@@ -44,8 +44,14 @@ npm run tauri build
 - Reprodução de arquivos MP3 (play, pausa, stop, seek)
 - Navegação entre faixas (anterior / próxima)
 - Três modos de reprodução: Contínua, Aleatória e Repetição
-- Leitura e exibição de tags ID3 (artista, título, álbum)
-- Capa do álbum extraída de arquivos `cover.jpg`/`png` na pasta da música
-- Busca e cache de letras no site letras.mus.br
-- Playlist selecionável por pasta
-- Interface escura com ícones unicode
+- Leitura e exibição de tags ID3 (artista, título, álbum, duração)
+- Capa do álbum extraída de arquivos `cover`/`folder`/`album`/`front`/`art`/`artwork` (jpg/png) na pasta da música
+- Busca e cache de letras via letras.mus.br com fallback de busca
+- Cache de letras em arquivos `.txt` na pasta do álbum
+- Controle de tamanho da fonte da letra (A+/A-)
+- Playlist selecionável por pasta com total de músicas e duração total
+- Barra de progresso clicável (seek)
+- Interface escura com tema `#000`/`#0d0d0d` e ícones unicode
+- Botões de mídia 32×32 com fundo escuro e texto branco
+- Toolbar com navegação entre painéis (letra / configurações)
+- Todos os endpoints e serviços com logging via SLF4J
