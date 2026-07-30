@@ -28,29 +28,31 @@ header h1 {
   color: #ccc;
 }
 
-/* ── Folder ── */
-#folder-section {
+/* ── Toolbar ── */
+#toolbar {
   display: flex;
-  gap: 8px;
+  gap: 6px;
+  padding: 4px 0;
 }
 
-#folder-input {
-  flex: 1;
-  padding: 10px 14px;
-  border: 1px solid #222;
-  border-radius: 6px;
-  background: #111;
-  color: #eee;
-  font-size: 0.9rem;
-  outline: none;
+#toolbar button {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  border-radius: 4px;
+  background: #1a1a1a;
+  border-color: #333;
+  color: #bbb;
 }
 
-#folder-input:focus {
+#toolbar button:hover {
+  background: #2a2a2a;
   border-color: #555;
-}
-
-#folder-input::placeholder {
-  color: #555;
+  color: #eee;
 }
 
 button {
@@ -73,15 +75,6 @@ button:hover:not(:disabled) {
 button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-}
-
-#load-btn {
-  background: #222;
-  color: #eee;
-}
-
-#load-btn:hover:not(:disabled) {
-  background: #333;
 }
 
 /* ── Main content: left 2/3 + right 1/3 ── */
@@ -110,6 +103,123 @@ button:disabled {
   font-style: italic;
 }
 
+#settings-panel {
+  flex: 2;
+  background: #0d0d0d;
+  border: 1px solid #1a1a1a;
+  border-radius: 8px;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.settings-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settings-title {
+  font-size: 1.1rem;
+  color: #ccc;
+  margin-bottom: 4px;
+}
+
+.settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-label {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.settings-options {
+  display: flex;
+  gap: 12px;
+}
+
+.settings-radio {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid #222;
+  border-radius: 6px;
+  background: #111;
+  color: #aaa;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.settings-radio:hover {
+  background: #1a1a1a;
+  border-color: #444;
+}
+
+.settings-radio.active {
+  border-color: #555;
+  color: #eee;
+  background: #1a1a1a;
+}
+
+.settings-radio input {
+  display: none;
+}
+
+.settings-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #aaa;
+  cursor: pointer;
+}
+
+.settings-checkbox input[type="checkbox"] {
+  accent-color: #888;
+}
+
+.settings-divider {
+  height: 1px;
+  background: #1a1a1a;
+}
+
+.settings-folder-row {
+  display: flex;
+  gap: 8px;
+}
+
+#settings-folder-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid #222;
+  border-radius: 6px;
+  background: #111;
+  color: #eee;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+#settings-folder-input:focus {
+  border-color: #555;
+}
+
+#settings-folder-input::placeholder {
+  color: #555;
+}
+
+#settings-load-btn {
+  background: #222;
+  color: #eee;
+}
+
+#settings-load-btn:hover:not(:disabled) {
+  background: #333;
+}
+
 #right-panel {
   flex: 1;
   display: flex;
@@ -125,6 +235,35 @@ button:disabled {
   gap: 10px;
 }
 
+#cover-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-width: 200px;
+  margin: 0 auto;
+  background: #0d0d0d;
+  border: 1px solid #1a1a1a;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+#album-cover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+#cover-placeholder {
+  font-size: 3rem;
+  color: #333;
+}
+
 #player-controls {
   display: flex;
   gap: 8px;
@@ -132,39 +271,19 @@ button:disabled {
 }
 
 #player-controls button {
-  font-size: 1.2rem;
-  min-width: 48px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 1rem;
   text-align: center;
+  background: #2a2a2a;
+  border-color: #444;
+  color: #eee;
 }
 
-#play-btn {
-  background: #1a3a1a;
-  border-color: #2a5a2a;
-  color: #8f8;
-}
-
-#play-btn:hover:not(:disabled) {
-  background: #2a4a2a;
-}
-
-#pause-btn {
-  background: #3a2a1a;
-  border-color: #5a3a2a;
-  color: #fc8;
-}
-
-#pause-btn:hover:not(:disabled) {
-  background: #4a3a2a;
-}
-
-#resume-btn {
-  background: #1a2a3a;
-  border-color: #2a4a5a;
-  color: #8cf;
-}
-
-#resume-btn:hover:not(:disabled) {
-  background: #2a3a4a;
+#player-controls button:hover:not(:disabled) {
+  background: #3a3a3a;
+  border-color: #666;
 }
 
 /* ── Progress ── */
@@ -180,6 +299,7 @@ button:disabled {
   background: #1a1a1a;
   border-radius: 3px;
   overflow: hidden;
+  cursor: pointer;
 }
 
 #progress-fill {

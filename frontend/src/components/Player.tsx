@@ -1,3 +1,4 @@
+import { useRef, useCallback } from 'react';
 import type { Id3Tags } from '../App';
 
 function formatTime(ms: number): string {
@@ -15,9 +16,13 @@ interface Props {
   duration: number;
   currentFile: string | null;
   currentId3?: Id3Tags;
-  onPlay: () => void;
-  onPause: () => void;
-  onResume: () => void;
+  showCover: boolean;
+  coverUrl: string | null;
+  onTogglePlayPause: () => void;
+  onStop: () => void;
+  onPrev: () => void;
+  onNext: () => void;
+  onSeek: (positionMs: number) => void;
 }
 
 function displayName(id3: Id3Tags | undefined): string {
@@ -30,26 +35,53 @@ function displayName(id3: Id3Tags | undefined): string {
   return '';
 }
 
-export default function Player({ status, position, duration, currentFile, currentId3, onPlay, onPause, onResume }: Props) {
+export default function Player({ status, position, duration, currentFile, currentId3, showCover, coverUrl, onTogglePlayPause, onStop, onPrev, onNext, onSeek }: Props) {
+  const barRef = useRef<HTMLDivElement>(null);
   const pct = duration > 0 ? Math.min((position / duration) * 100, 100) : 0;
   const name = displayName(currentId3);
+  const isPlaying = status === 'playing';
+  const canToggle = !!currentFile;
+  const canStop = isPlaying || status === 'paused';
+  const canSkip = !!currentFile;
+  const hasCover = showCover && !!currentFile;
+
+  const handleBarClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!duration || !currentFile || !barRef.current) return;
+    const rect = barRef.current.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    onSeek(Math.round(ratio * duration));
+  }, [duration, currentFile, onSeek]);
 
   return (
     <section id="player-section">
+      <div id="cover-container">
+        {hasCover && (
+          <img
+            key={currentFile}
+            id="album-cover"
+            src={coverUrl!}
+            alt="Capa do álbum"
+            onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+          />
+        )}
+        <span id="cover-placeholder">🎵</span>
+      </div>
+
       <div id="player-controls">
-        <button id="play-btn" onClick={onPlay} disabled={status === 'playing' || status === 'paused' || !currentFile}>
-          ▶
+        <button id="prev-btn" onClick={onPrev} disabled={!canSkip}>⏮</button>
+        <button
+          id="play-pause-btn"
+          onClick={onTogglePlayPause}
+          disabled={!canToggle}
+        >
+          {isPlaying ? '⏸' : '▶'}
         </button>
-        <button id="pause-btn" onClick={onPause} disabled={status !== 'playing'}>
-          ⏸
-        </button>
-        <button id="resume-btn" onClick={onResume} disabled={status !== 'paused'}>
-          ▶
-        </button>
+        <button id="stop-btn" onClick={onStop} disabled={!canStop}>⏹</button>
+        <button id="next-btn" onClick={onNext} disabled={!canSkip}>⏭</button>
       </div>
 
       <div id="progress-section">
-        <div id="progress-bar">
+        <div id="progress-bar" ref={barRef} onClick={handleBarClick}>
           <div id="progress-fill" style={{ width: `${pct}%` }} />
         </div>
         <span id="time-display">

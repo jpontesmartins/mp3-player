@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import FolderSelector from './components/FolderSelector';
+import Toolbar from './components/Toolbar';
 import Player from './components/Player';
 import Playlist from './components/Playlist';
 import LyricsPanel from './components/LyricsPanel';
+import SettingsPanel from './components/SettingsPanel';
+import type { PlaybackMode } from './components/SettingsPanel';
 import './App.css';
 
 const API = 'http://localhost:8080';
@@ -29,6 +31,26 @@ interface PlayingData {
 
 type Status = 'playing' | 'paused' | 'stopped';
 
+function getNextFile(current: string | null, files: string[], mode: PlaybackMode): string | null {
+  if (!files.length) return null;
+  if (mode === 'repeat') return current;
+  if (mode === 'shuffle') return files[Math.floor(Math.random() * files.length)];
+  if (!current) return files[0];
+  const idx = files.indexOf(current);
+  if (idx < 0 || idx >= files.length - 1) return files[0];
+  return files[idx + 1];
+}
+
+function getPrevFile(current: string | null, files: string[], mode: PlaybackMode): string | null {
+  if (!files.length) return null;
+  if (mode === 'repeat') return current;
+  if (mode === 'shuffle') return files[Math.floor(Math.random() * files.length)];
+  if (!current) return files[files.length - 1];
+  const idx = files.indexOf(current);
+  if (idx <= 0) return files[files.length - 1];
+  return files[idx - 1];
+}
+
 export default function App() {
   const [playlistFiles, setPlaylistFiles] = useState<string[]>([]);
   const [currentFile, setCurrentFile] = useState<string | null>(null);
@@ -36,7 +58,17 @@ export default function App() {
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);
   const [id3Cache, setId3Cache] = useState<Map<string, Id3Tags>>(new Map());
+  const [view, setView] = useState<'lyrics' | 'settings'>('lyrics');
+  const [playbackMode, setPlaybackMode] = useState<PlaybackMode>('continuous');
+  const [showCover, setShowCover] = useState(true);
   const lastLoggedFile = useRef<string | null>(null);
+  const currentFileRef = useRef(currentFile);
+  currentFileRef.current = currentFile;
+  const playlistRef = useRef(playlistFiles);
+  playlistRef.current = playlistFiles;
+  const modeRef = useRef(playbackMode);
+  modeRef.current = playbackMode;
+  const intentionalStopRef = useRef(false);
 
   const fetchId3ForFile = useCallback(async (file: string) => {
     if (id3Cache.has(file)) return;
@@ -54,6 +86,7 @@ export default function App() {
   }, [id3Cache]);
 
   const handleLoadPlaylist = useCallback(async (folder: string) => {
+    intentionalStopRef.current = true;
     try {
       const res = await fetch(`${API}/playlist?path=${encodeURIComponent(folder)}`);
       if (res.ok) {
@@ -79,6 +112,7 @@ export default function App() {
 
   useEffect(() => {
     let cancelled = false;
+    let prevStatus: Status = 'stopped';
     (async function poll() {
       while (!cancelled) {
         try {
@@ -90,6 +124,23 @@ export default function App() {
               setPosition(0);
               setDuration(0);
               lastLoggedFile.current = null;
+
+              if ((prevStatus === 'playing' || prevStatus === 'paused') && !intentionalStopRef.current) {
+                const next = getNextFile(currentFileRef.current, playlistRef.current, modeRef.current);
+                if (next) {
+                  fetch(`${API}/play`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: next,
+                  }).then(r => {
+                    if (r.ok) {
+                      setCurrentFile(next);
+                      setStatus('playing');
+                    }
+                  });
+                }
+              }
+              intentionalStopRef.current = false;
             } else {
               setStatus(data.status);
               setPosition(data.position);
@@ -111,6 +162,7 @@ export default function App() {
                 console.log('-----------------');
               }
             }
+            prevStatus = data.status;
           }
         } catch (_) { /* ignore */ }
         await new Promise(r => setTimeout(r, 2000));
@@ -147,22 +199,76 @@ export default function App() {
     } catch (_) { /* ignore */ }
   }, []);
 
-  const handlePlayPlaylist = useCallback(() => {
-    if (currentFile) playFile(currentFile);
-  }, [currentFile, playFile]);
+  const handleTogglePlayPause = useCallback(() => {
+    if (status === 'stopped' && currentFile) {
+      playFile(currentFile);
+    } else if (status === 'paused') {
+      handleResume();
+    } else if (status === 'playing') {
+      handlePause();
+    }
+  }, [status, currentFile, playFile, handleResume, handlePause]);
+
+  const handleStop = useCallback(async () => {
+    intentionalStopRef.current = true;
+    try {
+      await fetch(`${API}/stop`, { method: 'POST' });
+      setCurrentFile(null);
+      setStatus('stopped');
+      setPosition(0);
+      setDuration(0);
+    } catch (_) { /* ignore */ }
+  }, []);
+
+  const handlePrev = useCallback(() => {
+    const target = getPrevFile(currentFile, playlistFiles, playbackMode);
+    if (target) playFile(target);
+  }, [currentFile, playlistFiles, playbackMode, playFile]);
+
+  const handleNext = useCallback(() => {
+    const target = getNextFile(currentFile, playlistFiles, playbackMode);
+    if (target) playFile(target);
+  }, [currentFile, playlistFiles, playbackMode, playFile]);
+
+  const handleSeek = useCallback(async (positionMs: number) => {
+    try {
+      await fetch(`${API}/seek`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ position: positionMs }),
+      });
+      setPosition(positionMs);
+    } catch (_) { /* ignore */ }
+  }, []);
 
   const currentId3 = currentFile ? id3Cache.get(currentFile) : undefined;
 
+  const handleOpenSettings = useCallback(() => {
+    setView('settings');
+  }, []);
+
+  const handleOpenLyrics = useCallback(() => {
+    setView('lyrics');
+  }, []);
+
+  const coverUrl = currentFile ? `${API}/cover?path=${encodeURIComponent(currentFile)}` : null;
+
   return (
     <div id="app">
-      <header>
-        <h1>MP3 Player</h1>
-      </header>
-
-      <FolderSelector onLoad={handleLoadPlaylist} />
+      <Toolbar view={view} onOpenSettings={handleOpenSettings} onOpenLyrics={handleOpenLyrics} />
 
       <div id="main-content">
-        <LyricsPanel />
+        {view === 'lyrics' ? (
+          <LyricsPanel />
+        ) : (
+          <SettingsPanel
+            playbackMode={playbackMode}
+            showCover={showCover}
+            onPlaybackModeChange={setPlaybackMode}
+            onShowCoverChange={setShowCover}
+            onLoadPlaylist={handleLoadPlaylist}
+          />
+        )}
         <div id="right-panel">
           <Player
             status={status}
@@ -170,9 +276,13 @@ export default function App() {
             duration={duration}
             currentFile={currentFile}
             currentId3={currentId3}
-            onPlay={handlePlayPlaylist}
-            onPause={handlePause}
-            onResume={handleResume}
+            showCover={showCover}
+            coverUrl={coverUrl}
+            onTogglePlayPause={handleTogglePlayPause}
+            onStop={handleStop}
+            onPrev={handlePrev}
+            onNext={handleNext}
+            onSeek={handleSeek}
           />
           <Playlist
             files={playlistFiles}

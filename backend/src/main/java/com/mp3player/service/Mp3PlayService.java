@@ -31,12 +31,40 @@ public class Mp3PlayService {
     private volatile long totalPausedNanos;
 
     public void play(String filePath) throws FileNotFoundException {
+        play(filePath, 0);
+    }
+
+    private void play(String filePath, long startPositionMillis) throws FileNotFoundException {
         stopCurrent();
 
         analyzeFile(filePath);
         readId3Tags(filePath);
 
         FileInputStream fis = new FileInputStream(filePath);
+
+        int startFrame = 0;
+        if (startPositionMillis > 0 && totalFrames > 0) {
+            startFrame = (int) (startPositionMillis * sampleRate / (SAMPLES_PER_FRAME * 1000L));
+            startFrame = Math.min(startFrame, totalFrames - 1);
+            if (startFrame > 0) {
+                try {
+                    Bitstream bitstream = new Bitstream(fis);
+                    for (int i = 0; i < startFrame; i++) {
+                        Header h = bitstream.readFrame();
+                        if (h == null) break;
+                        bitstream.closeFrame();
+                    }
+                    long bytePos = fis.getChannel().position();
+                    bitstream.close();
+                    fis.close();
+                    fis = new FileInputStream(filePath);
+                    fis.skip(bytePos);
+                } catch (Exception e) {
+                    throw new RuntimeException("Error seeking to position", e);
+                }
+            }
+        }
+
         Player newPlayer;
         try {
             newPlayer = new Player(fis);
@@ -48,7 +76,7 @@ public class Mp3PlayService {
         this.player = newPlayer;
         this.paused = false;
         this.playing = true;
-        this.playStartNanos = System.nanoTime();
+        this.playStartNanos = System.nanoTime() - startPositionMillis * 1_000_000;
         this.pauseStartNanos = 0;
         this.totalPausedNanos = 0;
 
@@ -74,6 +102,16 @@ public class Mp3PlayService {
                 }
             }
         });
+    }
+
+    public void seekTo(long positionMillis) {
+        if (currentFilePath == null) return;
+        String path = currentFilePath;
+        try {
+            play(path, positionMillis);
+        } catch (FileNotFoundException e) {
+            // should not happen
+        }
     }
 
     private void analyzeFile(String filePath) {
@@ -183,6 +221,10 @@ public class Mp3PlayService {
         if (value != null && !value.trim().isEmpty()) {
             map.put(key, value.trim());
         }
+    }
+
+    public void stop() {
+        stopCurrent();
     }
 
     private void stopCurrent() {

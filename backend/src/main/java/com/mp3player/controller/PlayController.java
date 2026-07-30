@@ -13,6 +13,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
+
 @RestController
 public class PlayController {
 
@@ -43,6 +47,22 @@ public class PlayController {
         return ResponseEntity.ok("Paused");
     }
 
+    @PostMapping("/stop")
+    public ResponseEntity<String> stop() {
+        mp3PlayService.stop();
+        return ResponseEntity.ok("Stopped");
+    }
+
+    @PostMapping("/seek")
+    public ResponseEntity<String> seek(@RequestBody Map<String, Long> body) {
+        Long position = body.get("position");
+        if (position == null) {
+            return ResponseEntity.badRequest().body("Missing position");
+        }
+        mp3PlayService.seekTo(position);
+        return ResponseEntity.ok("Seeked to " + position);
+    }
+
     @PostMapping("/resume")
     public ResponseEntity<String> resume() {
         if (!mp3PlayService.isPlaying()) {
@@ -63,6 +83,40 @@ public class PlayController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
+    }
+
+    @GetMapping("/cover")
+    public ResponseEntity<Resource> getCover(@RequestParam String path) {
+        java.nio.file.Path parent = java.nio.file.Paths.get(path).getParent();
+        if (parent == null) {
+            return ResponseEntity.notFound().build();
+        }
+        String[] coverNames = { "cover", "folder", "album", "front", "art", "artwork" };
+        String[] extensions = { "jpg", "jpeg", "png" };
+        try (var files = java.nio.file.Files.list(parent)) {
+            var coverFile = files
+                .filter(f -> {
+                    if (!java.nio.file.Files.isRegularFile(f)) return false;
+                    String name = f.getFileName().toString().toLowerCase();
+                    int dot = name.lastIndexOf('.');
+                    if (dot < 0) return false;
+                    String stem = name.substring(0, dot);
+                    String ext = name.substring(dot + 1);
+                    if (!java.util.Arrays.asList(extensions).contains(ext)) return false;
+                    return java.util.Arrays.asList(coverNames).contains(stem);
+                })
+                .findFirst();
+            if (coverFile.isPresent()) {
+                var file = coverFile.get();
+                var resource = new InputStreamResource(java.nio.file.Files.newInputStream(file));
+                String name = file.getFileName().toString().toLowerCase();
+                String contentType = name.endsWith("png") ? "image/png" : "image/jpeg";
+                return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType)).body(resource);
+            }
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.notFound().build();
     }
 
     @GetMapping("/id3")
