@@ -43,8 +43,6 @@ export default function Player({ status, position, duration, currentFile, curren
   const canToggle = !!currentFile;
   const canStop = isPlaying || status === 'paused';
   const canSkip = !!currentFile;
-  const hasCover = showCover && !!currentFile;
-
   const handleBarClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!duration || !currentFile || !barRef.current) return;
     const rect = barRef.current.getBoundingClientRect();
@@ -54,8 +52,8 @@ export default function Player({ status, position, duration, currentFile, curren
 
   return (
     <section id="player-section">
-      <div id="cover-container">
-        {hasCover && (
+      {showCover && currentFile && (
+        <div id="cover-container">
           <img
             key={currentFile}
             id="album-cover"
@@ -63,9 +61,9 @@ export default function Player({ status, position, duration, currentFile, curren
             alt="Capa do álbum"
             onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
           />
-        )}
-        <span id="cover-placeholder">🎵</span>
-      </div>
+          <span id="cover-placeholder">🎵</span>
+        </div>
+      )}
 
       <div id="player-controls">
         <button id="prev-btn" onClick={onPrev} disabled={!canSkip}>⏮</button>

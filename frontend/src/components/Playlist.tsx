@@ -30,6 +30,15 @@ function displayName(tags: Id3Tags | undefined, file: string): string {
   return fileName(file);
 }
 
+function totalDuration(files: string[], cache: Map<string, Id3Tags>): number {
+  let total = 0;
+  for (const f of files) {
+    const d = cache.get(f)?.duration_ms;
+    if (d) total += Number(d);
+  }
+  return total;
+}
+
 export default function Playlist({ files, currentFile, id3Cache, onSelect }: Props) {
   if (files.length === 0) {
     return (
@@ -41,17 +50,19 @@ export default function Playlist({ files, currentFile, id3Cache, onSelect }: Pro
     );
   }
 
+  const total = totalDuration(files, id3Cache);
+
   return (
     <section id="playlist-section">
       <ul id="playlist">
-        {files.map((file, i) => {
+        {files.map((file) => {
           const tags = id3Cache.get(file);
           const name = displayName(tags, file);
           const dur = tags?.duration_ms ? Number(tags.duration_ms) : 0;
           const active = file === currentFile;
           return (
             <li
-              key={i}
+              key={file}
               className={active ? 'active' : ''}
               onClick={() => onSelect(file)}
             >
@@ -61,6 +72,10 @@ export default function Playlist({ files, currentFile, id3Cache, onSelect }: Pro
           );
         })}
       </ul>
+      <div id="playlist-footer">
+        <span>{files.length} {files.length === 1 ? 'música' : 'músicas'}</span>
+        {total > 0 && <span>{formatTime(total)}</span>}
+      </div>
     </section>
   );
 }

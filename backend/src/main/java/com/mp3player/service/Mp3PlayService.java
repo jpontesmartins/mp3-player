@@ -6,6 +6,8 @@ import javazoom.jl.decoder.Bitstream;
 import javazoom.jl.decoder.Header;
 import javazoom.jl.decoder.JavaLayerException;
 import javazoom.jl.player.Player;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.FileInputStream;
@@ -15,6 +17,8 @@ import java.util.Map;
 
 @Service
 public class Mp3PlayService {
+
+    private static final Logger log = LoggerFactory.getLogger(Mp3PlayService.class);
 
     private static final int FRAMES_PER_CHUNK = 1;
     private static final int SAMPLES_PER_FRAME = 1152;
@@ -47,6 +51,7 @@ public class Mp3PlayService {
             startFrame = (int) (startPositionMillis * sampleRate / (SAMPLES_PER_FRAME * 1000L));
             startFrame = Math.min(startFrame, totalFrames - 1);
             if (startFrame > 0) {
+                log.info("▶ Seeking to frame {} (~{}ms)", startFrame, startPositionMillis);
                 try {
                     Bitstream bitstream = new Bitstream(fis);
                     for (int i = 0; i < startFrame; i++) {
@@ -72,6 +77,7 @@ public class Mp3PlayService {
             throw new RuntimeException("Error creating player", e);
         }
 
+        log.info("▶ Playing: {} (start: {}ms)", filePath, startPositionMillis);
         this.currentFilePath = filePath;
         this.player = newPlayer;
         this.paused = false;
@@ -106,11 +112,12 @@ public class Mp3PlayService {
 
     public void seekTo(long positionMillis) {
         if (currentFilePath == null) return;
+        log.info("⏩ Seek to {}ms", positionMillis);
         String path = currentFilePath;
         try {
             play(path, positionMillis);
         } catch (FileNotFoundException e) {
-            // should not happen
+            log.error("File not found on seek", e);
         }
     }
 
@@ -130,17 +137,21 @@ public class Mp3PlayService {
             }
             bitstream.close();
             totalFrames = count;
+            log.info("▶ Analyzed: {} frames, {} Hz, ~{}ms", totalFrames, sampleRate, getTotalMillis());
         } catch (Exception e) {
+            log.error("Failed to analyze file: {}", filePath, e);
             totalFrames = -1;
         }
     }
 
     public void pause() {
+        log.info("⏸ Pause");
         this.paused = true;
         this.pauseStartNanos = System.nanoTime();
     }
 
     public void resume() {
+        log.info("▶ Resume");
         if (pauseStartNanos != 0) {
             totalPausedNanos += System.nanoTime() - pauseStartNanos;
             pauseStartNanos = 0;
@@ -212,9 +223,7 @@ public class Mp3PlayService {
 
     private void readId3Tags(String filePath) {
         this.id3Tags = getId3TagsForFile(filePath);
-        System.out.println("--- ID3 Tags ---");
-        id3Tags.forEach((k, v) -> System.out.println(k + ": " + v));
-        System.out.println("-----------------");
+        log.info("ID3 Tags: {}", id3Tags);
     }
 
     private static void putIfNotEmpty(Map<String, String> map, String key, String value) {
@@ -224,6 +233,7 @@ public class Mp3PlayService {
     }
 
     public void stop() {
+        log.info("⏹ Stop");
         stopCurrent();
     }
 
