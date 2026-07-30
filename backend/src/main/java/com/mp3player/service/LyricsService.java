@@ -69,6 +69,9 @@ public class LyricsService {
             return "Letra não encontrada para \"" + title + "\" de " + artist;
         }
 
+        for (Element p : lyricDiv.select("p")) {
+            p.after("<br>");
+        }
         return lyricDiv.wholeText().trim();
     }
 

@@ -89,8 +89,8 @@ export default function Player({ status, position, duration, currentFile, curren
         </span>
       </div>
 
-      <div id="status-section">
-        {status === 'playing' && `Tocando: ${name || currentFile?.split('\\').pop()?.split('/').pop() || ''}`}
+      <div id="status-section" style={{ fontSize: 14 }}>
+        {status === 'playing' && `${name || currentFile?.split('\\').pop()?.split('/').pop() || ''}`}
         {status === 'paused' && `Pausado: ${name || currentFile?.split('\\').pop()?.split('/').pop() || ''}`}
         {status === 'stopped' && 'Nenhuma música tocando'}
       </div>

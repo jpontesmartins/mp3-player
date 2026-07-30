@@ -6,9 +6,14 @@ interface Props {
   currentFile: string | null;
 }
 
+const MIN_SIZE = 0.7;
+const MAX_SIZE = 2.0;
+const STEP = 0.1;
+
 export default function LyricsPanel({ currentFile }: Props) {
   const [lyrics, setLyrics] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [fontSize, setFontSize] = useState(0.9);
 
   useEffect(() => {
     if (!currentFile) {
@@ -61,8 +66,12 @@ export default function LyricsPanel({ currentFile }: Props) {
             <button id="fetch-lyrics-btn" onClick={handleFetch} disabled={loading}>
               {loading ? 'Buscando...' : 'Buscar letra'}
             </button>
+            <div className="lyrics-font-controls">
+              <button className="font-btn" onClick={() => setFontSize(s => Math.min(MAX_SIZE, s + STEP))} disabled={fontSize >= MAX_SIZE}>A+</button>
+              <button className="font-btn" onClick={() => setFontSize(s => Math.max(MIN_SIZE, s - STEP))} disabled={fontSize <= MIN_SIZE}>A-</button>
+            </div>
           </div>
-          <pre className="lyrics-text">{lyrics}</pre>
+          <pre className="lyrics-text" style={{ fontSize: `${fontSize}rem` }}>{lyrics}</pre>
         </div>
       )}
     </section>
