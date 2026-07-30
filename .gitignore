@@ -32,7 +32,7 @@ frontend/src-tauri/*.rs.bk
 **/target/
 
 # Tauri generated icons & artifacts
-frontend/src-tauri/icons/
+# frontend/src-tauri/icons/
 
 # -------------------------------
 # 3. JAVA / JVM / BUILD TOOLS
