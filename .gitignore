@@ -107,7 +107,7 @@ nbdist/
 .DS_Store?
 .AppleDouble
 .LSOverride
-Icon*
+# Icon*
 ._*
 Thumbs.db
 ehthumbs.db
