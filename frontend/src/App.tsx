@@ -259,7 +259,7 @@ export default function App() {
 
       <div id="main-content">
         {view === 'lyrics' ? (
-          <LyricsPanel />
+          <LyricsPanel currentFile={currentFile} />
         ) : (
           <SettingsPanel
             playbackMode={playbackMode}

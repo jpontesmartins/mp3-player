@@ -1,5 +1,6 @@
 package com.mp3player.controller;
 
+import com.mp3player.service.LyricsService;
 import com.mp3player.service.Mp3PlayService;
 import com.mp3player.service.PlaylistService;
 import org.springframework.http.ResponseEntity;
@@ -22,10 +23,12 @@ public class PlayController {
 
     private final Mp3PlayService mp3PlayService;
     private final PlaylistService playlistService;
+    private final LyricsService lyricsService;
 
-    public PlayController(Mp3PlayService mp3PlayService, PlaylistService playlistService) {
+    public PlayController(Mp3PlayService mp3PlayService, PlaylistService playlistService, LyricsService lyricsService) {
         this.mp3PlayService = mp3PlayService;
         this.playlistService = playlistService;
+        this.lyricsService = lyricsService;
     }
 
     @PostMapping("/play")
@@ -117,6 +120,27 @@ public class PlayController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/lyrics/cached")
+    public ResponseEntity<String> getCachedLyrics(@RequestParam String path) {
+        try {
+            String lyrics = lyricsService.getCachedLyrics(path);
+            if (lyrics != null) return ResponseEntity.ok(lyrics);
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erro: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/lyrics")
+    public ResponseEntity<String> getLyrics(@RequestParam String path) {
+        try {
+            String lyrics = lyricsService.getLyrics(path);
+            return ResponseEntity.ok(lyrics);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao buscar letra: " + e.getMessage());
+        }
     }
 
     @GetMapping("/id3")

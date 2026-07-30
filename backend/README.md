@@ -1,0 +1,61 @@
+# Backend — MP3 Player API
+
+API REST em **Java 21** com **Spring Boot 3.3.5** para reprodução de MP3 e serviços auxiliares.
+
+## Tecnologias
+
+| Camada | Tecnologia |
+|---|---|
+| Runtime | Java 21 (virtual threads) |
+| Framework | Spring Boot 3.3.5 |
+| Build | Maven |
+| Decodificador MP3 | JLayer 1.0.1 |
+| Tags ID3 | mp3agic 0.9.1 |
+| Web scraping | Jsoup 1.18.1 |
+
+## Endpoints
+
+### Reprodução
+
+| Método | Rota | Descrição |
+|---|---|---|
+| `POST` | `/play` | Inicia reprodução de um arquivo MP3 (body = caminho completo) |
+| `POST` | `/pause` | Pausa a música atual |
+| `POST` | `/resume` | Retoma a música pausada |
+| `POST` | `/stop` | Para a reprodução e limpa o estado |
+| `POST` | `/seek` | Salta para uma posição específica (`{ "position": <ms> }`) |
+| `GET` | `/playing` | Status atual (`playing`/`paused`/`stopped`), posição, duração e ID3 |
+
+### Playlist
+
+| Método | Rota | Descrição |
+|---|---|---|
+| `GET` | `/playlist?path=<pasta>` | Escaneia uma pasta e retorna lista de arquivos `.mp3` |
+
+### Metadados
+
+| Método | Rota | Descrição |
+|---|---|---|
+| `GET` | `/id3?path=<arquivo>` | Retorna as tags ID3 (artista, título, álbum, etc.) |
+| `GET` | `/cover?path=<arquivo>` | Retorna a imagem de capa (`cover`/`folder`/`album`/etc. — jpg/png) da mesma pasta |
+| `GET` | `/lyrics?path=<arquivo>` | Retorna a letra da música (web scraping se não houver cache) |
+| `GET` | `/lyrics/cached?path=<arquivo>` | Retorna a letra apenas se já existir arquivo `.txt` em cache |
+
+## Scrapper de Letras
+
+O endpoint `/lyrics` implementa um scraper para o site [letras.mus.br](https://www.letras.mus.br):
+
+1. Extrai artista e título das tags ID3 do MP3
+2. Constrói slugs e tenta URL direta: `/{artista}/{musica}/`
+3. Se falhar, faz busca em `/?q=<artista>+<musica>` e localiza o link `<a class="gs-title">`
+4. Remove sufixo `traducao.html` quando presente
+5. Extrai o conteúdo de `<div class="lyric-original">`
+6. Salva em `{artista} - {musica}.txt` na mesma pasta do MP3
+
+## CORS
+
+Configurado para permitir origens externas (necessário para o frontend em dev no Vite).
+
+```
+
+```

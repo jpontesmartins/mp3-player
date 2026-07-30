@@ -92,15 +92,54 @@ button:disabled {
   border-radius: 8px;
   padding: 20px;
   display: flex;
+  overflow-y: auto;
+}
+
+.lyrics-empty {
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  overflow-y: auto;
+  gap: 12px;
+  width: 100%;
 }
 
 .lyrics-placeholder {
   color: #444;
   font-size: 1.1rem;
   font-style: italic;
+}
+
+.lyrics-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.lyrics-header {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.lyrics-text {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #ccc;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+#fetch-lyrics-btn {
+  background: #222;
+  color: #eee;
+  font-size: 0.85rem;
+  padding: 8px 16px;
+}
+
+#fetch-lyrics-btn:hover:not(:disabled) {
+  background: #333;
 }
 
 #settings-panel {
@@ -385,6 +424,19 @@ button:disabled {
 }
 
 #playlist-section::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 3px;
+}
+
+#lyrics-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+#lyrics-panel::-webkit-scrollbar-track {
+  background: #0d0d0d;
+}
+
+#lyrics-panel::-webkit-scrollbar-thumb {
   background: #333;
   border-radius: 3px;
 }
