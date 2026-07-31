@@ -5,6 +5,7 @@ import Playlist from './components/Playlist';
 import LyricsPanel from './components/LyricsPanel';
 import SettingsPanel from './components/SettingsPanel';
 import CollectionManager from './components/CollectionManager';
+import InfoModal from './components/InfoModal';
 import type { PlaybackMode } from './components/SettingsPanel';
 import './App.css';
 
@@ -62,6 +63,7 @@ export default function App() {
   const [view, setView] = useState<'lyrics' | 'settings' | 'collection'>('lyrics');
   const [playbackMode, setPlaybackMode] = useState<PlaybackMode>('continuous');
   const [showCover, setShowCover] = useState(true);
+  const [showInfo, setShowInfo] = useState(false);
   const lastLoggedFile = useRef<string | null>(null);
   const currentFileRef = useRef(currentFile);
   currentFileRef.current = currentFile;
@@ -251,6 +253,14 @@ export default function App() {
     setView('collection');
   }, []);
 
+  const handleOpenInfo = useCallback(() => {
+    setShowInfo(true);
+  }, []);
+
+  const handleCloseInfo = useCallback(() => {
+    setShowInfo(false);
+  }, []);
+
   const handleTagsUpdated = useCallback((file: string, tags: Id3Tags) => {
     setId3Cache(prev => {
       const next = new Map(prev);
@@ -268,6 +278,7 @@ export default function App() {
         onOpenSettings={handleOpenSettings}
         onOpenLyrics={handleOpenLyrics}
         onOpenCollection={handleOpenCollection}
+        onOpenInfo={handleOpenInfo}
       />
 
       <div id="main-content">
@@ -311,6 +322,8 @@ export default function App() {
           />
         </div>
       </div>
+      <footer id="statusbar">v0.9.0</footer>
+      {showInfo && <InfoModal onClose={handleCloseInfo} />}
     </div>
   );
 }

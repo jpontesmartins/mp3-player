@@ -1,15 +1,17 @@
 import LyricsIcon from '@mui/icons-material/Lyrics';
 import DisplaySettingsIcon from '@mui/icons-material/DisplaySettings';
 import LibraryMusicIcon from '@mui/icons-material/LibraryMusic';
+import InfoIcon from '@mui/icons-material/Info';
 
 interface Props {
   view: 'lyrics' | 'settings' | 'collection';
   onOpenSettings: () => void;
   onOpenLyrics: () => void;
   onOpenCollection: () => void;
+  onOpenInfo: () => void;
 }
 
-export default function Toolbar({ view, onOpenSettings, onOpenLyrics, onOpenCollection }: Props) {
+export default function Toolbar({ view, onOpenSettings, onOpenLyrics, onOpenCollection, onOpenInfo }: Props) {
   return (
     <div id="toolbar">
       <button
@@ -35,6 +37,13 @@ export default function Toolbar({ view, onOpenSettings, onOpenLyrics, onOpenColl
         disabled={view === 'settings'}
       >
         <DisplaySettingsIcon />
+      </button>
+      <button
+        id="toolbar-info-btn"
+        onClick={onOpenInfo}
+        title="Sobre"
+      >
+        <InfoIcon />
       </button>
     </div>
   );
