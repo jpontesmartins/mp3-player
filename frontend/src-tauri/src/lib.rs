@@ -1,7 +1,10 @@
 use std::path::{Path, PathBuf};
-use std::process::{Child, Command};
+use std::process::{Child, Command, Stdio};
 use std::sync::Mutex;
 use tauri::{Manager, RunEvent};
+
+#[cfg(windows)]
+use std::os::windows::process::CommandExt;
 
 pub struct BackendProcess(Mutex<Option<Child>>);
 
@@ -21,13 +24,30 @@ fn spawn_backend(app: &tauri::AppHandle) -> Option<Child> {
         eprintln!("backend resources not found (dev mode?)");
         return None;
     }
-    Command::new(&java)
-        .arg("-jar")
+
+    let mut cmd = Command::new(&java);
+    cmd.arg("-jar")
         .arg(&jar)
         .arg("--server.address=127.0.0.1")
-        .arg("--server.port=8080")
-        .spawn()
-        .ok()
+        .arg("--server.port=8080");
+
+    // No console window for the child (CREATE_NO_WINDOW).
+    #[cfg(windows)]
+    cmd.creation_flags(0x08000000);
+
+    // Redirect backend logs to a file so they can be inspected later.
+    if let Ok(log_dir) = app.path().app_log_dir() {
+        let _ = std::fs::create_dir_all(&log_dir);
+        let log_file = log_dir.join("backend.log");
+        if let Ok(out) = std::fs::File::create(&log_file) {
+            if let Ok(err) = out.try_clone() {
+                cmd.stdout(Stdio::from(out));
+                cmd.stderr(Stdio::from(err));
+            }
+        }
+    }
+
+    cmd.spawn().ok()
 }
 
 fn kill_backend(app: &tauri::AppHandle) {
