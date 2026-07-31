@@ -50,6 +50,7 @@ npm run tauri build
 - Cache de letras em arquivos `.txt` na pasta do álbum
 - Controle de tamanho da fonte da letra (A+/A-)
 - Playlist selecionável por pasta com total de músicas e duração total
+- Gerenciador de coleção: lista de álbuns e artistas da playlist com edição das tags ID3 (música, álbum, gênero, faixa, etc.) em grade por álbum/artista
 - Barra de progresso clicável (seek)
 - Interface escura com tema `#000`/`#0d0d0d` e ícones unicode
 - Botões de mídia 32×32 com fundo escuro e texto branco

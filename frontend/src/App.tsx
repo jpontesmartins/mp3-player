@@ -4,6 +4,7 @@ import Player from './components/Player';
 import Playlist from './components/Playlist';
 import LyricsPanel from './components/LyricsPanel';
 import SettingsPanel from './components/SettingsPanel';
+import CollectionManager from './components/CollectionManager';
 import type { PlaybackMode } from './components/SettingsPanel';
 import './App.css';
 
@@ -58,7 +59,7 @@ export default function App() {
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);
   const [id3Cache, setId3Cache] = useState<Map<string, Id3Tags>>(new Map());
-  const [view, setView] = useState<'lyrics' | 'settings'>('lyrics');
+  const [view, setView] = useState<'lyrics' | 'settings' | 'collection'>('lyrics');
   const [playbackMode, setPlaybackMode] = useState<PlaybackMode>('continuous');
   const [showCover, setShowCover] = useState(true);
   const lastLoggedFile = useRef<string | null>(null);
@@ -246,22 +247,45 @@ export default function App() {
     setView('lyrics');
   }, []);
 
+  const handleOpenCollection = useCallback(() => {
+    setView('collection');
+  }, []);
+
+  const handleTagsUpdated = useCallback((file: string, tags: Id3Tags) => {
+    setId3Cache(prev => {
+      const next = new Map(prev);
+      next.set(file, tags);
+      return next;
+    });
+  }, []);
+
   const coverUrl = currentFile ? `${API}/cover?path=${encodeURIComponent(currentFile)}` : null;
 
   return (
     <div id="app">
-      <Toolbar view={view} onOpenSettings={handleOpenSettings} onOpenLyrics={handleOpenLyrics} />
+      <Toolbar
+        view={view}
+        onOpenSettings={handleOpenSettings}
+        onOpenLyrics={handleOpenLyrics}
+        onOpenCollection={handleOpenCollection}
+      />
 
       <div id="main-content">
         {view === 'lyrics' ? (
           <LyricsPanel currentFile={currentFile} />
-        ) : (
+        ) : view === 'settings' ? (
           <SettingsPanel
             playbackMode={playbackMode}
             showCover={showCover}
             onPlaybackModeChange={setPlaybackMode}
             onShowCoverChange={setShowCover}
             onLoadPlaylist={handleLoadPlaylist}
+          />
+        ) : (
+          <CollectionManager
+            files={playlistFiles}
+            id3Cache={id3Cache}
+            onTagsUpdated={handleTagsUpdated}
           />
         )}
         <div id="right-panel">

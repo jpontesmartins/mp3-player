@@ -1,6 +1,8 @@
 package com.mp3player.service;
 
+import com.mpatric.mp3agic.ID3v1Genres;
 import com.mpatric.mp3agic.ID3v2;
+import com.mpatric.mp3agic.ID3v24Tag;
 import com.mpatric.mp3agic.Mp3File;
 import javazoom.jl.decoder.Bitstream;
 import javazoom.jl.decoder.Header;
@@ -12,6 +14,10 @@ import org.springframework.stereotype.Service;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -219,6 +225,33 @@ public class Mp3PlayService {
             tags.put("title", filePath.substring(filePath.lastIndexOf('\\') + 1));
         }
         return tags;
+    }
+
+    public Map<String, String> updateId3Tags(String filePath, Map<String, String> updates) throws Exception {
+        Mp3File mp3file = new Mp3File(filePath);
+        ID3v24Tag tag = new ID3v24Tag();
+        tag.setTitle(updates.get("title"));
+        tag.setArtist(updates.get("artist"));
+        tag.setAlbum(updates.get("album"));
+        tag.setYear(updates.get("year"));
+        String genre = updates.get("genre");
+        if (genre != null && !genre.trim().isEmpty()) {
+            int genreId = ID3v1Genres.matchGenreDescription(genre.trim());
+            if (genreId >= 0) {
+                tag.setGenre(genreId);
+            } else {
+                tag.setGenreDescription(genre.trim());
+            }
+        }
+        tag.setTrack(updates.get("track"));
+        mp3file.setId3v2Tag(tag);
+        mp3file.removeId3v1Tag();
+
+        Path tmp = Paths.get(filePath + ".mp3tmp");
+        mp3file.save(tmp.toString());
+        Files.move(tmp, Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
+        log.info("✏️ ID3 updated: {}", filePath);
+        return getId3TagsForFile(filePath);
     }
 
     private void readId3Tags(String filePath) {

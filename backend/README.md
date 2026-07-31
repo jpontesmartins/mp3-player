@@ -38,6 +38,8 @@ API REST em **Java 21** com **Spring Boot 3.3.5** para reprodução de MP3 e ser
 | Método | Rota | Descrição |
 |---|---|---|
 | `GET` | `/id3?path=<arquivo>` | Retorna as tags ID3 (artista, título, álbum, etc.) |
+| `POST` | `/id3/bulk` | Recebe uma lista de caminhos e retorna as tags ID3 de todos de uma vez (body = `["caminho1", "caminho2", ...]`) |
+| `POST` | `/id3/update` | Atualiza as tags ID3 de um arquivo (body = `{ "path": "<arquivo>", "tags": { "title": ..., "artist": ..., "album": ..., "genre": ..., "track": ..., "year": ... } }`) |
 | `GET` | `/cover?path=<arquivo>` | Retorna a imagem de capa (`cover`/`folder`/`album`/`front`/`art`/`artwork` — jpg/png) da mesma pasta |
 | `GET` | `/lyrics?path=<arquivo>` | Retorna a letra da música (web scraping se não houver cache) |
 | `GET` | `/lyrics/cached?path=<arquivo>` | Retorna a letra apenas se já existir arquivo `.txt` em cache |

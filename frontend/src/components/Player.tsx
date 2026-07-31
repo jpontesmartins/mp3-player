@@ -1,4 +1,9 @@
 import { useRef, useCallback } from 'react';
+import SkipNextIcon from '@mui/icons-material/SkipNext';
+import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
+import PauseIcon from '@mui/icons-material/Pause';
+import StopIcon from '@mui/icons-material/Stop';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import type { Id3Tags } from '../App';
 
 function formatTime(ms: number): string {
@@ -66,16 +71,22 @@ export default function Player({ status, position, duration, currentFile, curren
       )}
 
       <div id="player-controls">
-        <button id="prev-btn" onClick={onPrev} disabled={!canSkip}>⏮</button>
+        <button id="prev-btn" onClick={onPrev} disabled={!canSkip}>
+          <SkipPreviousIcon />
+        </button>
         <button
           id="play-pause-btn"
           onClick={onTogglePlayPause}
           disabled={!canToggle}
         >
-          {isPlaying ? '⏸' : '▶'}
+          {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
         </button>
-        <button id="stop-btn" onClick={onStop} disabled={!canStop}>⏹</button>
-        <button id="next-btn" onClick={onNext} disabled={!canSkip}>⏭</button>
+        <button id="stop-btn" onClick={onStop} disabled={!canStop}>
+          <StopIcon />
+        </button>
+        <button id="next-btn" onClick={onNext} disabled={!canSkip}>
+          <SkipNextIcon />
+        </button>
       </div>
 
       <div id="progress-section">

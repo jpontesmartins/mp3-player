@@ -172,10 +172,25 @@ public class PlayController {
         }
     }
 
+    public record Id3UpdateRequest(String path, Map<String, String> tags) {}
+
     @GetMapping("/id3")
     public ResponseEntity<Map<String, String>> getId3(@RequestParam String path) {
         log.info("🏷 ID3: {}", path);
         return ResponseEntity.ok(mp3PlayService.getId3TagsForFile(path));
+    }
+
+    @PostMapping("/id3/update")
+    public ResponseEntity<?> updateId3(@RequestBody Id3UpdateRequest request) {
+        log.info("✏️ ID3 update: {}", request.path());
+        try {
+            Map<String, String> updated = mp3PlayService.updateId3Tags(request.path(), request.tags());
+            log.info("✏️ ID3 update done: {}", updated);
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            log.error("✏️ ID3 update failed: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
     }
 
     @PostMapping("/id3/bulk")
