@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -175,6 +176,17 @@ public class PlayController {
     public ResponseEntity<Map<String, String>> getId3(@RequestParam String path) {
         log.info("🏷 ID3: {}", path);
         return ResponseEntity.ok(mp3PlayService.getId3TagsForFile(path));
+    }
+
+    @PostMapping("/id3/bulk")
+    public ResponseEntity<Map<String, Map<String, String>>> getBulkId3(@RequestBody List<String> paths) {
+        log.info("🏷 ID3 bulk: {} files", paths.size());
+        Map<String, Map<String, String>> result = new LinkedHashMap<>();
+        for (String path : paths) {
+            result.put(path, mp3PlayService.getId3TagsForFile(path));
+        }
+        log.info("🏷 ID3 bulk done: {} files", result.size());
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/playing")

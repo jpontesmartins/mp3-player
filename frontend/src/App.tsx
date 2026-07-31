@@ -70,21 +70,6 @@ export default function App() {
   modeRef.current = playbackMode;
   const intentionalStopRef = useRef(false);
 
-  const fetchId3ForFile = useCallback(async (file: string) => {
-    if (id3Cache.has(file)) return;
-    try {
-      const res = await fetch(`${API}/id3?path=${encodeURIComponent(file)}`);
-      if (res.ok) {
-        const tags: Id3Tags = await res.json();
-        setId3Cache(prev => {
-          const next = new Map(prev);
-          next.set(file, tags);
-          return next;
-        });
-      }
-    } catch (_) { /* ignore */ }
-  }, [id3Cache]);
-
   const handleLoadPlaylist = useCallback(async (folder: string) => {
     intentionalStopRef.current = true;
     try {
@@ -98,10 +83,20 @@ export default function App() {
         setDuration(0);
         setId3Cache(new Map());
         localStorage.setItem(STORAGE_KEY, folder);
-        files.forEach(f => fetchId3ForFile(f));
+        if (files.length > 0) {
+          const id3Res = await fetch(`${API}/id3/bulk`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(files),
+          });
+          if (id3Res.ok) {
+            const tagsMap: Record<string, Id3Tags> = await id3Res.json();
+            setId3Cache(new Map(Object.entries(tagsMap)));
+          }
+        }
       }
     } catch (_) { /* ignore */ }
-  }, [fetchId3ForFile]);
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
