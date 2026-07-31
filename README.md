@@ -39,6 +39,16 @@ cd frontend
 npm run tauri build
 ```
 
+### Empacotamento para Windows
+
+Gera um instalador auto-contido (MSI e NSIS) que já embute o backend Java e um JRE mínimo (jlink), sem exigir Java instalado na máquina de destino:
+
+```bash
+.\scripts\package-windows.ps1
+```
+
+O script compila o JAR do backend, gera o JRE com `jlink`, copia os recursos para `frontend/src-tauri/resources/` e roda `npm run build`. Os instaladores saem em `frontend/src-tauri/target/release/bundle/{msi,nsis}/`. O app inicia e encerra o backend automaticamente em `127.0.0.1:8080`.
+
 ## Funcionalidades principais
 
 - Reprodução de arquivos MP3 (play, pausa, stop, seek)

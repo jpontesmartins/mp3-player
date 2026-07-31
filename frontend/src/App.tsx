@@ -73,7 +73,7 @@ export default function App() {
   modeRef.current = playbackMode;
   const intentionalStopRef = useRef(false);
 
-  const handleLoadPlaylist = useCallback(async (folder: string) => {
+  const handleLoadPlaylist = useCallback(async (folder: string): Promise<boolean> => {
     intentionalStopRef.current = true;
     try {
       const res = await fetch(`${API}/playlist?path=${encodeURIComponent(folder)}`);
@@ -97,15 +97,29 @@ export default function App() {
             setId3Cache(new Map(Object.entries(tagsMap)));
           }
         }
+        return true;
       }
-    } catch (_) { /* ignore */ }
+      return false;
+    } catch (_) {
+      return false;
+    }
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      handleLoadPlaylist(saved);
-    }
+    if (!saved) return;
+    let attempts = 0;
+    const attempt = () => {
+      handleLoadPlaylist(saved).then(ok => {
+        if (!cancelled && !ok && attempts < 15) {
+          attempts++;
+          setTimeout(attempt, 1000);
+        }
+      });
+    };
+    attempt();
+    return () => { cancelled = true; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {

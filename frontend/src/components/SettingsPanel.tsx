@@ -7,7 +7,7 @@ interface Props {
   showCover: boolean;
   onPlaybackModeChange: (mode: PlaybackMode) => void;
   onShowCoverChange: (show: boolean) => void;
-  onLoadPlaylist: (path: string) => Promise<void>;
+  onLoadPlaylist: (path: string) => Promise<boolean>;
 }
 
 export default function SettingsPanel({ playbackMode, showCover, onPlaybackModeChange, onShowCoverChange, onLoadPlaylist }: Props) {

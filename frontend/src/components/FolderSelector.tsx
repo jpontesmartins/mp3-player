@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 interface Props {
-  onLoad: (path: string) => Promise<void>;
+  onLoad: (path: string) => Promise<boolean>;
 }
 
 export default function FolderSelector({ onLoad }: Props) {
