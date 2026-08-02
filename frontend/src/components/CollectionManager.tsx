@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import type { Id3Tags } from '../App';
+import PlaylistManager from './PlaylistManager';
 
 const API = 'http://localhost:8080';
 
@@ -16,9 +17,12 @@ const FIELD_LABELS: Record<EditableField, string> = {
 };
 
 interface Props {
-  files: string[];
+  libraryFiles: string[];
   id3Cache: Map<string, Id3Tags>;
   onTagsUpdated: (file: string, tags: Id3Tags) => void;
+  playlists: string[];
+  onRefreshPlaylists: () => Promise<void>;
+  onLoadPlaylist: (name: string) => Promise<boolean>;
 }
 
 interface Album {
@@ -78,15 +82,16 @@ function isDirty(row: Record<EditableField, string>, tags: Id3Tags | undefined):
   return EDITABLE_FIELDS.some(k => row[k] !== (tags?.[k] ?? ''));
 }
 
-export default function CollectionManager({ files, id3Cache, onTagsUpdated }: Props) {
+export default function CollectionManager({ libraryFiles, id3Cache, onTagsUpdated, playlists, onRefreshPlaylists, onLoadPlaylist }: Props) {
   const [selected, setSelected] = useState<Selection | null>(null);
   const [edits, setEdits] = useState<Edits>(new Map());
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [playlistView, setPlaylistView] = useState(false);
 
   const albums = useMemo<Album[]>(() => {
     const map = new Map<string, { folder: string; files: string[]; albumNames: string[] }>();
-    for (const f of files) {
+    for (const f of libraryFiles) {
       const folder = parentDir(f);
       const entry = map.get(folder) ?? { folder, files: [], albumNames: [] };
       entry.files.push(f);
@@ -106,24 +111,24 @@ export default function CollectionManager({ files, id3Cache, onTagsUpdated }: Pr
         return { folder: entry.folder, name: best ?? folderName(entry.folder), files: entry.files };
       })
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [files, id3Cache]);
+  }, [libraryFiles, id3Cache]);
 
   const artists = useMemo<Array<{ name: string; count: number }>>(() => {
     const counts = new Map<string, number>();
-    for (const f of files) {
+    for (const f of libraryFiles) {
       const artist = id3Cache.get(f)?.artist?.trim();
       if (artist) counts.set(artist, (counts.get(artist) ?? 0) + 1);
     }
     return Array.from(counts.entries())
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [files, id3Cache]);
+  }, [libraryFiles, id3Cache]);
 
   const gridFiles = useMemo<string[]>(() => {
     if (!selected) return [];
     if (selected.type === 'album') return selected.files ?? [];
-    return files.filter(f => (id3Cache.get(f)?.artist?.trim() ?? '') === selected.key);
-  }, [selected, files, id3Cache]);
+    return libraryFiles.filter(f => (id3Cache.get(f)?.artist?.trim() ?? '') === selected.key);
+  }, [selected, libraryFiles, id3Cache]);
 
   useEffect(() => {
     const next = new Map<string, Record<EditableField, string>>();
@@ -189,6 +194,21 @@ export default function CollectionManager({ files, id3Cache, onTagsUpdated }: Pr
     <section id="collection-panel">
       <h2 className="settings-title">Coleção</h2>
 
+      {playlistView ? (
+        <>
+          <div className="collection-backrow">
+            <button className="pmanager-btn" onClick={() => setPlaylistView(false)}>← Voltar</button>
+          </div>
+          <PlaylistManager
+            playlists={playlists}
+            collectionFiles={libraryFiles}
+            id3Cache={id3Cache}
+            onRefreshPlaylists={onRefreshPlaylists}
+            onLoadPlaylist={onLoadPlaylist}
+          />
+        </>
+      ) : (
+      <>
       <div className="collection-lists">
         <div className="collection-list">
           <h3 className="collection-list-title">Álbuns ({albums.length})</h3>
@@ -222,6 +242,24 @@ export default function CollectionManager({ files, id3Cache, onTagsUpdated }: Pr
             ))}
             {artists.length === 0 && <li className="collection-empty">Nenhum artista</li>}
           </ul>
+        </div>
+
+        <div className="collection-list">
+          <h3 className="collection-list-title">Playlists ({playlists.length})</h3>
+          <ul className="collection-items">
+            {playlists.map(name => (
+              <li key={name} onClick={() => { setPlaylistView(true); }}>
+                <span className="collection-item-name">{name}</span>
+              </li>
+            ))}
+            {playlists.length === 0 && <li className="collection-empty">Nenhuma playlist</li>}
+          </ul>
+          <button
+            className="pmanager-btn primary collection-newplaylist-btn"
+            onClick={() => setPlaylistView(true)}
+          >
+            Gerenciar playlists
+          </button>
         </div>
       </div>
 
@@ -277,6 +315,8 @@ export default function CollectionManager({ files, id3Cache, onTagsUpdated }: Pr
             </table>
           </div>
         </div>
+      )}
+      </>
       )}
     </section>
   );

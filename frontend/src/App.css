@@ -758,3 +758,169 @@ table.collection-grid tr.dirty td {
 #info-close-btn:hover:not(:disabled) {
   background: #333;
 }
+
+/* -------- Playlist Manager -------- */
+.collection-backrow {
+  display: flex;
+  margin-bottom: 10px;
+}
+
+.collection-newplaylist-btn {
+  margin-top: 8px;
+  flex-shrink: 0;
+}
+
+.pmanager {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.pmanager-newrow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.pmanager-newinput {
+  flex: 1;
+  background: #111;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  color: #eee;
+  padding: 8px 10px;
+  font-size: 0.9rem;
+}
+
+.pmanager-btn {
+  background: #222;
+  color: #ddd;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.pmanager-btn:hover:not(:disabled) {
+  background: #333;
+}
+
+.pmanager-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.pmanager-btn.primary {
+  background: #222;
+  border-color: #333;
+  color: #eee;
+}
+
+.pmanager-btn.primary:hover:not(:disabled) {
+  background: #333;
+}
+
+.pmanager-btn.danger:hover:not(:disabled) {
+  background: #7a2222;
+}
+
+.pmanager-msg {
+  color: #7cd67c;
+  font-size: 0.82rem;
+  margin-bottom: 10px;
+}
+
+.pmanager-item {
+  cursor: pointer;
+}
+
+.pmanager-item-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.pmanager-editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.pmanager-editor-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.pmanager-editor-title {
+  font-size: 1rem;
+  color: #eee;
+  margin-bottom: 12px;
+}
+
+.pmanager-nameinput {
+  flex: 1;
+  background: #111;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  color: #eee;
+  padding: 8px 10px;
+  font-size: 0.9rem;
+}
+
+.pmanager-error {
+  color: #e07b7b;
+  font-size: 0.82rem;
+  margin-bottom: 10px;
+}
+
+.pmanager-editor-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.pmanager-panes {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+
+.pmanager-pane {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: #111;
+  border: 1px solid #1a1a1a;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.pmanager-pane-title {
+  font-size: 0.82rem;
+  color: #999;
+  font-weight: 600;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.pmanager-songs {
+  list-style: none;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.pmanager-song {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 4px;
+  border-bottom: 1px solid #1c1c1c;
+  font-size: 0.85rem;
+}

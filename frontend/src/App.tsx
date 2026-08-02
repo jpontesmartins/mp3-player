@@ -55,6 +55,8 @@ function getPrevFile(current: string | null, files: string[], mode: PlaybackMode
 
 export default function App() {
   const [playlistFiles, setPlaylistFiles] = useState<string[]>([]);
+  const [libraryFiles, setLibraryFiles] = useState<string[]>([]);
+  const [playlists, setPlaylists] = useState<string[]>([]);
   const [currentFile, setCurrentFile] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>('stopped');
   const [position, setPosition] = useState(0);
@@ -80,6 +82,7 @@ export default function App() {
       if (res.ok) {
         const files: string[] = await res.json();
         setPlaylistFiles(files);
+        setLibraryFiles(files);
         setCurrentFile(null);
         setStatus('stopped');
         setPosition(0);
@@ -104,6 +107,53 @@ export default function App() {
       return false;
     }
   }, []);
+
+  const ensureId3For = useCallback(async (files: string[]) => {
+    const missing = files.filter(f => !id3Cache.has(f));
+    if (missing.length === 0) return;
+    const id3Res = await fetch(`${API}/id3/bulk`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(missing),
+    });
+    if (id3Res.ok) {
+      const tagsMap: Record<string, Id3Tags> = await id3Res.json();
+      setId3Cache(prev => {
+        const next = new Map(prev);
+        for (const [k, v] of Object.entries(tagsMap)) next.set(k, v);
+        return next;
+      });
+    }
+  }, [id3Cache]);
+
+  const loadVirtualPlaylist = useCallback(async (name: string): Promise<boolean> => {
+    intentionalStopRef.current = true;
+    try {
+      const res = await fetch(`${API}/playlist/${encodeURIComponent(name)}`);
+      if (!res.ok) return false;
+      const files: string[] = await res.json();
+      setPlaylistFiles(files);
+      setCurrentFile(null);
+      setStatus('stopped');
+      setPosition(0);
+      setDuration(0);
+      await ensureId3For([...new Set([...libraryFiles, ...files])]);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }, [libraryFiles, ensureId3For]);
+
+  const refreshPlaylists = useCallback(async () => {
+    try {
+      const res = await fetch(`${API}/playlists`);
+      if (res.ok) setPlaylists(await res.json());
+    } catch (_) { /* ignore */ }
+  }, []);
+
+  useEffect(() => {
+    refreshPlaylists();
+  }, [refreshPlaylists]);
 
   useEffect(() => {
     let cancelled = false;
@@ -308,9 +358,12 @@ export default function App() {
           />
         ) : (
           <CollectionManager
-            files={playlistFiles}
+            libraryFiles={libraryFiles}
             id3Cache={id3Cache}
             onTagsUpdated={handleTagsUpdated}
+            playlists={playlists}
+            onRefreshPlaylists={refreshPlaylists}
+            onLoadPlaylist={loadVirtualPlaylist}
           />
         )}
         <div id="right-panel">
