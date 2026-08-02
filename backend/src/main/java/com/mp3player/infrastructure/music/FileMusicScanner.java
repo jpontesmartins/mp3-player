@@ -1,6 +1,8 @@
-package com.mp3player.service;
+package com.mp3player.infrastructure.music;
 
-import org.springframework.stereotype.Service;
+import com.mp3player.domain.model.Music;
+import com.mp3player.domain.port.MusicScanner;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -9,10 +11,11 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Stream;
 
-@Service
-public class PlaylistService {
+@Component
+public class FileMusicScanner implements MusicScanner {
 
-    public List<String> scanFolder(String folderPath) throws IOException {
+    @Override
+    public List<Music> scanFolder(String folderPath) throws IOException {
         Path start = Paths.get(folderPath);
         if (!Files.exists(start) || !Files.isDirectory(start)) {
             throw new IOException("Directory not found: " + folderPath);
@@ -22,7 +25,7 @@ public class PlaylistService {
                     .filter(Files::isRegularFile)
                     .filter(p -> p.toString().toLowerCase().endsWith(".mp3"))
                     .map(Path::toAbsolutePath)
-                    .map(Path::toString)
+                    .map(p -> new Music(p.toString(), Music.Metadata.empty()))
                     .toList();
         }
     }

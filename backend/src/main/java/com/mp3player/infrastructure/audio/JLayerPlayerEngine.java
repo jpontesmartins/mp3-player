@@ -1,33 +1,28 @@
-package com.mp3player.service;
+package com.mp3player.infrastructure.audio;
 
-import com.mpatric.mp3agic.ID3v1Genres;
-import com.mpatric.mp3agic.ID3v2;
-import com.mpatric.mp3agic.ID3v24Tag;
-import com.mpatric.mp3agic.Mp3File;
+import com.mp3player.domain.port.Id3Codec;
+import com.mp3player.domain.port.PlayerEngine;
 import javazoom.jl.decoder.Bitstream;
 import javazoom.jl.decoder.Header;
-import javazoom.jl.decoder.JavaLayerException;
 import javazoom.jl.player.Player;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.LinkedHashMap;
+import java.io.IOException;
 import java.util.Map;
 
-@Service
-public class Mp3PlayService {
+@Component
+public class JLayerPlayerEngine implements PlayerEngine {
 
-    private static final Logger log = LoggerFactory.getLogger(Mp3PlayService.class);
+    private static final Logger log = LoggerFactory.getLogger(JLayerPlayerEngine.class);
 
     private static final int FRAMES_PER_CHUNK = 1;
     private static final int SAMPLES_PER_FRAME = 1152;
+
+    private final Id3Codec id3Codec;
 
     private volatile Player player;
     private volatile String currentFilePath;
@@ -40,11 +35,17 @@ public class Mp3PlayService {
     private volatile long pauseStartNanos;
     private volatile long totalPausedNanos;
 
-    public void play(String filePath) throws FileNotFoundException {
+    public JLayerPlayerEngine(Id3Codec id3Codec) {
+        this.id3Codec = id3Codec;
+    }
+
+    @Override
+    public void play(String filePath) throws IOException {
         play(filePath, 0);
     }
 
-    private void play(String filePath, long startPositionMillis) throws FileNotFoundException {
+    @Override
+    public void play(String filePath, long startPositionMillis) throws IOException {
         stopCurrent();
 
         analyzeFile(filePath);
@@ -57,7 +58,7 @@ public class Mp3PlayService {
             startFrame = (int) (startPositionMillis * sampleRate / (SAMPLES_PER_FRAME * 1000L));
             startFrame = Math.min(startFrame, totalFrames - 1);
             if (startFrame > 0) {
-                log.info("▶ Seeking to frame {} (~{}ms)", startFrame, startPositionMillis);
+                log.info("Seeking to frame {} (~{}ms)", startFrame, startPositionMillis);
                 try {
                     Bitstream bitstream = new Bitstream(fis);
                     for (int i = 0; i < startFrame; i++) {
@@ -79,11 +80,11 @@ public class Mp3PlayService {
         Player newPlayer;
         try {
             newPlayer = new Player(fis);
-        } catch (JavaLayerException e) {
+        } catch (javazoom.jl.decoder.JavaLayerException e) {
             throw new RuntimeException("Error creating player", e);
         }
 
-        log.info("▶ Playing: {} (start: {}ms)", filePath, startPositionMillis);
+        log.info("Playing: {} (start: {}ms)", filePath, startPositionMillis);
         this.currentFilePath = filePath;
         this.player = newPlayer;
         this.paused = false;
@@ -106,7 +107,8 @@ public class Mp3PlayService {
                         }
                     }
                 }
-            } catch (JavaLayerException e) {
+            } catch (javazoom.jl.decoder.JavaLayerException e) {
+                log.warn("Playback error", e);
             } finally {
                 newPlayer.close();
                 if (this.player == newPlayer) {
@@ -116,13 +118,13 @@ public class Mp3PlayService {
         });
     }
 
+    @Override
     public void seekTo(long positionMillis) {
         if (currentFilePath == null) return;
-        log.info("⏩ Seek to {}ms", positionMillis);
-        String path = currentFilePath;
+        log.info("Seek to {}ms", positionMillis);
         try {
-            play(path, positionMillis);
-        } catch (FileNotFoundException e) {
+            play(currentFilePath, positionMillis);
+        } catch (Exception e) {
             log.error("File not found on seek", e);
         }
     }
@@ -143,21 +145,22 @@ public class Mp3PlayService {
             }
             bitstream.close();
             totalFrames = count;
-            log.info("▶ Analyzed: {} frames, {} Hz, ~{}ms", totalFrames, sampleRate, getTotalMillis());
         } catch (Exception e) {
             log.error("Failed to analyze file: {}", filePath, e);
             totalFrames = -1;
         }
     }
 
+    @Override
     public void pause() {
-        log.info("⏸ Pause");
+        log.info("Pause");
         this.paused = true;
         this.pauseStartNanos = System.nanoTime();
     }
 
+    @Override
     public void resume() {
-        log.info("▶ Resume");
+        log.info("Resume");
         if (pauseStartNanos != 0) {
             totalPausedNanos += System.nanoTime() - pauseStartNanos;
             pauseStartNanos = 0;
@@ -165,108 +168,47 @@ public class Mp3PlayService {
         this.paused = false;
     }
 
+    @Override
     public String getCurrentFilePath() {
         return currentFilePath;
     }
 
+    @Override
     public boolean isPlaying() {
         return playing;
     }
 
+    @Override
     public boolean isPaused() {
         return paused;
     }
 
+    @Override
     public long getElapsedMillis() {
         if (playStartNanos == 0) return 0;
         long now = pauseStartNanos != 0 ? pauseStartNanos : System.nanoTime();
         return (now - playStartNanos - totalPausedNanos) / 1_000_000;
     }
 
+    @Override
     public long getTotalMillis() {
         if (totalFrames <= 0 || sampleRate <= 0) return 0;
         return (long) totalFrames * SAMPLES_PER_FRAME * 1000 / sampleRate;
     }
 
+    @Override
     public Map<String, String> getId3Tags() {
         return id3Tags;
     }
 
-    public Map<String, String> getId3TagsForFile(String filePath) {
-        Map<String, String> tags = new LinkedHashMap<>();
-        try {
-            Mp3File mp3file = new Mp3File(filePath);
-            if (mp3file.hasId3v2Tag()) {
-                ID3v2 id3 = mp3file.getId3v2Tag();
-                putIfNotEmpty(tags, "title", id3.getTitle());
-                putIfNotEmpty(tags, "artist", id3.getArtist());
-                putIfNotEmpty(tags, "album", id3.getAlbum());
-                putIfNotEmpty(tags, "year", id3.getYear());
-                putIfNotEmpty(tags, "genre", id3.getGenreDescription());
-                putIfNotEmpty(tags, "track", id3.getTrack());
-            }
-            if (tags.isEmpty() && mp3file.hasId3v1Tag()) {
-                var id3 = mp3file.getId3v1Tag();
-                putIfNotEmpty(tags, "title", id3.getTitle());
-                putIfNotEmpty(tags, "artist", id3.getArtist());
-                putIfNotEmpty(tags, "album", id3.getAlbum());
-                putIfNotEmpty(tags, "year", id3.getYear());
-                putIfNotEmpty(tags, "genre", id3.getGenreDescription());
-                putIfNotEmpty(tags, "track", id3.getTrack());
-            }
-            long durationMs = mp3file.getLengthInMilliseconds();
-            if (durationMs > 0) {
-                tags.put("duration_ms", String.valueOf(durationMs));
-            }
-        } catch (Exception e) {
-            tags.put("error", "Could not read ID3 tags");
-        }
-        if (tags.isEmpty()) {
-            tags.put("title", filePath.substring(filePath.lastIndexOf('\\') + 1));
-        }
-        return tags;
-    }
-
-    public Map<String, String> updateId3Tags(String filePath, Map<String, String> updates) throws Exception {
-        Mp3File mp3file = new Mp3File(filePath);
-        ID3v24Tag tag = new ID3v24Tag();
-        tag.setTitle(updates.get("title"));
-        tag.setArtist(updates.get("artist"));
-        tag.setAlbum(updates.get("album"));
-        tag.setYear(updates.get("year"));
-        String genre = updates.get("genre");
-        if (genre != null && !genre.trim().isEmpty()) {
-            int genreId = ID3v1Genres.matchGenreDescription(genre.trim());
-            if (genreId >= 0) {
-                tag.setGenre(genreId);
-            } else {
-                tag.setGenreDescription(genre.trim());
-            }
-        }
-        tag.setTrack(updates.get("track"));
-        mp3file.setId3v2Tag(tag);
-        mp3file.removeId3v1Tag();
-
-        Path tmp = Paths.get(filePath + ".mp3tmp");
-        mp3file.save(tmp.toString());
-        Files.move(tmp, Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
-        log.info("✏️ ID3 updated: {}", filePath);
-        return getId3TagsForFile(filePath);
-    }
-
     private void readId3Tags(String filePath) {
-        this.id3Tags = getId3TagsForFile(filePath);
+        this.id3Tags = id3Codec.read(filePath).toTagMap();
         log.info("ID3 Tags: {}", id3Tags);
     }
 
-    private static void putIfNotEmpty(Map<String, String> map, String key, String value) {
-        if (value != null && !value.trim().isEmpty()) {
-            map.put(key, value.trim());
-        }
-    }
-
+    @Override
     public void stop() {
-        log.info("⏹ Stop");
+        log.info("Stop");
         stopCurrent();
     }
 

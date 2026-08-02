@@ -1,52 +1,59 @@
 package com.mp3player.controller;
 
-import com.mp3player.service.LyricsService;
-import com.mp3player.service.Mp3PlayService;
-import com.mp3player.service.PlaylistService;
-import com.mp3player.service.VirtualPlaylistService;
+import com.mp3player.application.lyrics.LyricsAppService;
+import com.mp3player.application.metadata.Id3AppService;
+import com.mp3player.application.player.PlayerService;
+import com.mp3player.application.playlist.PlaylistAppService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.DeleteMapping;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-
+/**
+ * HTTP adapter. Only translates web requests into application service calls and
+ * formats responses; all business logic lives in the application layer.
+ */
 @RestController
 public class PlayController {
 
     private static final Logger log = LoggerFactory.getLogger(PlayController.class);
 
-    private final Mp3PlayService mp3PlayService;
-    private final PlaylistService playlistService;
-    private final VirtualPlaylistService virtualPlaylistService;
-    private final LyricsService lyricsService;
+    private final PlayerService playerService;
+    private final PlaylistAppService playlistService;
+    private final LyricsAppService lyricsService;
+    private final Id3AppService id3Service;
 
-    public PlayController(Mp3PlayService mp3PlayService, PlaylistService playlistService,
-                          VirtualPlaylistService virtualPlaylistService, LyricsService lyricsService) {
-        this.mp3PlayService = mp3PlayService;
+    public PlayController(PlayerService playerService, PlaylistAppService playlistService,
+                          LyricsAppService lyricsService, Id3AppService id3Service) {
+        this.playerService = playerService;
         this.playlistService = playlistService;
-        this.virtualPlaylistService = virtualPlaylistService;
         this.lyricsService = lyricsService;
+        this.id3Service = id3Service;
     }
+
+    // ---------- player ----------
 
     @PostMapping("/play")
     public ResponseEntity<String> play(@RequestBody String filePath) {
         log.info("▶ Play: {}", filePath);
         try {
-            mp3PlayService.play(filePath);
+            playerService.play(filePath);
             return ResponseEntity.ok("Playing: " + filePath);
         } catch (Exception e) {
             log.error("▶ Play failed: {}", e.getMessage());
@@ -56,18 +63,18 @@ public class PlayController {
 
     @PostMapping("/pause")
     public ResponseEntity<String> pause() {
-        if (!mp3PlayService.isPlaying()) {
-            log.warn("⏸ Pause ignored — no music playing");
-            return ResponseEntity.badRequest().body("No music playing");
+        String result = playerService.pause();
+        if ("Paused".equals(result)) {
+            log.info("⏸ Paused");
+            return ResponseEntity.ok(result);
         }
-        mp3PlayService.pause();
-        log.info("⏸ Paused");
-        return ResponseEntity.ok("Paused");
+        log.warn("⏸ Pause ignored: {}", result);
+        return ResponseEntity.badRequest().body(result);
     }
 
     @PostMapping("/stop")
     public ResponseEntity<String> stop() {
-        mp3PlayService.stop();
+        playerService.stop();
         log.info("⏹ Stopped");
         return ResponseEntity.ok("Stopped");
     }
@@ -76,28 +83,33 @@ public class PlayController {
     public ResponseEntity<String> seek(@RequestBody Map<String, Long> body) {
         Long position = body.get("position");
         if (position == null) {
-            log.warn("⏩ Seek ignored — missing position");
             return ResponseEntity.badRequest().body("Missing position");
         }
-        mp3PlayService.seekTo(position);
-        log.info("⏩ Seek to {}ms", position);
-        return ResponseEntity.ok("Seeked to " + position);
+        String result = playerService.seekTo(position);
+        if (result.startsWith("Seeked")) {
+            log.info("⏩ Seek to {}ms", position);
+            return ResponseEntity.ok(result);
+        }
+        return ResponseEntity.badRequest().body(result);
     }
 
     @PostMapping("/resume")
     public ResponseEntity<String> resume() {
-        if (!mp3PlayService.isPlaying()) {
-            log.warn("▶ Resume ignored — no music playing");
-            return ResponseEntity.badRequest().body("No music playing");
+        String result = playerService.resume();
+        if ("Resumed".equals(result)) {
+            log.info("▶ Resumed");
+            return ResponseEntity.ok(result);
         }
-        if (!mp3PlayService.isPaused()) {
-            log.warn("▶ Resume ignored — music is not paused");
-            return ResponseEntity.badRequest().body("Music is not paused");
-        }
-        mp3PlayService.resume();
-        log.info("▶ Resumed");
-        return ResponseEntity.ok("Resumed");
+        log.warn("▶ Resume ignored: {}", result);
+        return ResponseEntity.badRequest().body(result);
     }
+
+    @GetMapping("/playing")
+    public ResponseEntity<Map<String, Object>> playing() {
+        return ResponseEntity.ok(playerService.status());
+    }
+
+    // ---------- playlist ----------
 
     @GetMapping("/playlist")
     public ResponseEntity<?> getPlaylist(@RequestParam String path) {
@@ -115,20 +127,17 @@ public class PlayController {
     @GetMapping("/playlists")
     public ResponseEntity<?> listPlaylists() {
         try {
-            return ResponseEntity.ok(virtualPlaylistService.list());
+            return ResponseEntity.ok(playlistService.list());
         } catch (Exception e) {
-            log.error("📚 List playlists failed: {}", e.getMessage());
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }
 
     @GetMapping("/playlist/{name}")
     public ResponseEntity<?> getVirtualPlaylist(@PathVariable String name) {
-        log.info("📚 Playlist: {}", name);
         try {
-            return ResponseEntity.ok(virtualPlaylistService.load(name));
+            return ResponseEntity.ok(playlistService.load(name));
         } catch (Exception e) {
-            log.error("📚 Playlist load failed: {}", e.getMessage());
             return ResponseEntity.notFound().build();
         }
     }
@@ -137,27 +146,23 @@ public class PlayController {
 
     @PostMapping("/playlist")
     public ResponseEntity<?> saveVirtualPlaylist(@RequestBody PlaylistSaveRequest request) {
-        if (request.name() == null || request.name().trim().isEmpty()) {
+        if (request.name() == null || request.name().isBlank()) {
             return ResponseEntity.badRequest().body("Missing playlist name");
         }
-        log.info("📚 Save playlist: {} ({} songs)", request.name(), request.paths().size());
         try {
-            virtualPlaylistService.save(request.name(), request.paths());
+            playlistService.createOrUpdate(request.name(), request.paths() == null ? List.of() : request.paths());
             return ResponseEntity.ok("Saved");
         } catch (Exception e) {
-            log.error("📚 Save playlist failed: {}", e.getMessage());
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }
 
     @DeleteMapping("/playlist/{name}")
     public ResponseEntity<?> deleteVirtualPlaylist(@PathVariable String name) {
-        log.info("📚 Delete playlist: {}", name);
         try {
-            virtualPlaylistService.delete(name);
+            playlistService.delete(name);
             return ResponseEntity.ok("Deleted");
         } catch (Exception e) {
-            log.error("📚 Delete playlist failed: {}", e.getMessage());
             return ResponseEntity.notFound().build();
         }
     }
@@ -166,127 +171,90 @@ public class PlayController {
 
     @PostMapping("/playlist/rename")
     public ResponseEntity<?> renameVirtualPlaylist(@RequestBody PlaylistRenameRequest request) {
-        log.info("📚 Rename playlist: {} -> {}", request.oldName(), request.newName());
         try {
-            virtualPlaylistService.rename(request.oldName(), request.newName());
+            playlistService.rename(request.oldName(), request.newName());
             return ResponseEntity.ok("Renamed");
         } catch (Exception e) {
-            log.error("📚 Rename playlist failed: {}", e.getMessage());
             return ResponseEntity.notFound().build();
         }
     }
 
-    @GetMapping("/cover")
-    public ResponseEntity<Resource> getCover(@RequestParam String path) {
-        java.nio.file.Path parent = java.nio.file.Paths.get(path).getParent();
-        if (parent == null) {
-            log.warn("🖼 Cover: no parent directory for {}", path);
-            return ResponseEntity.notFound().build();
-        }
-        String[] coverNames = { "cover", "folder", "album", "front", "art", "artwork" };
-        String[] extensions = { "jpg", "jpeg", "png" };
-        try (var files = java.nio.file.Files.list(parent)) {
-            var coverFile = files
-                .filter(f -> {
-                    if (!java.nio.file.Files.isRegularFile(f)) return false;
-                    String name = f.getFileName().toString().toLowerCase();
-                    int dot = name.lastIndexOf('.');
-                    if (dot < 0) return false;
-                    String stem = name.substring(0, dot);
-                    String ext = name.substring(dot + 1);
-                    if (!java.util.Arrays.asList(extensions).contains(ext)) return false;
-                    return java.util.Arrays.asList(coverNames).contains(stem);
-                })
-                .findFirst();
-            if (coverFile.isPresent()) {
-                var file = coverFile.get();
-                log.info("🖼 Cover found: {}", file.getFileName());
-                var resource = new InputStreamResource(java.nio.file.Files.newInputStream(file));
-                String name = file.getFileName().toString().toLowerCase();
-                String contentType = name.endsWith("png") ? "image/png" : "image/jpeg";
-                return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType)).body(resource);
-            }
-            log.info("🖼 Cover not found in {}", parent);
-        } catch (Exception e) {
-            log.error("🖼 Cover error: {}", e.getMessage());
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.notFound().build();
-    }
-
-    @GetMapping("/lyrics/cached")
-    public ResponseEntity<String> getCachedLyrics(@RequestParam String path) {
-        try {
-            String lyrics = lyricsService.getCachedLyrics(path);
-            if (lyrics != null) {
-                log.info("📜 Cached lyrics found");
-                return ResponseEntity.ok(lyrics);
-            }
-            log.info("📜 No cached lyrics");
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            log.error("📜 Cached lyrics error: {}", e.getMessage());
-            return ResponseEntity.badRequest().body("Erro: " + e.getMessage());
-        }
-    }
-
-    @GetMapping("/lyrics")
-    public ResponseEntity<String> getLyrics(@RequestParam String path) {
-        log.info("📜 Fetching lyrics");
-        try {
-            String lyrics = lyricsService.getLyrics(path);
-            return ResponseEntity.ok(lyrics);
-        } catch (Exception e) {
-            log.error("📜 Lyrics fetch failed: {}", e.getMessage());
-            return ResponseEntity.badRequest().body("Erro ao buscar letra: " + e.getMessage());
-        }
-    }
+    // ---------- ID3 ----------
 
     public record Id3UpdateRequest(String path, Map<String, String> tags) {}
 
     @GetMapping("/id3")
     public ResponseEntity<Map<String, String>> getId3(@RequestParam String path) {
-        log.info("🏷 ID3: {}", path);
-        return ResponseEntity.ok(mp3PlayService.getId3TagsForFile(path));
+        return ResponseEntity.ok(id3Service.getForFile(path));
     }
 
     @PostMapping("/id3/update")
     public ResponseEntity<?> updateId3(@RequestBody Id3UpdateRequest request) {
-        log.info("✏️ ID3 update: {}", request.path());
         try {
-            Map<String, String> updated = mp3PlayService.updateId3Tags(request.path(), request.tags());
-            log.info("✏️ ID3 update done: {}", updated);
-            return ResponseEntity.ok(updated);
+            return ResponseEntity.ok(id3Service.update(request.path(), request.tags()));
         } catch (Exception e) {
-            log.error("✏️ ID3 update failed: {}", e.getMessage());
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }
 
     @PostMapping("/id3/bulk")
     public ResponseEntity<Map<String, Map<String, String>>> getBulkId3(@RequestBody List<String> paths) {
-        log.info("🏷 ID3 bulk: {} files", paths.size());
-        Map<String, Map<String, String>> result = new LinkedHashMap<>();
-        for (String path : paths) {
-            result.put(path, mp3PlayService.getId3TagsForFile(path));
-        }
-        log.info("🏷 ID3 bulk done: {} files", result.size());
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(id3Service.getBulk(paths));
     }
 
-    @GetMapping("/playing")
-    public ResponseEntity<Map<String, Object>> getPlaying() {
-        String filePath = mp3PlayService.getCurrentFilePath();
-        if (filePath == null || !mp3PlayService.isPlaying()) {
-            return ResponseEntity.ok(Map.of("status", "stopped", "file", ""));
+    // ---------- lyrics ----------
+
+    @GetMapping("/lyrics/cached")
+    public ResponseEntity<String> getCachedLyrics(@RequestParam String path) {
+        String lyrics = lyricsService.getCached(path);
+        if (lyrics == null) {
+            return ResponseEntity.notFound().build();
         }
-        String status = mp3PlayService.isPaused() ? "paused" : "playing";
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", status);
-        response.put("file", filePath);
-        response.put("position", mp3PlayService.getElapsedMillis());
-        response.put("duration", mp3PlayService.getTotalMillis());
-        response.put("id3", mp3PlayService.getId3Tags());
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(lyrics);
+    }
+
+    @GetMapping("/lyrics")
+    public ResponseEntity<String> getLyrics(@RequestParam String path) {
+        try {
+            return ResponseEntity.ok(lyricsService.get(path));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao buscar letra: " + e.getMessage());
+        }
+    }
+
+    // ---------- cover file serving ----------
+
+    @GetMapping("/cover")
+    public ResponseEntity<Resource> getCover(@RequestParam String path) {
+        try {
+            Path parent = Paths.get(path).getParent();
+            if (parent == null) return ResponseEntity.notFound().build();
+            String[] coverNames = { "cover", "folder", "album", "front", "art", "artwork" };
+            String[] extensions = { "jpg", "jpeg", "png" };
+            try (var files = java.nio.file.Files.list(parent)) {
+                var coverFile = files
+                        .filter(f -> {
+                            if (!java.nio.file.Files.isRegularFile(f)) return false;
+                            String name = f.getFileName().toString().toLowerCase();
+                            int dot = name.lastIndexOf('.');
+                            if (dot < 0) return false;
+                            String stem = name.substring(0, dot);
+                            String ext = name.substring(dot + 1);
+                            if (!Arrays.asList(extensions).contains(ext)) return false;
+                            return Arrays.asList(coverNames).contains(stem);
+                        })
+                        .findFirst();
+                if (coverFile.isPresent()) {
+                    var file = coverFile.get();
+                    var resource = new InputStreamResource(java.nio.file.Files.newInputStream(file));
+                    String name = file.getFileName().toString().toLowerCase();
+                    String contentType = name.endsWith("png") ? "image/png" : "image/jpeg";
+                    return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType)).body(resource);
+                }
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

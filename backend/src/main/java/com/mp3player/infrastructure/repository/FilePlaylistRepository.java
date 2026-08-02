@@ -1,0 +1,117 @@
+package com.mp3player.infrastructure.repository;
+
+import com.mp3player.domain.model.Playlist;
+import com.mp3player.domain.repository.PlaylistRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Repository;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.stream.Stream;
+
+/**
+ * File-based implementation of {@link PlaylistRepository}. Each playlist is a
+ * TXT file under the user playlists directory, one absolute path per line.
+ */
+@Repository
+public class FilePlaylistRepository implements PlaylistRepository {
+
+    private static final Logger log = LoggerFactory.getLogger(FilePlaylistRepository.class);
+
+    private final Path baseDir;
+
+    public FilePlaylistRepository() {
+        this(Paths.get(System.getProperty("user.home"), ".mp3-player", "playlists"));
+    }
+
+    FilePlaylistRepository(Path baseDir) {
+        this.baseDir = baseDir;
+        try {
+            Files.createDirectories(baseDir);
+        } catch (IOException e) {
+            log.error("Could not create playlists dir: {}", baseDir, e);
+        }
+    }
+
+    @Override
+    public List<String> list() {
+        try (Stream<Path> stream = Files.list(baseDir)) {
+            return stream
+                    .filter(Files::isRegularFile)
+                    .filter(p -> p.toString().toLowerCase().endsWith(".txt"))
+                    .map(p -> p.getFileName().toString().replaceFirst("(?i)\\.txt$", ""))
+                    .sorted()
+                    .toList();
+        } catch (IOException e) {
+            log.error("Error listing playlists", e);
+            return List.of();
+        }
+    }
+
+    @Override
+    public List<String> load(String name) {
+        Path file = fileFor(name);
+        if (!Files.exists(file)) {
+            return List.of();
+        }
+        try {
+            return Files.readAllLines(file, StandardCharsets.UTF_8)
+                    .stream()
+                    .map(String::trim)
+                    .filter(l -> !l.isEmpty())
+                    .toList();
+        } catch (IOException e) {
+            log.error("Error loading playlist {}", name, e);
+            return List.of();
+        }
+    }
+
+    @Override
+    public void save(Playlist playlist) {
+        Path file = fileFor(playlist.getName());
+        try {
+            Files.write(file, playlist.getSongPaths(), StandardCharsets.UTF_8);
+            log.info("Playlist saved: {} ({} songs)", playlist.getName(), playlist.getSongPaths().size());
+        } catch (IOException e) {
+            throw new IllegalStateException("Error saving playlist " + playlist.getName(), e);
+        }
+    }
+
+    @Override
+    public void delete(String name) {
+        try {
+            Files.deleteIfExists(fileFor(name));
+            log.info("Playlist deleted: {}", name);
+        } catch (IOException e) {
+            throw new IllegalStateException("Error deleting playlist " + name, e);
+        }
+    }
+
+    @Override
+    public void rename(String currentName, String newName) {
+        Path from = fileFor(currentName);
+        if (!Files.exists(from)) {
+            throw new IllegalArgumentException("Playlist not found: " + currentName);
+        }
+        try {
+            Files.move(from, fileFor(newName), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            log.info("Playlist renamed: {} -> {}", currentName, newName);
+        } catch (IOException e) {
+            throw new IllegalStateException("Error renaming playlist", e);
+        }
+    }
+
+    String sanitize(String name) {
+        String cleaned = name.trim().replaceAll("[\\\\/:*?\"<>|]", "_");
+        return cleaned.isEmpty() ? "playlist" : cleaned;
+    }
+
+    private Path fileFor(String name) {
+        return baseDir.resolve(sanitize(name) + ".txt");
+    }
+}
