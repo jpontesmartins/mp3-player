@@ -1,0 +1,90 @@
+package com.mp3player.controller;
+
+import com.mp3player.application.player.PlayerService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
+
+/**
+ * HTTP adapter for playback control. Only translates web requests into
+ * {@link PlayerService} calls; all business logic lives in the application layer.
+ */
+@RestController
+@RequestMapping
+public class PlayerController {
+
+    private static final Logger log = LoggerFactory.getLogger(PlayerController.class);
+
+    private final PlayerService playerService;
+
+    public PlayerController(PlayerService playerService) {
+        this.playerService = playerService;
+    }
+
+    @PostMapping("/play")
+    public ResponseEntity<String> play(@RequestBody String filePath) {
+        log.info("▶ Play: {}", filePath);
+        try {
+            playerService.play(filePath);
+            return ResponseEntity.ok("Playing: " + filePath);
+        } catch (Exception e) {
+            log.error("▶ Play failed: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/pause")
+    public ResponseEntity<String> pause() {
+        String result = playerService.pause();
+        if ("Paused".equals(result)) {
+            log.info("⏸ Paused");
+            return ResponseEntity.ok(result);
+        }
+        log.warn("⏸ Pause ignored: {}", result);
+        return ResponseEntity.badRequest().body(result);
+    }
+
+    @PostMapping("/stop")
+    public ResponseEntity<String> stop() {
+        playerService.stop();
+        log.info("⏹ Stopped");
+        return ResponseEntity.ok("Stopped");
+    }
+
+    @PostMapping("/seek")
+    public ResponseEntity<String> seek(@RequestBody Map<String, Long> body) {
+        Long position = body.get("position");
+        if (position == null) {
+            return ResponseEntity.badRequest().body("Missing position");
+        }
+        String result = playerService.seekTo(position);
+        if (result.startsWith("Seeked")) {
+            log.info("⏩ Seek to {}ms", position);
+            return ResponseEntity.ok(result);
+        }
+        return ResponseEntity.badRequest().body(result);
+    }
+
+    @PostMapping("/resume")
+    public ResponseEntity<String> resume() {
+        String result = playerService.resume();
+        if ("Resumed".equals(result)) {
+            log.info("▶ Resumed");
+            return ResponseEntity.ok(result);
+        }
+        log.warn("▶ Resume ignored: {}", result);
+        return ResponseEntity.badRequest().body(result);
+    }
+
+    @GetMapping("/playing")
+    public ResponseEntity<Map<String, Object>> playing() {
+        return ResponseEntity.ok(playerService.status());
+    }
+}

@@ -3,7 +3,11 @@ package com.mp3player;
 import com.mp3player.application.lyrics.LyricsAppService;
 import com.mp3player.application.metadata.Id3AppService;
 import com.mp3player.application.playlist.PlaylistAppService;
-import com.mp3player.controller.PlayController;
+import com.mp3player.application.player.PlayerService;
+import com.mp3player.controller.LyricsController;
+import com.mp3player.controller.MetadataController;
+import com.mp3player.controller.PlayerController;
+import com.mp3player.controller.PlaylistController;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,7 +18,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 class Mp3PlayerApplicationTests {
 
     @Autowired
-    PlayController playController;
+    PlayerController playerController;
+    @Autowired
+    PlaylistController playlistController;
+    @Autowired
+    LyricsController lyricsController;
+    @Autowired
+    MetadataController metadataController;
+    @Autowired
+    PlayerService playerService;
     @Autowired
     PlaylistAppService playlistAppService;
     @Autowired
@@ -24,7 +36,11 @@ class Mp3PlayerApplicationTests {
 
     @Test
     void contextLoads() {
-        assertNotNull(playController);
+        assertNotNull(playerController);
+        assertNotNull(playlistController);
+        assertNotNull(lyricsController);
+        assertNotNull(metadataController);
+        assertNotNull(playerService);
         assertNotNull(playlistAppService);
         assertNotNull(lyricsAppService);
         assertNotNull(id3AppService);

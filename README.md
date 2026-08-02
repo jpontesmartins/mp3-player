@@ -71,7 +71,8 @@ com.mp3player
 │   ├── music/            #   FileMusicScanner (escaneia pasta)
 │   ├── lyrics/           #   JsoupLyricsScraper (letras.mus.br)
 │   └── repository/       #   FilePlaylistRepository, FileLyricRepository
-├── web/                  # adaptadores HTTP (PlayController delega para application)
+├── web/                  # adaptadores HTTP: PlayerController, PlaylistController,
+│                       #                      MetadataController (ID3 + cover), LyricsController
 └── config/               # configuração (CORS)
 ```
 

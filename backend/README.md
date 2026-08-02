@@ -36,11 +36,21 @@ com.mp3player
 │   ├── music/            #   FileMusicScanner
 │   ├── lyrics/           #   JsoupLyricsScraper
 │   └── repository/       #   FilePlaylistRepository, FileLyricRepository
-├── web/                    # PlayController (delega aos application services)
+├── web/                    # adaptadores HTTP: PlayerController, PlaylistController,
+│                           #                     MetadataController (ID3 + cover), LyricsController
 └── config/                 # CORS
 ```
 
 > O diagrama acima usa indentação para indicar o pacote-pai; por exemplo, `PlayerService` está em `application/player/`.
+
+O pacote `web/` foi dividido em **Controllers por módulo**, cada um delegando ao service correspondente:
+
+| Controller | Rotas |
+|---|---|
+| `PlayerController` | `/play`, `/pause`, `/stop`, `/seek`, `/resume`, `/playing` |
+| `PlaylistController` | `/playlist`, `/playlists`, `/playlist/{name}`, `/playlist/rename` |
+| `MetadataController` | `/id3`, `/id3/bulk`, `/id3/update`, `/cover` |
+| `LyricsController` | `/lyrics`, `/lyrics/cached` |
 
 ### Padrões aplicados
 

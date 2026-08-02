@@ -5,9 +5,9 @@ Diagramas [Mermaid](https://mermaid.js.org/) que mostram como uma requisição a
 Todos os casos de uso seguem o mesmo padrão:
 
 ```
-web (PlayController) ──> application (AppService) ──> domain ports/repositories
-                                                        │
-                                                        └──> infrastructure (adapters)
+web (Controllers) ──> application (AppService) ──> domain ports/repositories
+                                                      │
+                                                      └──> infrastructure (adapters)
 ```
 
 O controller **só traduz** HTTP ↔ chamadas de serviço. O service **orquestra** os ports. A infra **implementa** o acesso a arquivo/sistema/biblioteca. O domínio **não depende de nada**.
@@ -18,8 +18,11 @@ O controller **só traduz** HTTP ↔ chamadas de serviço. O service **orquestra
 
 ```mermaid
 flowchart TD
-    subgraph Web["web (adaptador HTTP)"]
-        C["PlayController"]
+    subgraph Web["web (adaptadores HTTP)"]
+        PC["PlayerController"]
+        PLC["PlaylistController"]
+        MC["MetadataController<br/>(ID3 + cover)"]
+        LC["LyricsController"]
     end
 
     subgraph Application["application (casos de uso)"]
@@ -44,8 +47,14 @@ flowchart TD
         LREPO["FileLyricRepository"]
     end
 
-    Request["HTTP request (frontend Tauri/React)"] --> C
-    C --> PS & PL & LY & ID
+    Request["HTTP request (frontend Tauri/React)"] --> PC
+    Request --> PLC
+    Request --> MC
+    Request --> LC
+    PC --> PS
+    PLC --> PL
+    MC --> ID
+    LC --> LY
     PS --> PORTS
     PL --> PORTS
     LY --> PORTS
@@ -87,7 +96,7 @@ flowchart LR
     end
 
     subgraph Web["web"]
-        Ctrl["PlayController"]
+        Ctrl["PlayerController / PlaylistController<br/>MetadataController / LyricsController"]
     end
 
     Ctrl -->|depende de| Svc
@@ -114,7 +123,7 @@ sequenceDiagram
     autonumber
     participant FE as Frontend (React)
     actor Msg as HTTPS 8080
-    participant C as PlayController
+    participant C as PlayerController
     participant PS as PlayerService (application)
     participant PE as PlayerEngine (port)
     participant J as JLayerPlayerEngine (infra)
@@ -138,8 +147,8 @@ O mesmo fluxo vale para `pause`, `stop`, `resume`, `seek`: o controller só repa
 sequenceDiagram
     autonumber
     participant FE as Frontend
-    participant C as PlayController
-    participant S as PlaylistService (application)
+    participant C as PlaylistController
+    participant S as PlaylistAppService (application)
     participant Scanner as MusicScanner (port)
     participant FS as FileMusicScanner (infra)
     participant R as PlaylistRepository (port)
@@ -174,7 +183,7 @@ sequenceDiagram
 sequenceDiagram
     autonumber
     participant FE as Frontend
-    participant C as PlayController
+    participant C as MetadataController
     participant S as Id3AppService (application)
     participant CO as Id3Codec (port)
     participant M as Id3MagicCodec (infra)
@@ -197,7 +206,7 @@ Leitura (`GET /id3`) e bulk (`POST /id3/bulk`) usam `read(path)` / iteração do
 sequenceDiagram
     autonumber
     participant FE as Frontend
-    participant C as PlayController
+    participant C as LyricsController
     participant S as LyricsAppService (application)
     participant R as LyricRepository (port)
     participant FR as FileLyricRepository (infra)
@@ -238,6 +247,12 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
+    subgraph WebC["web (adaptadores HTTP)"]
+        PC["PlayerController"]
+        PLC["PlaylistController"]
+        MC["MetadataController"]
+        LC["LyricsController"]
+    end
     subgraph App["application (casos de uso)"]
         PS["PlayerService"]
         PL["PlaylistService"]
@@ -260,6 +275,11 @@ flowchart LR
         FPR["FilePlaylistRepository"]
         FLR["FileLyricRepository"]
     end
+
+    PC --> PS
+    PLC --> PL
+    MC --> ID
+    LC --> LY
 
     PS --> dPE
     ID --> dIC

@@ -2,6 +2,7 @@ package com.mp3player.infrastructure.repository;
 
 import com.mp3player.domain.model.Lyric;
 import com.mp3player.domain.model.Music;
+import com.mp3player.domain.port.Id3Codec;
 import com.mp3player.domain.repository.LyricRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,12 +17,19 @@ import java.util.Optional;
 
 /**
  * File-based implementation of {@link LyricRepository}. Lyrics are stored as a
- * TXT file next to the song, named after its artist/title.
+ * TXT file in the song's album (parent) folder, named "{artist} - {title}.txt"
+ * using the ID3 tags, falling back to the filename when tags are missing.
  */
 @Repository
 public class FileLyricRepository implements LyricRepository {
 
     private static final Logger log = LoggerFactory.getLogger(FileLyricRepository.class);
+
+    private final Id3Codec id3Codec;
+
+    public FileLyricRepository(Id3Codec id3Codec) {
+        this.id3Codec = id3Codec;
+    }
 
     @Override
     public Optional<Lyric> find(String musicPath) {
@@ -48,36 +56,62 @@ public class FileLyricRepository implements LyricRepository {
         Path file = resolveTxtFile(lyric.getMusicPath());
         if (file == null) return;
         try {
+            Files.createDirectories(file.getParent());
             Files.writeString(file, lyric.getText(), StandardCharsets.UTF_8);
-            log.info("Lyrics saved to {}", file.getFileName());
+            log.info("Lyrics saved to {}", file.toAbsolutePath());
         } catch (IOException e) {
             log.error("Error saving lyrics for {}", lyric.getMusicPath(), e);
         }
     }
 
-    /** Resolves the lyrics TXT file for the given audio, based on its filename. */
+    /** Resolves the lyrics TXT file for the given audio, in its album folder. */
     private Path resolveTxtFile(String musicPath) {
-        String artist = extractArtist(musicPath);
-        String title = extractTitle(musicPath);
-
         Path parent = Paths.get(musicPath).getParent();
         if (parent == null) return null;
-
-        String fileName = (artist.isEmpty() ? "" : artist + " - ") + title + ".txt";
-        fileName = fileName.replaceAll("[\\\\/:*?\"<>|]", "_");
+        String fileName = resolveTxTFileName(musicPath);
         return parent.resolve(fileName);
     }
 
-    private String extractArtist(String filePath) {
-        String name = baseName(filePath);
-        int dash = name.indexOf(" - ");
-        return dash > 0 ? sanitize(name.substring(0, dash)) : "";
+    /**
+     * Nome do arquivo de letra: usa as tags ID3 (artista, título) se presentes;
+     * senão infere do nome do arquivo MP3 ("Artista - Música" ou "Música").
+     */
+    private String resolveTxTFileName(String musicPath) {
+        String id3Artist = id3Tag(musicPath, true);
+        String id3Title = id3Tag(musicPath, false);
+
+        if (!id3Artist.isBlank() && !id3Title.isBlank()) {
+            return sanitizeFileName(id3Artist + " - " + id3Title) + ".txt";
+        }
+
+        String base = baseName(musicPath);
+        int dash = base.indexOf(" - ");
+        if (dash > 0 && id3Artist.isBlank() && id3Title.isBlank()) {
+            return sanitizeFileName(base) + ".txt";
+        }
+
+        String artist = id3Artist.isBlank() ? "" : id3Artist;
+        String title = id3Title.isBlank() ? base : id3Title;
+        return fileNameFor(artist, title);
     }
 
-    private String extractTitle(String filePath) {
-        String name = baseName(filePath);
-        int dash = name.indexOf(" - ");
-        return dash > 0 ? sanitize(name.substring(dash + 3)) : sanitize(name);
+    private String id3Tag(String musicPath, boolean artist) {
+        try {
+            Music music = id3Codec.read(musicPath);
+            String value = artist ? music.getMetadata().getArtist() : music.getMetadata().getTitle();
+            return value == null ? "" : value.trim();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    private static String fileNameFor(String artist, String title) {
+        String prefix = artist == null || artist.isBlank() ? "" : artist.trim() + " - ";
+        return sanitizeFileName(prefix + (title == null ? "" : title.trim())) + ".txt";
+    }
+
+    private static String sanitizeFileName(String s) {
+        return s.replaceAll("[\\\\/:*?\"<>|]", "_").trim();
     }
 
     private String baseName(String filePath) {
@@ -86,9 +120,5 @@ public class FileLyricRepository implements LyricRepository {
             name = name.substring(0, name.length() - 4);
         }
         return name;
-    }
-
-    private static String sanitize(String s) {
-        return s == null ? "" : s.trim();
     }
 }
