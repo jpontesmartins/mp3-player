@@ -46,14 +46,57 @@ interface TooltipState {
   y: number;
 }
 
-const HOVER_DELAY_MS = 2000;
+const HOVER_DELAY_MS = 1000;
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+type ResizeType = 'artist' | 'time';
 
 export default function Playlist({ files, currentFile, id3Cache, onSelect }: Props) {
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
   const [tooltipStyle, setTooltipStyle] = useState<{ left: number; top: number } | null>(null);
+  const [artistPct, setArtistPct] = useState(30);
+  const [timePx, setTimePx] = useState(62);
+  const [dragType, setDragType] = useState<ResizeType | null>(null);
   const hoverTimer = useRef<number | null>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const dragInfo = useRef<{ type: ResizeType; startX: number; startArtist: number; startTime: number } | null>(null);
 
+  useEffect(() => {
+    if (!dragType) return undefined;
+    const onMove = (e: MouseEvent) => {
+      const info = dragInfo.current;
+      if (!info || !headerRef.current) return;
+      const width = headerRef.current.clientWidth || 1;
+      const dx = e.clientX - info.startX;
+      if (info.type === 'artist') {
+        setArtistPct(clamp(info.startArtist + (dx / width) * 100, 15, 55));
+      } else {
+        setTimePx(clamp(info.startTime + dx, 40, 160));
+      }
+    };
+    const onUp = () => {
+      dragInfo.current = null;
+      setDragType(null);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, [dragType]);
+
+  const startResize = (type: ResizeType) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    dragInfo.current = { type, startX: e.clientX, startArtist: artistPct, startTime: timePx };
+    setDragType(type);
+  };
+
+  const gridStyle = { gridTemplateColumns: `${artistPct}% 1fr ${timePx}px` };
   const clearTimer = () => {
     if (hoverTimer.current !== null) {
       window.clearTimeout(hoverTimer.current);
@@ -108,22 +151,42 @@ export default function Playlist({ files, currentFile, id3Cache, onSelect }: Pro
 
   return (
     <section id="playlist-section">
+      <div id="playlist-header" ref={headerRef} style={gridStyle}>
+        <span className="pl-header-artist">Artista</span>
+        <span className="pl-header-title">Música</span>
+        <span className="pl-header-time">Tempo</span>
+        <span
+          className={`pl-resizer ${dragType === 'artist' ? 'dragging' : ''}`}
+          style={{ left: `calc(${artistPct}% - 4px)` }}
+          title="Redimensionar coluna"
+          onMouseDown={startResize('artist')}
+        />
+        <span
+          className={`pl-resizer ${dragType === 'time' ? 'dragging' : ''}`}
+          style={{ left: `calc(100% - ${timePx}px - 5px)` }}
+          title="Redimensionar coluna"
+          onMouseDown={startResize('time')}
+        />
+      </div>
       <ul id="playlist">
         {files.map((file) => {
           const tags = id3Cache.get(file);
-          const name = displayName(tags, file);
+          const artist = tags?.artist || '';
+          const title = tags?.title || fileName(file);
           const dur = tags?.duration_ms ? Number(tags.duration_ms) : 0;
           const active = file === currentFile;
           return (
             <li
               key={file}
               className={active ? 'active' : ''}
+              style={gridStyle}
               onClick={() => onSelect(file)}
               onMouseEnter={handleEnter(file)}
               onMouseLeave={handleLeave}
             >
-              <span className="pl-name">{name}</span>
-              {dur > 0 && <span className="pl-duration">{formatTime(dur)}</span>}
+              <span className="pl-artist">{artist}</span>
+              <span className="pl-title">{title}</span>
+              <span className="pl-duration">{dur > 0 ? formatTime(dur) : ''}</span>
             </li>
           );
         })}

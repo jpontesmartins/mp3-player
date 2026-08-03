@@ -3,6 +3,8 @@ package com.mp3player.controller;
 import com.mp3player.application.lyrics.LyricsAppService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -35,6 +37,21 @@ public class LyricsController {
             return ResponseEntity.ok(lyricsService.get(path));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Erro ao buscar letra: " + e.getMessage());
+        }
+    }
+
+    public record LyricsSaveRequest(String path, String text) {}
+
+    @PostMapping("/lyrics")
+    public ResponseEntity<String> saveLyrics(@RequestBody LyricsSaveRequest request) {
+        if (request.path() == null || request.text() == null) {
+            return ResponseEntity.badRequest().body("Caminho e texto são obrigatórios");
+        }
+        try {
+            lyricsService.save(request.path(), request.text());
+            return ResponseEntity.ok("Letra salva");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao salvar letra: " + e.getMessage());
         }
     }
 }

@@ -54,6 +54,11 @@ public class LyricsAppService {
         }
     }
 
+    /** Persiste o texto informado como a letra da música. */
+    public void save(String musicPath, String text) {
+        lyricRepository.save(new Lyric(musicPath, text), musicFor(musicPath));
+    }
+
     private Music musicFor(String musicPath) {
         return id3Codec.read(musicPath);
     }
