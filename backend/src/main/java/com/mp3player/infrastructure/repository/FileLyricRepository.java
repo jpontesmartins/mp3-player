@@ -16,9 +16,10 @@ import java.nio.file.Paths;
 import java.util.Optional;
 
 /**
- * File-based implementation of {@link LyricRepository}. Lyrics are stored as a
- * TXT file in the song's album (parent) folder, named "{artist} - {title}.txt"
- * using the ID3 tags, falling back to the filename when tags are missing.
+ * Implementação baseada em arquivos de {@link LyricRepository}. As letras são
+ * armazenadas como um arquivo TXT na pasta do álbum (pai) da música, nomeado
+ * "{artista} - {título}.txt" usando as tags ID3, com fallback para o nome do
+ * arquivo quando as tags estão ausentes.
  */
 @Repository
 public class FileLyricRepository implements LyricRepository {
@@ -64,7 +65,7 @@ public class FileLyricRepository implements LyricRepository {
         }
     }
 
-    /** Resolves the lyrics TXT file for the given audio, in its album folder. */
+    /** Resolve o arquivo TXT de letra para o áudio informado, na pasta do álbum. */
     private Path resolveTxtFile(String musicPath) {
         Path parent = Paths.get(musicPath).getParent();
         if (parent == null) return null;

@@ -9,7 +9,7 @@ import InfoModal from './components/InfoModal';
 import type { PlaybackMode } from './components/SettingsPanel';
 import './App.css';
 
-const API = 'http://localhost:8080';
+const API = 'http://localhost:8111';
 const STORAGE_KEY = 'mp3_folder';
 
 export interface Id3Tags {
@@ -20,6 +20,7 @@ export interface Id3Tags {
   genre?: string;
   track?: string;
   duration_ms?: string;
+  kbps?: string;
   error?: string;
 }
 

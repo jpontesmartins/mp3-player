@@ -3,14 +3,14 @@ package com.mp3player.domain.port;
 import java.io.IOException;
 
 /**
- * Port for fetching lyrics text from a web source.
+ * Port para buscar o texto da letra em uma fonte web.
  */
 public interface LyricsScraper {
 
     /**
-     * Fetches the lyrics for the given artist/title.
+     * Busca a letra para o artista/título informados.
      *
-     * @return the lyrics text, or a human-readable "not found" message when absent.
+     * @return o texto da letra ou uma mensagem legível de "não encontrado".
      */
     String fetch(String artist, String title) throws IOException;
 }

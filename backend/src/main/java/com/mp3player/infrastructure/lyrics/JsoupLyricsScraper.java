@@ -12,8 +12,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Lyrics scraper that fetches from www.letras.mus.br using a direct URL first
- * and falling back to a search for the song page.
+ * Scraper de letras que busca em www.letras.mus.br usando URL direta primeiro
+ * e, em caso de falha, uma busca pela página da música.
  */
 @Component
 public class JsoupLyricsScraper implements LyricsScraper {

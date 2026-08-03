@@ -122,7 +122,7 @@ flowchart LR
 sequenceDiagram
     autonumber
     participant FE as Frontend (React)
-    actor Msg as HTTPS 8080
+    actor Msg as HTTPS 8111
     participant C as PlayerController
     participant PS as PlayerService (application)
     participant PE as PlayerEngine (port)

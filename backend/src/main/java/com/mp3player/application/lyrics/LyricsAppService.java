@@ -10,9 +10,8 @@ import org.springframework.stereotype.Service;
 import java.nio.file.Paths;
 
 /**
- * Application service for the lyrics module: reads cached lyrics, fetches lyrics
- * from the web via the {@link LyricsScraper} port, and persists them through the
- * {@link LyricRepository}.
+ * Service da aplicação para o módulo de letras: lê letras em cache, busca letras
+ * na web via port {@link LyricsScraper} e as persiste através do {@link LyricRepository}.
  */
 @Service
 public class LyricsAppService {
@@ -27,13 +26,13 @@ public class LyricsAppService {
         this.lyricRepository = lyricRepository;
     }
 
-    /** Returns cached lyrics for the given audio, or null if none is saved. */
+    /** Retorna a letra em cache para o áudio informado, ou {@code null} se não houver. */
     public String getCached(String musicPath) {
         if (!lyricRepository.exists(musicPath)) return null;
         return lyricRepository.find(musicPath).map(Lyric::getText).orElse(null);
     }
 
-    /** Returns cached lyrics or fetches from the web, saving the result. */
+    /** Retorna a letra em cache ou busca na web, salvando o resultado. */
     public String get(String musicPath) {
         String cached = getCached(musicPath);
         if (cached != null) return cached;

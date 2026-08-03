@@ -7,8 +7,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * HTTP adapter for the lyrics module: cached lookup and web-fetch with cache.
- * Only translates web requests into {@link LyricsAppService} calls.
+ * Adaptador HTTP para o módulo de letras: consulta em cache e busca na web com
+ * armazenamento em cache. Apenas traduz requisições web em chamadas ao
+ * {@link LyricsAppService}.
  */
 @RestController
 public class LyricsController {

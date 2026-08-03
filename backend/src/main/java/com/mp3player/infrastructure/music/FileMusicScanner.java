@@ -11,6 +11,10 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Stream;
 
+/**
+ * Implementação do port {@link MusicScanner} que percorre uma pasta recursivamente
+ * e retorna as músicas (.mp3) encontradas.
+ */
 @Component
 public class FileMusicScanner implements MusicScanner {
 

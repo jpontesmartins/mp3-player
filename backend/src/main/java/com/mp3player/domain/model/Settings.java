@@ -2,7 +2,7 @@ package com.mp3player.domain.model;
 
 import java.util.Objects;
 
-/** User preferences for the player. */
+/** Preferências do usuário para o player. */
 public final class Settings {
 
     public enum PlaybackMode { CONTINUOUS, SHUFFLE, REPEAT }
@@ -15,6 +15,7 @@ public final class Settings {
         this.showCover = showCover;
     }
 
+    /** Retorna as configurações padrão (reprodução contínua e capa visível). */
     public static Settings defaults() {
         return new Settings(PlaybackMode.CONTINUOUS, true);
     }
@@ -27,10 +28,12 @@ public final class Settings {
         return showCover;
     }
 
+    /** Retorna uma cópia com o modo de reprodução alterado. */
     public Settings withPlaybackMode(PlaybackMode mode) {
         return new Settings(mode, showCover);
     }
 
+    /** Retorna uma cópia com a preferência de exibir a capa alterada. */
     public Settings withShowCover(boolean cover) {
         return new Settings(playbackMode, cover);
     }

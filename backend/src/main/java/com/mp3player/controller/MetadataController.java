@@ -19,8 +19,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * HTTP adapter for the metadata module: reading/editing ID3 tags and serving the
- * album cover image. Only translates web requests into {@link Id3AppService} calls.
+ * Adaptador HTTP para o módulo de metadados: leitura/edição de tags ID3 e
+ * fornecimento da capa do álbum. Apenas traduz requisições web em chamadas ao
+ * {@link Id3AppService}.
  */
 @RestController
 public class MetadataController {

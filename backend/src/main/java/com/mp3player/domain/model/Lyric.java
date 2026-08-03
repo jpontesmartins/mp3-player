@@ -3,8 +3,8 @@ package com.mp3player.domain.model;
 import java.util.Objects;
 
 /**
- * Domain entity representing the lyrics of a single song.
- * Identified by the absolute path of the music it belongs to.
+ * Entidade de domínio representando a letra de uma única música.
+ * Identificada pelo caminho absoluto da música à qual pertence.
  */
 public final class Lyric {
 

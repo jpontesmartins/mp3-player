@@ -5,24 +5,24 @@ import com.mp3player.domain.model.Playlist;
 import java.util.List;
 
 /**
- * Repository port for persisting and loading playlists. Current implementation
- * stores each playlist as a TXT file of absolute paths, but an implementation
- * could later back it with a database without changing the domain.
+ * Port de repositório para persistir e carregar playlists. A implementação
+ * atual armazena cada playlist como um arquivo TXT de caminhos absolutos, mas
+ * uma implementação poderia usar um banco de dados sem alterar o domínio.
  */
 public interface PlaylistRepository {
 
-    /** Names of all saved playlists. */
+    /** Nomes de todas as playlists salvas. */
     List<String> list();
 
-    /** Loads the ordered song paths of a playlist. */
+    /** Carrega os caminhos ordenados das músicas de uma playlist. */
     List<String> load(String name);
 
-    /** Creates or overwrites a playlist. */
+    /** Cria ou sobrescreve uma playlist. */
     void save(Playlist playlist);
 
-    /** Deletes a playlist. */
+    /** Exclui uma playlist. */
     void delete(String name);
 
-    /** Renames an existing playlist. */
+    /** Renomeia uma playlist existente. */
     void rename(String currentName, String newName);
 }

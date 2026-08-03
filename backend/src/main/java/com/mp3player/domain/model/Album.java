@@ -1,6 +1,8 @@
 package com.mp3player.domain.model;
 
-/** Value object identifying an album by its name and artist. */
+/**
+ * Value object que identifica um álbum pelo nome e pelo artista.
+ */
 public final class Album {
 
     private final Artist artist;

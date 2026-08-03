@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
- * Port (contract) for the audio playback engine. Implementation owns the
- * low-level media decoding/threading (currently JLayer).
+ * Port (contrato) para o motor de reprodução de áudio. A implementação é
+ * responsável pela decodificação e pelas threads de baixo nível (atualmente JLayer).
  */
 public interface PlayerEngine {
 
@@ -31,6 +31,6 @@ public interface PlayerEngine {
 
     long getTotalMillis();
 
-    /** ID3 tags of the currently playing track, as a wire map. */
+    /** Tags ID3 da faixa em reprodução, como mapa de troca (wire). */
     Map<String, String> getId3Tags();
 }

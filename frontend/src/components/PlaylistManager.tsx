@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Id3Tags } from '../App';
 
-const API = 'http://localhost:8080';
+const API = 'http://localhost:8111';
 
 interface Props {
   playlists: string[];

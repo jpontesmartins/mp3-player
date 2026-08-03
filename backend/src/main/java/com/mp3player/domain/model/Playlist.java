@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Domain aggregate for a virtual playlist. Each song is referenced by the
- * absolute physical path of the underlying file, ordered by the playlist order.
+ * Agregado de domínio para uma playlist virtual. Cada música é referenciada
+ * pelo caminho absoluto do arquivo físico, na ordem da playlist.
  */
 public final class Playlist {
 
@@ -27,7 +27,13 @@ public final class Playlist {
         return Collections.unmodifiableList(songPaths);
     }
 
-    /** Returns a new playlist with the given song appended at the end, if not already present. */
+    /**
+     * Retorna uma nova playlist com a música informada adicionada ao final,
+     * caso ainda não esteja presente.
+     *
+     * @param path caminho absoluto do arquivo da música.
+     * @return nova instância com a música adicionada, ou {@code this} se já existir.
+     */
     public Playlist addSong(String path) {
         Objects.requireNonNull(path);
         if (songPaths.contains(path)) {
@@ -38,7 +44,12 @@ public final class Playlist {
         return new Playlist(name, next);
     }
 
-    /** Returns a new playlist without the given song. */
+    /**
+     * Retorna uma nova playlist sem a música informada.
+     *
+     * @param path caminho absoluto do arquivo da música.
+     * @return nova instância sem a música, ou {@code this} se ela não estiver presente.
+     */
     public Playlist removeSong(String path) {
         List<String> next = new ArrayList<>(songPaths);
         next.remove(path);

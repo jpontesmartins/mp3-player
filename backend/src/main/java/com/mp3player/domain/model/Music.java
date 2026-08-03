@@ -4,8 +4,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Aggregate root representing a single audio file and its ID3 metadata.
- * The absolute file path acts as its unique identity.
+ * Raiz agregada representando um único arquivo de áudio e seus metadados ID3.
+ * O caminho absoluto do arquivo atua como identidade única.
  */
 public final class Music {
 
@@ -37,7 +37,11 @@ public final class Music {
         return path.hashCode();
     }
 
-    /** Flattens the metadata into the wire format expected by the frontend. */
+    /**
+     * Achata os metadados para o formato de troca (wire) esperado pelo frontend.
+     *
+     * @return mapa com os campos ID3 presentes, incluindo a duração em milissegundos.
+     */
     public Map<String, String> toTagMap() {
         Map<String, String> map = new LinkedHashMap<>();
         metadata.putIfNotBlank(map, "title", metadata.getTitle());
@@ -49,10 +53,15 @@ public final class Music {
         if (metadata.getDurationMs() != null) {
             map.put("duration_ms", String.valueOf(metadata.getDurationMs()));
         }
+        if (metadata.getBitrateKbps() != null) {
+            map.put("kbps", String.valueOf(metadata.getBitrateKbps()));
+        }
         return map;
     }
 
-    /** Value object with the editable ID3 fields plus duration. */
+    /**
+     * Value object com os campos ID3 editáveis além da duração.
+     */
     public static final class Metadata {
         private final String title;
         private final String artist;
@@ -61,8 +70,13 @@ public final class Music {
         private final String genre;
         private final String track;
         private final Long durationMs;
+        private final Integer bitrateKbps;
 
         public Metadata(String title, String artist, String album, String year, String genre, String track, Long durationMs) {
+            this(title, artist, album, year, genre, track, durationMs, null);
+        }
+
+        public Metadata(String title, String artist, String album, String year, String genre, String track, Long durationMs, Integer bitrateKbps) {
             this.title = title;
             this.artist = artist;
             this.album = album;
@@ -70,10 +84,11 @@ public final class Music {
             this.genre = genre;
             this.track = track;
             this.durationMs = durationMs;
+            this.bitrateKbps = bitrateKbps;
         }
 
         public static Metadata empty() {
-            return new Metadata(null, null, null, null, null, null, null);
+            return new Metadata(null, null, null, null, null, null, null, null);
         }
 
         public static Metadata fromTags(Map<String, String> tags) {
@@ -85,6 +100,14 @@ public final class Music {
                 } catch (NumberFormatException ignored) {
                 }
             }
+            String rawBitrate = tags.getOrDefault("kbps", "");
+            Integer bitrate = null;
+            if (!rawBitrate.isBlank()) {
+                try {
+                    bitrate = Integer.parseInt(rawBitrate.trim());
+                } catch (NumberFormatException ignored) {
+                }
+            }
             return new Metadata(
                     blankToNull(tags.get("title")),
                     blankToNull(tags.get("artist")),
@@ -92,7 +115,8 @@ public final class Music {
                     blankToNull(tags.get("year")),
                     blankToNull(tags.get("genre")),
                     blankToNull(tags.get("track")),
-                    duration
+                    duration,
+                    bitrate
             );
         }
 
@@ -103,6 +127,7 @@ public final class Music {
         public String getGenre() { return genre; }
         public String getTrack() { return track; }
         public Long getDurationMs() { return durationMs; }
+        public Integer getBitrateKbps() { return bitrateKbps; }
 
         private void putIfNotBlank(Map<String, String> map, String key, String value) {
             if (value != null && !value.isBlank()) {

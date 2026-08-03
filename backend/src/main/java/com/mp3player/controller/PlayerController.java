@@ -13,8 +13,9 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 
 /**
- * HTTP adapter for playback control. Only translates web requests into
- * {@link PlayerService} calls; all business logic lives in the application layer.
+ * Adaptador HTTP para o controle de reprodução. Apenas traduz requisições web
+ * em chamadas ao {@link PlayerService}; toda a lógica de negócio vive na camada
+ * de aplicação.
  */
 @RestController
 @RequestMapping

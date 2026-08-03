@@ -20,7 +20,7 @@ cd backend
 mvn spring-boot:run
 ```
 
-A API roda em `http://localhost:8080`.
+A API roda em `http://localhost:8111`.
 
 ### Frontend (desenvolvimento)
 
@@ -47,7 +47,7 @@ Gera um instalador auto-contido (MSI e NSIS) que já embute o backend Java e um 
 .\scripts\package-windows.ps1
 ```
 
-O script compila o JAR do backend, gera o JRE com `jlink`, copia os recursos para `frontend/src-tauri/resources/` e roda `npm run build`. Os instaladores saem em `frontend/src-tauri/target/release/bundle/{msi,nsis}/`. O app inicia e encerra o backend automaticamente em `127.0.0.1:8080`.
+O script compila o JAR do backend, gera o JRE com `jlink`, copia os recursos para `frontend/src-tauri/resources/` e roda `npm run build`. Os instaladores saem em `frontend/src-tauri/target/release/bundle/{msi,nsis}/`. O app inicia e encerra o backend automaticamente em `127.0.0.1:8111`.
 
 ## Arquitetura do backend
 

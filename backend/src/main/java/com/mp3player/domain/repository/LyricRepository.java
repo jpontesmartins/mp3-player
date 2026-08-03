@@ -6,23 +6,23 @@ import com.mp3player.domain.model.Music;
 import java.util.Optional;
 
 /**
- * Repository for persisting song lyrics. Implementations decide where the
- * lyric text is stored (currently a TXT file next to the audio), so swapping to
- * a database later only requires a new implementation.
+ * Repositório para persistir letras de músicas. As implementações decidem onde
+ * o texto é armazenado (atualmente um TXT ao lado do áudio); trocar para um
+ * banco de dados depois exige apenas uma nova implementação.
  */
 public interface LyricRepository {
 
     /**
-     * Loads the cached lyrics for the given music, if the lyrics were previously saved.
+     * Carrega a letra em cache para a música informada, caso tenha sido salva anteriormente.
      */
     Optional<Lyric> find(String musicPath);
 
     /**
-     * Persist/saves the lyrics. The repository uses the music metadata to choose
-     * the storage location/filename.
+     * Persiste/salva a letra. O repositório usa os metadados da música para
+     * escolher a localização e o nome do arquivo de armazenamento.
      */
     void save(Lyric lyric, Music music);
 
-    /** Whether a cached lyric file already exists for the music. */
+    /** Indica se já existe uma letra em cache para a música. */
     boolean exists(String musicPath);
 }

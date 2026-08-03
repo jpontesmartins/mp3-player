@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import type { Id3Tags } from '../App';
 import PlaylistManager from './PlaylistManager';
 
-const API = 'http://localhost:8080';
+const API = 'http://localhost:8111';
 
 const EDITABLE_FIELDS = ['title', 'artist', 'album', 'genre', 'track', 'year'] as const;
 type EditableField = typeof EDITABLE_FIELDS[number];

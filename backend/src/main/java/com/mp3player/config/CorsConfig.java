@@ -5,6 +5,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/**
+ * Configuração de CORS para permitir chamadas de origens externas (necessário
+ * para o frontend em desenvolvimento no Vite).
+ */
 @Configuration
 public class CorsConfig {
 

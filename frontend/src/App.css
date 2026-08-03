@@ -13,7 +13,7 @@ body {
 
 #app {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 20px 24px 6px;
   display: flex;
@@ -438,6 +438,56 @@ button:disabled {
 
 #playlist li.active .pl-duration {
   color: #999;
+}
+
+/* ── Tooltip ID3 ── */
+.id3-tooltip {
+  position: fixed;
+  z-index: 999;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 10px 14px;
+  max-width: 280px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+}
+
+.id3-tooltip-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #eee;
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #1a1a1a;
+  word-wrap: break-word;
+}
+
+.id3-tooltip-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 0;
+}
+
+.id3-tooltip-list > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.id3-tooltip-list dt {
+  color: #777;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.id3-tooltip-list dd {
+  margin: 0;
+  color: #ccc;
+  font-size: 0.75rem;
+  text-align: right;
+  word-wrap: break-word;
 }
 
 #playlist-section::-webkit-scrollbar {

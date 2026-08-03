@@ -29,7 +29,7 @@ fn spawn_backend(app: &tauri::AppHandle) -> Option<Child> {
     cmd.arg("-jar")
         .arg(&jar)
         .arg("--server.address=127.0.0.1")
-        .arg("--server.port=8080");
+        .arg("--server.port=8111");
 
     // No console window for the child (CREATE_NO_WINDOW).
     #[cfg(windows)]

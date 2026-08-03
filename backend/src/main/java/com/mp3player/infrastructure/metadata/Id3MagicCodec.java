@@ -16,13 +16,14 @@ import java.nio.file.StandardCopyOption;
 import java.util.Map;
 
 /**
- * ID3 codec backed by mp3agic. Reads/writes the editable ID3 tags and duration.
+ * Codec ID3 baseado em mp3agic. Lê/grava as tags ID3 editáveis e a duração.
  */
 @Component
 public class Id3MagicCodec implements Id3Codec {
 
     private static final Logger log = LoggerFactory.getLogger(Id3MagicCodec.class);
 
+    /** Lê as tags ID3 do arquivo no caminho informado e monta um agregado {@link Music}. */
     @Override
     public Music read(String filePath) {
         try {
@@ -48,14 +49,17 @@ public class Id3MagicCodec implements Id3Codec {
                 track = pick(track, id3.getTrack());
             }
             long durationMs = mp3file.getLengthInMilliseconds();
+            int bitrate = mp3file.getBitrate();
+            Integer bitrateKbps = bitrate > 0 ? bitrate : null;
 
             Music.Metadata metadata = new Music.Metadata(
                     title, artist, album, year, genre, track,
-                    durationMs > 0 ? durationMs : null);
+                    durationMs > 0 ? durationMs : null, bitrateKbps);
 
             Music music = new Music(filePath, metadata);
             if (music.toTagMap().isEmpty()) {
-                return new Music(filePath, new Music.Metadata(fileName(filePath), null, null, null, null, null, durationMs > 0 ? durationMs : null));
+                return new Music(filePath, new Music.Metadata(fileName(filePath), null, null, null, null, null,
+                        durationMs > 0 ? durationMs : null, bitrateKbps));
             }
             return music;
         } catch (Exception e) {
@@ -64,6 +68,7 @@ public class Id3MagicCodec implements Id3Codec {
         }
     }
 
+    /** Atualiza as tags editáveis do arquivo e retorna o {@link Music} resultante. */
     @Override
     public Music update(String filePath, Map<String, String> tags) {
         try {

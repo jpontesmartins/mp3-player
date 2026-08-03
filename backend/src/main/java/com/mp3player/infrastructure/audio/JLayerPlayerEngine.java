@@ -14,6 +14,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Map;
 
+/**
+ * Implementação do port {@link PlayerEngine} baseada em JLayer. Responsável pela
+ * decodificação e reprodução de MP3, executada em uma virtual thread.
+ */
 @Component
 public class JLayerPlayerEngine implements PlayerEngine {
 
@@ -99,6 +103,7 @@ public class JLayerPlayerEngine implements PlayerEngine {
                     if (!paused) {
                         newPlayer.play(FRAMES_PER_CHUNK);
                     } else {
+                        // TODO: ver se isso aqui faz alguma diferença
                         try {
                             Thread.sleep(1);
                         } catch (InterruptedException e) {

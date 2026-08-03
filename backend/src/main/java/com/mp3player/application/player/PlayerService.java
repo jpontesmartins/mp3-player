@@ -11,8 +11,8 @@ import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Application service for the player module. Orchestrates the {@link PlayerEngine}
- * port and implements play/pause/stop/resume/seek and next/previous navigation.
+ * Service da aplicação para o módulo de player. Orquestra o port {@link PlayerEngine}
+ * e implementa play/pause/stop/resume/seek e a navegação anterior/próxima.
  */
 @Service
 public class PlayerService {
@@ -23,20 +23,24 @@ public class PlayerService {
         this.engine = engine;
     }
 
+    /** Inicia a reprodução do arquivo informado. */
     public void play(String filePath) throws IOException {
         engine.play(filePath);
     }
 
+    /** Inicia a reprodução do arquivo informado a partir da posição em milissegundos. */
     public void play(String filePath, long startMillis) throws IOException {
         engine.play(filePath, startMillis);
     }
 
+    /** Pausa a reprodução atual. */
     public String pause() {
         if (!engine.isPlaying()) return "No music playing";
         engine.pause();
         return "Paused";
     }
 
+    /** Retoma a música pausada. */
     public String resume() {
         if (!engine.isPlaying()) return "No music playing";
         if (!engine.isPaused()) return "Music is not paused";
@@ -44,17 +48,20 @@ public class PlayerService {
         return "Resumed";
     }
 
+    /** Para a reprodução e limpa o estado. */
     public void stop() {
         engine.stop();
     }
 
+    /** Salta para a posição informada em milissegundos. */
     public String seekTo(long positionMillis) {
         if (engine.getCurrentFilePath() == null) return "No music playing";
         engine.seekTo(positionMillis);
         return "Seeked to " + positionMillis;
     }
 
-    /** Plays the next song in the list according to the given playback mode. */
+    // TODO acho que nao estah sendo usado
+    /** Toca a próxima música da lista de acordo com o modo de reprodução. */
     public boolean playNext(List<String> files, Settings.PlaybackMode mode) {
         String next = next(engine.getCurrentFilePath(), files, mode);
         if (next == null) return false;
@@ -66,7 +73,8 @@ public class PlayerService {
         }
     }
 
-    /** Plays the previous song in the list according to the given playback mode. */
+    // TODO acho que nao estah sendo usado
+    /** Toca a música anterior da lista de acordo com o modo de reprodução. */
     public boolean playPrevious(List<String> files, Settings.PlaybackMode mode) {
         String prev = previous(engine.getCurrentFilePath(), files, mode);
         if (prev == null) return false;
@@ -78,6 +86,7 @@ public class PlayerService {
         }
     }
 
+    /** Retorna o estado atual da reprodução (status, arquivo, posição, duração e ID3). */
     public Map<String, Object> status() {
         Map<String, Object> response = new LinkedHashMap<>();
         String filePath = engine.getCurrentFilePath();

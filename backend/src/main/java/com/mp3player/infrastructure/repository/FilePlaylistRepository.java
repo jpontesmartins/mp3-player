@@ -15,8 +15,8 @@ import java.util.List;
 import java.util.stream.Stream;
 
 /**
- * File-based implementation of {@link PlaylistRepository}. Each playlist is a
- * TXT file under the user playlists directory, one absolute path per line.
+ * Implementação baseada em arquivos de {@link PlaylistRepository}. Cada playlist
+ * é um arquivo TXT no diretório de playlists do usuário, com um caminho absoluto por linha.
  */
 @Repository
 public class FilePlaylistRepository implements PlaylistRepository {

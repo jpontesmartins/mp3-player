@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Application service for the ID3 editing module: reads a single file, reads many
- * files at once (bulk) and updates the editable tags.
+ * Service da aplicação para o módulo de edição de ID3: lê um arquivo, lê vários
+ * de uma vez (bulk) e atualiza as tags editáveis.
  */
 @Service
 public class Id3AppService {
@@ -21,6 +21,7 @@ public class Id3AppService {
         this.id3Codec = id3Codec;
     }
 
+    /** Lê as tags ID3 de um único arquivo como mapa de troca (wire). */
     public Map<String, String> getForFile(String filePath) {
         try {
             return id3Codec.read(filePath).toTagMap();
@@ -29,6 +30,7 @@ public class Id3AppService {
         }
     }
 
+    /** Lê as tags ID3 de vários arquivos de uma vez, indexando pelo caminho. */
     public Map<String, Map<String, String>> getBulk(List<String> paths) {
         Map<String, Map<String, String>> result = new LinkedHashMap<>();
         for (String path : paths) {
@@ -37,6 +39,7 @@ public class Id3AppService {
         return result;
     }
 
+    /** Atualiza as tags editáveis do arquivo e retorna as tags resultantes. */
     public Map<String, String> update(String filePath, Map<String, String> tags) {
         Music updated = id3Codec.update(filePath, tags);
         return updated.toTagMap();

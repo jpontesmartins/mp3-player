@@ -13,8 +13,10 @@
     "windows": [
       {
         "title": "MP3 Player",
-        "width": 1000,
+        "width": 1400,
         "height": 700,
+        "minWidth": 1000,
+        "minHeight": 600,
         "resizable": true,
         "fullscreen": false
       }

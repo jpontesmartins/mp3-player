@@ -1,6 +1,8 @@
 package com.mp3player.domain.model;
 
-/** Domain entity representing an artist (unique by name). */
+/**
+ * Entidade de domínio representando um artista (único por nome).
+ */
 public final class Artist {
 
     private final String name;

@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * HTTP adapter for the playlist module: folder-scan plus CRUD of virtual
- * playlists. Only translates web requests into {@link PlaylistAppService} calls.
+ * Adaptador HTTP para o módulo de playlist: scan de pasta e CRUD de playlists
+ * virtuais. Apenas traduz requisições web em chamadas ao {@link PlaylistAppService}.
  */
 @RestController
 public class PlaylistController {
