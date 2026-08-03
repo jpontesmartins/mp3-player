@@ -56,18 +56,22 @@ Todos os ícones são caracteres unicode — sem dependência de bibliotecas de 
 - Ao trocar de música, verifica automaticamente se existe arquivo `.txt`
 - Se existir, carrega e exibe o conteúdo
 - Botão "Buscar letra" faz scraping via backend (`GET /lyrics`)
+- Botão "Alterar letra" abre editor em textarea com Salvar/Cancelar (persistência via `POST /lyrics`)
 - Controles A+/A- para aumentar/diminuir tamanho da fonte (0.7rem–2.0rem, passo 0.1)
 
 ### Player
-- Capa do álbum (cover/folder/album/front/art/artwork.jpg/png na mesma pasta do MP3)
+- Capa do álbum (cover/folder/album/front/art/artwork.jpg/png/webp/gif na mesma pasta do MP3)
 - Só renderiza quando `showCover=true` e há música carregada
 - Placeholder `🎵` apenas quando a imagem falha (`onError`)
+- **Clique com botão direito no 🎵** abre um menu de contexto com "Baixar capa do álbum"; ao clicar, o backend baixa a capa (iTunes/Deezer) e o Player recarrega a imagem automaticamente
 - Controles: ⏮ ▶/⏸ ⏹ ⏭ (todos 32×32)
 - Barra de progresso clicável (seek via `POST /seek`)
 - Exibe nome da faixa e status
 
 ### Playlist
 - Lista de músicas da pasta selecionada
+- Cabeçalho com colunas redimensionáveis (artista 15–55%, tempo 40–160px) com grade compartilhada
+- Tooltip com metad ID3 da faixa (Música, Artista, Álbum, Ano, Gênero, Faixa, Duração, Bitrate) após 1s de hover, com posição ajustada à janela
 - Destaque na faixa atual
 - Duração ao lado do nome
 - Clique para tocar
@@ -83,7 +87,8 @@ Todos os ícones são caracteres unicode — sem dependência de bibliotecas de 
 - **Auto-play**: ao fim da música, toca a próxima conforme o modo selecionado (Contínua → próxima, Aleatória → aleatória, Repetição → mesma)
 - **Intentional stop**: `intentionalStopRef` impede auto-play em Stop manual ou carregamento de nova playlist
 - **Seek**: clique na barra de progresso para ir a qualquer ponto
-- **Capa**: se a imagem falhar (`onError`), exibe o placeholder `🎵`; `key={currentFile}` força recriação do `<img>` ao trocar de música
+- **Capa**: se a imagem falhar (`onError`), exibe o placeholder `🎵`; `key={currentFile}:{coverVersion}` força recriação do `<img>` ao trocar de música e ao concluir o download da capa (revela a imagem mesmo que a anterior tenha falhado)
+- **Menu de capa**: botão direito no 🎵 abre o menu de contexto com "Baixar capa do álbum" (fecha em clique fora/scroll/redimensionar)
 - **Cache de letras**: arquivos `.txt` são salvos na pasta do álbum e reutilizados
 - **Reset de letra**: `useEffect` em `currentFile` limpa letra ao trocar de música
 - **Polling**: `setInterval` a cada 500ms atualiza barra de progresso e status

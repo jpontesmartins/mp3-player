@@ -22,19 +22,20 @@ O código segue **Clean Architecture** / **Clean Code** / **DDD**. A regra de de
 ```
 com.mp3player
 ├── domain/                 # regras de negócio — sem dependências externas
-│   ├── model/              #   entidades: Music, Artist, Album, Playlist, Lyric, Settings
-│   ├── port/               #   contratos: PlayerEngine, Id3Codec, MusicScanner, LyricsScraper
+│   ├── model/              #   entidades: Music, Artist, Album, Playlist, Lyric, Settings, CoverImage
+│   ├── port/               #   contratos: PlayerEngine, Id3Codec, MusicScanner, LyricsScraper, AlbumCoverSearcher
 │   └── repository/         #   portas de persistência: PlaylistRepository, LyricRepository
 ├── application/            # casos de uso — orquestram ports e modelos
 │   ├── player/           #   PlayerService       (play, pause, stop, resume, seek, próxima/anterior)
 │   ├── playlist/         #   PlaylistAppService  (playlists virtuais + físico)
 │   ├── lyrics/           #   LyricsAppService    (busca, web scraping, cache)
-│   └── metadata/         #   Id3AppService        (ler, bulk e atualizar tags)
+│   └── metadata/         #   Id3AppService (ler, bulk e atualizar tags), CoverAppService (baixar capa)
 ├── infrastructure/         # implementações concretas dos ports
 │   ├── audio/            #   JLayerPlayerEngine
 │   ├── metadata/         #   Id3MagicCodec (mp3agic)
 │   ├── music/            #   FileMusicScanner
 │   ├── lyrics/           #   JsoupLyricsScraper
+│   ├── cover/            #   MusicAlbumCoverSearcher (iTunes + Deezer)
 │   └── repository/       #   FilePlaylistRepository, FileLyricRepository
 ├── web/                    # adaptadores HTTP: PlayerController, PlaylistController,
 │                           #                     MetadataController (ID3 + cover), LyricsController
@@ -49,8 +50,8 @@ O pacote `web/` foi dividido em **Controllers por módulo**, cada um delegando a
 |---|---|
 | `PlayerController` | `/play`, `/pause`, `/stop`, `/seek`, `/resume`, `/playing` |
 | `PlaylistController` | `/playlist`, `/playlists`, `/playlist/{name}`, `/playlist/rename` |
-| `MetadataController` | `/id3`, `/id3/bulk`, `/id3/update`, `/cover` |
-| `LyricsController` | `/lyrics`, `/lyrics/cached` |
+| `MetadataController` | `/id3`, `/id3/bulk`, `/id3/update`, `/cover`, `/cover/download` |
+| `LyricsController` | `/lyrics`, `/lyrics/cached`, `/lyrics` (POST) |
 
 ### Padrões aplicados
 
@@ -108,19 +109,32 @@ mvn test
 | `GET` | `/id3?path=<arquivo>` | Retorna as tags ID3 (artista, título, álbum, etc.) |
 | `POST` | `/id3/bulk` | Lista de caminhos → tags ID3 de todos de uma vez |
 | `POST` | `/id3/update` | Atualiza tags ID3 de um arquivo |
-| `GET` | `/cover?path=<arquivo>` | Capa (jpg/png) da mesma pasta |
+| `GET` | `/cover?path=<arquivo>` | Capa (jpg/png/webp/gif) da mesma pasta |
+| `POST` | `/cover/download` | Baixa a capa do álbum (body = `{ "path": "<mp3>" }`) e salva na pasta do álbum |
 | `GET` | `/lyrics?path=<arquivo>` | Letra da música (web scraping se não houver cache) |
 | `GET` | `/lyrics/cached?path=<arquivo>` | Letra apenas se já houver `.txt` em cache |
+| `POST` | `/lyrics` | Salva/edita a letra da música (body = `{ "path": ..., "text": ... }`) |
+
+## Download de capa do álbum
+
+O endpoint `POST /cover/download` baixa a arte do álbum e salva na pasta do MP3 como `cover.<ext>`:
+
+1. Lê as tags ID3 do arquivo (via `Id3Codec`) e monta o termo de busca "artista + álbum" (deduplica quando o álbum repete o artista).
+2. Busca a capa na **API de busca do iTunes** (`entity=album`, arte em 600×600) — primeira fonte.
+3. Se não achar, cai para a **API do Deezer** (`cover_xl`, 1000×1000).
+4. Baixa a imagem original e grava em `cover.jpg`/`png`/`webp`/`gif` na mesma pasta, pronta para ser servida por `GET /cover`.
+
+> O scrap de imagens do Google/Bing foi descartado: o Google só entrega uma página shell que exige JavaScript, e o Bing retornava resultados irrelevantes para as buscas. O `AlbumCoverSearcher` (port) deixa a fonte plugável.
 
 ## Scraper de Letras
 
 O endpoint `/lyrics` usa o scraper para [letras.mus.br](https://www.letras.mus.br) (implementado em `infrastructure/lyrics/JsoupLyricsScraper`):
 
 1. Extrai artista e título das tags ID3 do MP3
-2. Constrói slugs e tenta URL direta: `/{artista}/{musica}/`
+2. Constrói slugs e tenta URL direta: `/{artista}/{musica}/` — para bandas com "The", tenta também sem o "The" (`the-velvet-underground` e `velvet-underground`)
 3. Se falhar, busca em `/?q=<artista>+<musica>` e localiza o link `<a class="gs-title">`
 4. Fallbacks: `.gs-title a`, link genérico, match por título
-5. Se ainda falhar, tenta a página do artista com o nome invertido (`/mitchell-joni/` para "Joni Mitchell"), primeiro via URL direta da música e depois procurando o link pelo título na listagem de músicas do artista
+5. Se ainda falhar, tenta a página do artista com o nome invertido (`/mitchell-joni/` para "Joni Mitchell"), primeiro via URL direta da música e depois procurando o link pelo título na listagem; tenta as combinações invertido/normal × com/sem "The" (páginas inexistentes são ignoradas com `ignoreHttpErrors`)
 6. Remove sufixo `traducao.html` quando presente
 7. Extrai `<div class="lyric-original">` e insere `<br>` após cada `<p>`
 8. Salva em `{artista} - {musica}.txt` na mesma pasta do MP3 (via `LyricRepository`)
@@ -131,6 +145,7 @@ A persistência é feita por abstrações, prontas para escapamento futuro a um 
 
 - **Playlists virtuais** → `%USERPROFILE%\.mp3-player\playlists\<nome>.txt`, cada linha um caminho absoluto de MP3.
 - **Letras** → `<pasta do mp3>\<artista> - <música>.txt`.
+- **Capas baixadas** → `<pasta do mp3>\cover.<ext>` (gera provider via `GET /cover`).
 
 Para migrar a um banco, basta criar novas implementações de `domain/repository/PlaylistRepository` e `LyricRepository` e declarar como beans; o `application/` e o `web/` não mudam.
 

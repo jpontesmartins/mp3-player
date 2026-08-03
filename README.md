@@ -56,20 +56,21 @@ O backend foi refatorado seguindo **Clean Architecture**, **Clean Code** e **Dom
 ```
 com.mp3player
 ├── domain/                 # regras de negócio (núcleo, sem dependências externas)
-│   ├── model/              #   entidades: Music, Artist, Album, Playlist, Lyric, Settings
+│   ├── model/              #   entidades: Music, Artist, Album, Playlist, Lyric, Settings, CoverImage
 │   ├── port/               #   contratos (interfaces): PlayerEngine, Id3Codec,
-│   │                       #                           MusicScanner, LyricsScraper
+│   │                       #                           MusicScanner, LyricsScraper, AlbumCoverSearcher
 │   └── repository/         #   portas de persistência: PlaylistRepository, LyricRepository
 ├── application/            # casos de uso (orquestram os ports, sem infra)
 │   ├── player/           #   PlayerService (play, pause, stop, resume, seek, próxima/anterior)
 │   ├── playlist/         #   PlaylistAppService (carregar, criar, editar, listar, excluir, renomear, scan de pasta)
 │   ├── lyrics/           #   LyricsAppService (buscar letra, web scraping, cache)
-│   └── metadata/         #   Id3AppService (ler, bulk, editar tags ID3)
+│   └── metadata/         #   Id3AppService (ler, bulk, editar tags ID3), CoverAppService (baixar capa)
 ├── infrastructure/         # implementações concretas dos ports
 │   ├── audio/            #   JLayerPlayerEngine (decodificação JLayer)
 │   ├── metadata/         #   Id3MagicCodec (mp3agic)
 │   ├── music/            #   FileMusicScanner (escaneia pasta)
 │   ├── lyrics/           #   JsoupLyricsScraper (letras.mus.br)
+│   ├── cover/            #   MusicAlbumCoverSearcher (iTunes + Deezer)
 │   └── repository/       #   FilePlaylistRepository, FileLyricRepository
 ├── web/                  # adaptadores HTTP: PlayerController, PlaylistController,
 │                       #                      MetadataController (ID3 + cover), LyricsController
@@ -96,12 +97,14 @@ O backend cobre com testes unitários (JUnit 5 + Mockito) e um teste de contexto
 
 - Reprodução de arquivos MP3 (play, pausa, stop, resume, seek)
 - Navegação entre faixas (anterior / próxima) com três modos: Contínua, Aleatória e Repetição
-- Leitura e edição de tags ID3 (artista, título, álbum, ano, gênero, faixa, duração)
-- Capa do álbum extraída de arquivos `cover`/`folder`/`album`/`front`/`art`/`artwork` (jpg/png) na pasta da música
-- Busca e cache de letras via letras.mus.br com fallback de busca
+- Leitura e edição de tags ID3 (artista, título, álbum, ano, gênero, faixa, duração, bitrate)
+- Capa do álbum exibida a partir de arquivos `cover`/`folder`/`album`/`front`/`art`/`artwork` (jpg/png/webp/gif) na pasta da música
+- **Download de capa**: clique com o botão direito no placeholder `🎵` abre o menu "Baixar capa do álbum"; o backend busca a capa pelas APIs do iTunes (fallback: Deezer) e salva na pasta do álbum, com atualização automática no Player
+- Busca e cache de letras via letras.mus.br com múltiplos fallbacks (URL direta, busca, página do artista com variantes "The", nome invertido e normal)
 - **Múltiplas playlists** — além da playlist física (pasta), cria playlists virtuais com o caminho físico de cada música, salvas em `.txt` por um repositório
-- Playlist com carregamento, criação, edição, listagem e exclusão (painel de Coleção com duas colunas: todas as músicas × músicas da playlist)
+- Playlist com carregamento, criação, edição, listagem e exclusão (painel de Coleção com duas colunas: todas as músicas × músicas da playlist), cabeçalho com colunas redimensionáveis (Artista | Música | Tempo) e tooltip com os metadados ID3 da faixa
 - Gerenciador de coleção: lista de álbuns e artistas de toda a biblioteca com edição das tags ID3 em grade por álbum/artista
+- Edição das letras ("Alterar letra") com persistência via `POST /lyrics`
 - Barra de progresso clicável (seek)
 - Interface escura com tema `#000`/`#0d0d0d`
 - Toolbar com navegação entre painéis (letra / coleção / configurações)

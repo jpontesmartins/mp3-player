@@ -13,6 +13,15 @@ versões seguem [Semântic Versioning](https://semver.org/lang/pt-BR/).
 - Testes unitários do backend com JUnit 5 e Mockito (domínio, application e infraestrutura).
 - Documentação: README da raiz e do backend, e diagramas de arquitetura (`docs/architecture.md`).
 - Skills do opencode para replicação de arquitetura de backend e estilo de frontend.
+- **Download de capa do álbum**: menu de contexto no placeholder `🎵` do Player com a
+  opção "Baixar capa do álbum"; o backend busca a arte pelas APIs do iTunes (fallback:
+  Deezer) e salva `cover.<ext>` na pasta do álbum, com recarga automática no Player.
+- Bitrate (`kbps`) nas tags ID3 e no tooltip da playlist.
+- Tooltip na playlist com os metadados ID3 da faixa (1s de hover, posição ajustada à janela).
+- Colunas do cabeçalho da playlist redimensionáveis (Artista | Música | Tempo).
+- Edição de letras no painel ("Alterar letra") com persistência via `POST /lyrics`.
+- Fallbacks no scraper de letras: variantes "The" (com/sem) e slugs invertido/normal
+  na página do artista, ignorando páginas inexistentes (404).
 
 ### Refatorado
 - Backend reescrito seguindo **Clean Architecture / Clean Code / DDD**: hierarquia
@@ -24,6 +33,8 @@ versões seguem [Semântic Versioning](https://semver.org/lang/pt-BR/).
 - Porta da API alterada de `8080` para `8111` (backend, frontend e início automático no Tauri).
 - Ajustes no salvamento/cache de letras.
 - Javadoc do backend traduzido/adicionado em português.
+- Readmes (raiz, backend e frontend) atualizados com as novas funcionalidades.
+- `GET /cover` passou a servir também `webp` e `gif`.
 
 ### Corrigido
 - Nenhum.
