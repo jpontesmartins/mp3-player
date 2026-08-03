@@ -120,9 +120,10 @@ O endpoint `/lyrics` usa o scraper para [letras.mus.br](https://www.letras.mus.b
 2. Constrói slugs e tenta URL direta: `/{artista}/{musica}/`
 3. Se falhar, busca em `/?q=<artista>+<musica>` e localiza o link `<a class="gs-title">`
 4. Fallbacks: `.gs-title a`, link genérico, match por título
-5. Remove sufixo `traducao.html` quando presente
-6. Extrai `<div class="lyric-original">` e insere `<br>` após cada `<p>`
-7. Salva em `{artista} - {musica}.txt` na mesma pasta do MP3 (via `LyricRepository`)
+5. Se ainda falhar, tenta a página do artista com o nome invertido (`/mitchell-joni/` para "Joni Mitchell"), primeiro via URL direta da música e depois procurando o link pelo título na listagem de músicas do artista
+6. Remove sufixo `traducao.html` quando presente
+7. Extrai `<div class="lyric-original">` e insere `<br>` após cada `<p>`
+8. Salva em `{artista} - {musica}.txt` na mesma pasta do MP3 (via `LyricRepository`)
 
 ## Repositórios (armazenamento em TXT)
 

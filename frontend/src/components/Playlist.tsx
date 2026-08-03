@@ -206,6 +206,7 @@ export default function Playlist({ files, currentFile, id3Cache, onSelect }: Pro
             {displayName(tooltipTags, fileName(tooltip.file))}
           </div>
           <dl className="id3-tooltip-list">
+            {tooltipTags.title && <div><dt>Música</dt><dd>{tooltipTags.title}</dd></div>}
             {tooltipTags.artist && <div><dt>Artista</dt><dd>{tooltipTags.artist}</dd></div>}
             {tooltipTags.album && <div><dt>Álbum</dt><dd>{tooltipTags.album}</dd></div>}
             {tooltipTags.year && <div><dt>Ano</dt><dd>{tooltipTags.year}</dd></div>}
