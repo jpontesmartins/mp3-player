@@ -1,5 +1,6 @@
 package com.mp3player.controller;
 
+import com.mp3player.application.metadata.CoverAppService;
 import com.mp3player.application.metadata.Id3AppService;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -27,9 +28,11 @@ import java.util.Map;
 public class MetadataController {
 
     private final Id3AppService id3Service;
+    private final CoverAppService coverService;
 
-    public MetadataController(Id3AppService id3Service) {
+    public MetadataController(Id3AppService id3Service, CoverAppService coverService) {
         this.id3Service = id3Service;
+        this.coverService = coverService;
     }
 
     @GetMapping("/id3")
@@ -59,7 +62,7 @@ public class MetadataController {
             Path parent = Paths.get(path).getParent();
             if (parent == null) return ResponseEntity.notFound().build();
             String[] coverNames = { "cover", "folder", "album", "front", "art", "artwork" };
-            String[] extensions = { "jpg", "jpeg", "png" };
+            String[] extensions = { "jpg", "jpeg", "png", "webp", "gif" };
             try (var files = Files.list(parent)) {
                 var coverFile = files
                         .filter(f -> {
@@ -77,13 +80,35 @@ public class MetadataController {
                     var file = coverFile.get();
                     var resource = new InputStreamResource(Files.newInputStream(file));
                     String name = file.getFileName().toString().toLowerCase();
-                    String contentType = name.endsWith("png") ? "image/png" : "image/jpeg";
+                    String contentType = contentTypeFor(name);
                     return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType)).body(resource);
                 }
                 return ResponseEntity.notFound().build();
             }
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    private static String contentTypeFor(String name) {
+        if (name.endsWith("png")) return "image/png";
+        if (name.endsWith("webp")) return "image/webp";
+        if (name.endsWith("gif")) return "image/gif";
+        return "image/jpeg";
+    }
+
+    public record CoverDownloadRequest(String path) {}
+
+    @PostMapping("/cover/download")
+    public ResponseEntity<String> downloadCover(@RequestBody CoverDownloadRequest request) {
+        if (request.path() == null || request.path().isBlank()) {
+            return ResponseEntity.badRequest().body("Caminho é obrigatório");
+        }
+        try {
+            String saved = coverService.download(request.path());
+            return ResponseEntity.ok(saved);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao baixar capa: " + e.getMessage());
         }
     }
 }
