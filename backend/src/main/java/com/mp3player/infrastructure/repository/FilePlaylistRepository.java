@@ -34,7 +34,7 @@ public class FilePlaylistRepository implements PlaylistRepository {
         try {
             Files.createDirectories(baseDir);
         } catch (IOException e) {
-            log.error("Could not create playlists dir: {}", baseDir, e);
+            log.error("[Playlist] Não foi possível criar diretório de playlists: {}", baseDir, e);
         }
     }
 
@@ -48,7 +48,7 @@ public class FilePlaylistRepository implements PlaylistRepository {
                     .sorted()
                     .toList();
         } catch (IOException e) {
-            log.error("Error listing playlists", e);
+            log.error("[Playlist] Erro ao listar playlists", e);
             return List.of();
         }
     }
@@ -66,7 +66,7 @@ public class FilePlaylistRepository implements PlaylistRepository {
                     .filter(l -> !l.isEmpty())
                     .toList();
         } catch (IOException e) {
-            log.error("Error loading playlist {}", name, e);
+            log.error("[Playlist] Erro ao carregar playlist {}", name, e);
             return List.of();
         }
     }
@@ -76,7 +76,7 @@ public class FilePlaylistRepository implements PlaylistRepository {
         Path file = fileFor(playlist.getName());
         try {
             Files.write(file, playlist.getSongPaths(), StandardCharsets.UTF_8);
-            log.info("Playlist saved: {} ({} songs)", playlist.getName(), playlist.getSongPaths().size());
+            log.info("[Playlist] Playlist salva: {} ({} músicas)", playlist.getName(), playlist.getSongPaths().size());
         } catch (IOException e) {
             throw new IllegalStateException("Error saving playlist " + playlist.getName(), e);
         }
@@ -86,7 +86,7 @@ public class FilePlaylistRepository implements PlaylistRepository {
     public void delete(String name) {
         try {
             Files.deleteIfExists(fileFor(name));
-            log.info("Playlist deleted: {}", name);
+            log.info("[Playlist] Playlist removida: {}", name);
         } catch (IOException e) {
             throw new IllegalStateException("Error deleting playlist " + name, e);
         }
@@ -100,7 +100,7 @@ public class FilePlaylistRepository implements PlaylistRepository {
         }
         try {
             Files.move(from, fileFor(newName), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-            log.info("Playlist renamed: {} -> {}", currentName, newName);
+            log.info("[Playlist] Playlist renomeada: {} -> {}", currentName, newName);
         } catch (IOException e) {
             throw new IllegalStateException("Error renaming playlist", e);
         }

@@ -59,6 +59,11 @@ public class LyricsAppService {
         lyricRepository.save(new Lyric(musicPath, text), musicFor(musicPath));
     }
 
+    /** Remove a letra em cache para a música informada. */
+    public void delete(String musicPath) {
+        lyricRepository.delete(musicPath);
+    }
+
     private Music musicFor(String musicPath) {
         return id3Codec.read(musicPath);
     }

@@ -403,6 +403,28 @@ button:disabled {
   color: #fff;
 }
 
+.playlist-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 0;
+  color: #aaa;
+  font-size: 13px;
+}
+
+.playlist-spinner {
+  font-size: 2.8rem !important;
+  color: #555;
+  animation: playlist-spin 1.1s linear infinite;
+}
+
+@keyframes playlist-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 #player-controls {
   display: flex;
   gap: 8px;

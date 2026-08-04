@@ -47,7 +47,7 @@ public class CoverAppService {
         }
         Path target = folder.resolve("cover." + extensionFor(image.contentType()));
         Files.write(target, image.bytes());
-        log.info("Cover saved to {}", target);
+        log.info("[Capa] Capa salva em {}", target);
         return target.toString();
     }
 

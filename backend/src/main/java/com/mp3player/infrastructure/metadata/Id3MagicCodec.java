@@ -63,7 +63,7 @@ public class Id3MagicCodec implements Id3Codec {
             }
             return music;
         } catch (Exception e) {
-            log.warn("Could not read ID3 for {}", filePath, e);
+            log.warn("[Metadata] Não foi possível ler ID3 de {}", filePath, e);
             return new Music(filePath, Music.Metadata.empty());
         }
     }
@@ -94,7 +94,7 @@ public class Id3MagicCodec implements Id3Codec {
             Path tmp = Paths.get(filePath + ".mp3tmp");
             mp3file.save(tmp.toString());
             Files.move(tmp, Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
-            log.info("ID3 updated: {}", filePath);
+            log.info("[Metadata] ID3 atualizado: {}", filePath);
             return read(filePath);
         } catch (Exception e) {
             throw new IllegalStateException("Error updating ID3 tags", e);

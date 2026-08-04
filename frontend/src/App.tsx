@@ -24,6 +24,16 @@ export interface Id3Tags {
   error?: string;
 }
 
+export interface PlaylistProps {
+  files: string[];
+  currentFile: string | null;
+  id3Cache: Map<string, Id3Tags>;
+  loading?: boolean;
+  id3Loaded?: number;
+  id3Total?: number;
+  onSelect: (file: string) => void;
+}
+
 interface PlayingData {
   status: 'playing' | 'paused' | 'stopped';
   file: string;
@@ -63,6 +73,10 @@ export default function App() {
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);
   const [id3Cache, setId3Cache] = useState<Map<string, Id3Tags>>(new Map());
+  const [id3Loading, setId3Loading] = useState(false);
+  const [id3Loaded, setId3Loaded] = useState(0);
+  const [id3Total, setId3Total] = useState(0);
+  const id3BatchSize = 50;
   const [view, setView] = useState<'lyrics' | 'settings' | 'collection'>('lyrics');
   const [playbackMode, setPlaybackMode] = useState<PlaybackMode>('continuous');
   const [showCover, setShowCover] = useState(true);
@@ -91,14 +105,30 @@ export default function App() {
         setId3Cache(new Map());
         localStorage.setItem(STORAGE_KEY, folder);
         if (files.length > 0) {
-          const id3Res = await fetch(`${API}/id3/bulk`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(files),
-          });
-          if (id3Res.ok) {
-            const tagsMap: Record<string, Id3Tags> = await id3Res.json();
-            setId3Cache(new Map(Object.entries(tagsMap)));
+          setId3Loading(true);
+          setId3Total(files.length);
+          setId3Loaded(0);
+          try {
+            for (let i = 0; i < files.length; i += id3BatchSize) {
+              const batch = files.slice(i, i + id3BatchSize);
+              const id3Res = await fetch(`${API}/id3/bulk`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(batch),
+              });
+              if (id3Res.ok) {
+                const tagsMap: Record<string, Id3Tags> = await id3Res.json();
+                setId3Cache(prev => {
+                  const next = new Map(prev);
+                  for (const [k, v] of Object.entries(tagsMap)) next.set(k, v);
+                  return next;
+                });
+                setId3Loaded(i + batch.length);
+              }
+            }
+          } finally {
+            setId3Loading(false);
+            setTimeout(() => setId3Total(0), 1000);
           }
         }
         return true;
@@ -112,20 +142,27 @@ export default function App() {
   const ensureId3For = useCallback(async (files: string[]) => {
     const missing = files.filter(f => !id3Cache.has(f));
     if (missing.length === 0) return;
-    const id3Res = await fetch(`${API}/id3/bulk`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(missing),
-    });
-    if (id3Res.ok) {
-      const tagsMap: Record<string, Id3Tags> = await id3Res.json();
-      setId3Cache(prev => {
-        const next = new Map(prev);
-        for (const [k, v] of Object.entries(tagsMap)) next.set(k, v);
-        return next;
+    
+    setId3Total(prev => Math.max(prev, missing.length));
+    
+    for (let i = 0; i < missing.length; i += id3BatchSize) {
+      const batch = missing.slice(i, i + id3BatchSize);
+      const id3Res = await fetch(`${API}/id3/bulk`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(batch),
       });
+      if (id3Res.ok) {
+        const tagsMap: Record<string, Id3Tags> = await id3Res.json();
+        setId3Cache(prev => {
+          const next = new Map(prev);
+          for (const [k, v] of Object.entries(tagsMap)) next.set(k, v);
+          return next;
+        });
+        setId3Loaded(prev => prev + batch.length);
+      }
     }
-  }, [id3Cache]);
+  }, [id3Cache, id3BatchSize]);
 
   const loadVirtualPlaylist = useCallback(async (name: string): Promise<boolean> => {
     intentionalStopRef.current = true;
@@ -138,7 +175,15 @@ export default function App() {
       setStatus('stopped');
       setPosition(0);
       setDuration(0);
-      await ensureId3For([...new Set([...libraryFiles, ...files])]);
+      if (files.length > 0) {
+        setId3Loading(true);
+        setId3Total(files.length);
+        try {
+          await ensureId3For([...new Set([...libraryFiles, ...files])]);
+        } finally {
+          setId3Loading(false);
+        }
+      }
       return true;
     } catch (_) {
       return false;
@@ -386,6 +431,9 @@ export default function App() {
             files={playlistFiles}
             currentFile={currentFile}
             id3Cache={id3Cache}
+            loading={id3Loading}
+            id3Loaded={id3Loaded}
+            id3Total={id3Total}
             onSelect={playFile}
           />
         </div>

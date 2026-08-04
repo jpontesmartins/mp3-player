@@ -35,23 +35,23 @@ public class MusicAlbumCoverSearcher implements AlbumCoverSearcher {
 
         String imageUrl = findItunes(encoded);
         if (imageUrl == null) {
-            log.info("iTunes found no cover for \"{}\", trying Deezer", term);
+            log.info("[Capa] iTunes não encontrou capa para \"{}\", tentando Deezer", term);
             imageUrl = findDeezer(encoded);
         }
 
         if (imageUrl == null) {
-            log.warn("No cover found for term: {}", term);
+            log.warn("[Capa] Nenhuma capa encontrada para: {}", term);
             return null;
         }
 
-        log.info("Downloading cover from {}", imageUrl);
+        log.info("[Capa] Baixando capa de {}", imageUrl);
         return download(imageUrl);
     }
 
     /** Consulta a API de busca do iTunes (entity=album) e retorna a capa do primeiro álbum. */
     private static String findItunes(String encoded) throws IOException {
         String url = "https://itunes.apple.com/search?entity=album&limit=1&term=" + encoded;
-        log.info("Searching cover on iTunes: {}", url);
+        log.info("[Capa] Buscando capa no iTunes: {}", url);
         Connection.Response res = Jsoup.connect(url)
                 .userAgent(USER_AGENT)
                 .timeout(15000)
@@ -64,7 +64,7 @@ public class MusicAlbumCoverSearcher implements AlbumCoverSearcher {
     /** Consulta a API da Deezer e retorna a capa grande do primeiro álbum. */
     private static String findDeezer(String encoded) throws IOException {
         String url = "https://api.deezer.com/search/album?limit=1&q=" + encoded;
-        log.info("Searching cover on Deezer: {}", url);
+        log.info("[Capa] Buscando capa no Deezer: {}", url);
         String json = Jsoup.connect(url)
                 .userAgent(USER_AGENT)
                 .timeout(15000)

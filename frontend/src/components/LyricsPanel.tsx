@@ -84,6 +84,23 @@ export default function LyricsPanel({ currentFile }: Props) {
     }
   }, [currentFile, draft]);
 
+  const handleDelete = useCallback(async () => {
+    if (!currentFile) return;
+    if (!confirm('Remover letra salva?')) return;
+    try {
+      const res = await fetch(`${API}/lyrics?path=${encodeURIComponent(currentFile)}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        setLyrics(null);
+      } else {
+        alert(`Erro ao remover letra: ${await res.text()}`);
+      }
+    } catch {
+      alert('Erro ao conectar com o servidor');
+    }
+  }, [currentFile]);
+
   const canFetch = !!currentFile;
 
   return (
@@ -111,6 +128,7 @@ export default function LyricsPanel({ currentFile }: Props) {
                   {loading ? 'Buscando...' : 'Buscar letra'}
                 </button>
                 <button id="edit-lyrics-btn" onClick={handleStartEdit}>Alterar letra</button>
+                <button id="delete-lyrics-btn" onClick={handleDelete}>Remover letra</button>
               </>
             )}
             <div className="lyrics-font-controls">

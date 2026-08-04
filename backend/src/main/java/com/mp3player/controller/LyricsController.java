@@ -2,6 +2,7 @@ package com.mp3player.controller;
 
 import com.mp3player.application.lyrics.LyricsAppService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -52,6 +53,19 @@ public class LyricsController {
             return ResponseEntity.ok("Letra salva");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Erro ao salvar letra: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/lyrics")
+    public ResponseEntity<String> deleteLyrics(@RequestParam String path) {
+        if (path == null || path.isBlank()) {
+            return ResponseEntity.badRequest().body("Caminho é obrigatório");
+        }
+        try {
+            lyricsService.delete(path);
+            return ResponseEntity.ok("Letra removida");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao remover letra: " + e.getMessage());
         }
     }
 }

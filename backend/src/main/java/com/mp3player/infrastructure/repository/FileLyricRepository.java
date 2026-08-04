@@ -41,7 +41,7 @@ public class FileLyricRepository implements LyricRepository {
         try {
             return Optional.of(new Lyric(musicPath, Files.readString(file, StandardCharsets.UTF_8)));
         } catch (IOException e) {
-            log.error("Error reading lyrics for {}", musicPath, e);
+            log.error("[Lyrics] Erro ao ler letra de {}", musicPath, e);
             return Optional.empty();
         }
     }
@@ -59,9 +59,21 @@ public class FileLyricRepository implements LyricRepository {
         try {
             Files.createDirectories(file.getParent());
             Files.writeString(file, lyric.getText(), StandardCharsets.UTF_8);
-            log.info("Lyrics saved to {}", file.toAbsolutePath());
+            log.info("[Lyrics] Letra salva em {}", file.toAbsolutePath());
         } catch (IOException e) {
-            log.error("Error saving lyrics for {}", lyric.getMusicPath(), e);
+            log.error("[Lyrics] Erro ao salvar letra de {}", lyric.getMusicPath(), e);
+        }
+    }
+
+    @Override
+    public void delete(String musicPath) {
+        Path file = resolveTxtFile(musicPath);
+        if (file == null) return;
+        try {
+            Files.deleteIfExists(file);
+            log.info("[Lyrics] Letra removida de {}", musicPath);
+        } catch (IOException e) {
+            log.error("[Lyrics] Erro ao remover letra de {}", musicPath, e);
         }
     }
 

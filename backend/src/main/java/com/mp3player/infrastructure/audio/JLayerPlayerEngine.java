@@ -62,7 +62,7 @@ public class JLayerPlayerEngine implements PlayerEngine {
             startFrame = (int) (startPositionMillis * sampleRate / (SAMPLES_PER_FRAME * 1000L));
             startFrame = Math.min(startFrame, totalFrames - 1);
             if (startFrame > 0) {
-                log.info("Seeking to frame {} (~{}ms)", startFrame, startPositionMillis);
+                log.info("[Player] Buscando frame {} (~{}ms)", startFrame, startPositionMillis);
                 try {
                     Bitstream bitstream = new Bitstream(fis);
                     for (int i = 0; i < startFrame; i++) {
@@ -88,7 +88,7 @@ public class JLayerPlayerEngine implements PlayerEngine {
             throw new RuntimeException("Error creating player", e);
         }
 
-        log.info("Playing: {} (start: {}ms)", filePath, startPositionMillis);
+        log.info("[Player] Reproduzindo: {} (início: {}ms)", filePath, startPositionMillis);
         this.currentFilePath = filePath;
         this.player = newPlayer;
         this.paused = false;
@@ -113,7 +113,7 @@ public class JLayerPlayerEngine implements PlayerEngine {
                     }
                 }
             } catch (javazoom.jl.decoder.JavaLayerException e) {
-                log.warn("Playback error", e);
+                log.warn("[Player] Erro na reprodução", e);
             } finally {
                 newPlayer.close();
                 if (this.player == newPlayer) {
@@ -126,11 +126,11 @@ public class JLayerPlayerEngine implements PlayerEngine {
     @Override
     public void seekTo(long positionMillis) {
         if (currentFilePath == null) return;
-        log.info("Seek to {}ms", positionMillis);
+        log.info("[Player] Buscando posição {}ms", positionMillis);
         try {
             play(currentFilePath, positionMillis);
         } catch (Exception e) {
-            log.error("File not found on seek", e);
+            log.error("[Player] Arquivo não encontrado ao buscar posição", e);
         }
     }
 
@@ -151,21 +151,21 @@ public class JLayerPlayerEngine implements PlayerEngine {
             bitstream.close();
             totalFrames = count;
         } catch (Exception e) {
-            log.error("Failed to analyze file: {}", filePath, e);
+            log.error("[Player] Falha ao analisar arquivo: {}", filePath, e);
             totalFrames = -1;
         }
     }
 
     @Override
     public void pause() {
-        log.info("Pause");
+        log.info("[Player] Pausado");
         this.paused = true;
         this.pauseStartNanos = System.nanoTime();
     }
 
     @Override
     public void resume() {
-        log.info("Resume");
+        log.info("[Player] Retomado");
         if (pauseStartNanos != 0) {
             totalPausedNanos += System.nanoTime() - pauseStartNanos;
             pauseStartNanos = 0;
@@ -208,12 +208,12 @@ public class JLayerPlayerEngine implements PlayerEngine {
 
     private void readId3Tags(String filePath) {
         this.id3Tags = id3Codec.read(filePath).toTagMap();
-        log.info("ID3 Tags: {}", id3Tags);
+        log.info("[Player] Tags ID3: {}", id3Tags);
     }
 
     @Override
     public void stop() {
-        log.info("Stop");
+        log.info("[Player] Parado");
         stopCurrent();
     }
 

@@ -31,12 +31,12 @@ public class PlayerController {
 
     @PostMapping("/play")
     public ResponseEntity<String> play(@RequestBody String filePath) {
-        log.info("▶ Play: {}", filePath);
+        log.info("[Player] Reproduzindo: {}", filePath);
         try {
             playerService.play(filePath);
             return ResponseEntity.ok("Playing: " + filePath);
         } catch (Exception e) {
-            log.error("▶ Play failed: {}", e.getMessage());
+            log.error("[Player] Falha ao reproduzir: {}", e.getMessage());
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }
@@ -45,17 +45,17 @@ public class PlayerController {
     public ResponseEntity<String> pause() {
         String result = playerService.pause();
         if ("Paused".equals(result)) {
-            log.info("⏸ Paused");
+            log.info("[Player] Pausado");
             return ResponseEntity.ok(result);
         }
-        log.warn("⏸ Pause ignored: {}", result);
+        log.warn("[Player] Pausa ignorada: {}", result);
         return ResponseEntity.badRequest().body(result);
     }
 
     @PostMapping("/stop")
     public ResponseEntity<String> stop() {
         playerService.stop();
-        log.info("⏹ Stopped");
+        log.info("[Player] Parado");
         return ResponseEntity.ok("Stopped");
     }
 
@@ -67,7 +67,7 @@ public class PlayerController {
         }
         String result = playerService.seekTo(position);
         if (result.startsWith("Seeked")) {
-            log.info("⏩ Seek to {}ms", position);
+            log.info("[Player] Buscando posição {}ms", position);
             return ResponseEntity.ok(result);
         }
         return ResponseEntity.badRequest().body(result);
@@ -77,10 +77,10 @@ public class PlayerController {
     public ResponseEntity<String> resume() {
         String result = playerService.resume();
         if ("Resumed".equals(result)) {
-            log.info("▶ Resumed");
+            log.info("[Player] Retomado");
             return ResponseEntity.ok(result);
         }
-        log.warn("▶ Resume ignored: {}", result);
+        log.warn("[Player] Retomada ignorada: {}", result);
         return ResponseEntity.badRequest().body(result);
     }
 

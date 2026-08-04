@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import AutorenewIcon from '@mui/icons-material/Autorenew';
 import type { Id3Tags } from '../App';
 
 function formatTime(ms: number): string {
@@ -14,6 +15,9 @@ interface Props {
   files: string[];
   currentFile: string | null;
   id3Cache: Map<string, Id3Tags>;
+  loading?: boolean;
+  id3Loaded?: number;
+  id3Total?: number;
   onSelect: (file: string) => void;
 }
 
@@ -54,7 +58,7 @@ function clamp(value: number, min: number, max: number): number {
 
 type ResizeType = 'artist' | 'time';
 
-export default function Playlist({ files, currentFile, id3Cache, onSelect }: Props) {
+export default function Playlist({ files, currentFile, id3Cache, loading = false, id3Loaded = 0, id3Total = 0, onSelect }: Props) {
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
   const [tooltipStyle, setTooltipStyle] = useState<{ left: number; top: number } | null>(null);
   const [artistPct, setArtistPct] = useState(30);
@@ -135,6 +139,22 @@ export default function Playlist({ files, currentFile, id3Cache, onSelect }: Pro
     });
     return () => cancelAnimationFrame(raf);
   }, [tooltip]);
+
+  if (loading) {
+    return (
+      <section id="playlist-section">
+        <div id="playlist-header" style={gridStyle}>
+          <span className="pl-header-artist">Artista</span>
+          <span className="pl-header-title">Música</span>
+          <span className="pl-header-time">Tempo</span>
+        </div>
+        <div className="playlist-loading">
+          <AutorenewIcon className="playlist-spinner" />
+          <span>Carregando dados... {id3Total > 0 ? `${id3Loaded}/${id3Total}` : ''}</span>
+        </div>
+      </section>
+    );
+  }
 
   if (files.length === 0) {
     return (

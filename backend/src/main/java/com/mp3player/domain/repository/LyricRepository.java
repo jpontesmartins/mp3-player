@@ -25,4 +25,7 @@ public interface LyricRepository {
 
     /** Indica se já existe uma letra em cache para a música. */
     boolean exists(String musicPath);
+
+    /** Remove a letra em cache (arquivo TXT) para a música informada. */
+    void delete(String musicPath);
 }

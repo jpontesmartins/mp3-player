@@ -36,7 +36,7 @@ public class JsoupLyricsScraper implements LyricsScraper {
 
         for (String candidate : candidates) {
             String page = stripTranslation(candidate);
-            log.info("Fetching lyrics page: {}", page);
+            log.info("[Scraper] Buscando página de letra: {}", page);
             try {
                 Document lyricDoc = Jsoup.connect(page)
                         .userAgent(USER_AGENT)
@@ -46,7 +46,7 @@ public class JsoupLyricsScraper implements LyricsScraper {
 
                 Element lyricDiv = lyricDoc.selectFirst("div.lyric-original");
                 if (lyricDiv == null) {
-                    log.warn("div.lyric-original not found on {}", page);
+                    log.warn("[Scraper] div.lyric-original não encontrada em {}", page);
                     continue;
                 }
 
@@ -55,11 +55,11 @@ public class JsoupLyricsScraper implements LyricsScraper {
                 }
                 return lyricDiv.wholeText().trim();
             } catch (IOException e) {
-                log.warn("Failed to fetch page {}", page, e);
+                log.warn("[Scraper] Falha ao buscar página {}", page, e);
             }
         }
 
-        log.warn("No URL found for \"{}\" - \"{}\"", artist, title);
+        log.warn("[Scraper] Nenhuma URL encontrada para \"{}\" - \"{}\"", artist, title);
         return "Letra não encontrada para \"" + title + "\" de " + artist;
     }
 
@@ -83,7 +83,7 @@ public class JsoupLyricsScraper implements LyricsScraper {
 
         for (String artistSlug : slugs) {
             String url = "https://www.letras.mus.br/" + artistSlug + "/" + titleSlug + "/";
-            log.info("Trying direct URL: {}", url);
+            log.info("[Scraper] Tentando URL direta: {}", url);
             try {
                 int status = Jsoup.connect(url)
                         .userAgent(USER_AGENT)
@@ -99,7 +99,7 @@ public class JsoupLyricsScraper implements LyricsScraper {
     private String searchForUrl(String artist, String title) throws IOException {
         String query = java.net.URLEncoder.encode(artist + " " + title, StandardCharsets.UTF_8);
         String searchUrl = "https://www.letras.mus.br/?q=" + query;
-        log.info("Searching: {}", searchUrl);
+        log.info("[Scraper] Buscando: {}", searchUrl);
 
         Document searchDoc = Jsoup.connect(searchUrl)
                 .userAgent(USER_AGENT)
@@ -179,7 +179,7 @@ public class JsoupLyricsScraper implements LyricsScraper {
      */
     private String tryArtistSlug(String inverted, String title) throws IOException {
         String direct = "https://www.letras.mus.br/" + inverted + "/" + toSlug(title) + "/";
-        log.info("Trying inverted artist direct URL: {}", direct);
+        log.info("[Scraper] Tentando URL direta do artista invertido: {}", direct);
         try {
             int status = Jsoup.connect(direct)
                     .userAgent(USER_AGENT)
@@ -190,7 +190,7 @@ public class JsoupLyricsScraper implements LyricsScraper {
         }
 
         String pageUrl = "https://www.letras.mus.br/" + inverted + "/";
-        log.info("Fetching artist page: {}", pageUrl);
+        log.info("[Scraper] Buscando página do artista: {}", pageUrl);
         Document artistDoc;
         try {
             artistDoc = Jsoup.connect(pageUrl)
@@ -200,7 +200,7 @@ public class JsoupLyricsScraper implements LyricsScraper {
                     .ignoreHttpErrors(true)
                     .get();
         } catch (IOException e) {
-            log.warn("Failed to fetch artist page {}", pageUrl, e);
+            log.warn("[Scraper] Falha ao buscar página do artista {}", pageUrl, e);
             return null;
         }
 
@@ -214,7 +214,7 @@ public class JsoupLyricsScraper implements LyricsScraper {
                     .findFirst().orElse(null);
         }
         if (link == null) {
-            log.warn("No song link found on artist page for \"{}\"", title);
+            log.warn("[Scraper] Nenhum link de música encontrado na página do artista para \"{}\"", title);
             return null;
         }
 

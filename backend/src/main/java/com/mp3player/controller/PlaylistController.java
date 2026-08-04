@@ -31,13 +31,13 @@ public class PlaylistController {
 
     @GetMapping("/playlist")
     public ResponseEntity<?> getPlaylist(@RequestParam String path) {
-        log.info("📂 Playlist: {}", path);
+        log.info("[Playlist] Carregando pasta: {}", path);
         try {
             List<String> files = playlistService.scanFolder(path);
-            log.info("📂 Found {} files", files.size());
+            log.info("[Playlist] {} arquivos encontrados", files.size());
             return ResponseEntity.ok(files);
         } catch (Exception e) {
-            log.error("📂 Playlist failed: {}", e.getMessage());
+            log.error("[Playlist] Falha ao carregar pasta: {}", e.getMessage());
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }
