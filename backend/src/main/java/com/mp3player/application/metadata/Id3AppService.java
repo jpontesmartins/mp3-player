@@ -4,9 +4,13 @@ import com.mp3player.domain.model.Music;
 import com.mp3player.domain.port.Id3Codec;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * Service da aplicação para o módulo de edição de ID3: lê um arquivo, lê vários
@@ -30,11 +34,28 @@ public class Id3AppService {
         }
     }
 
-    /** Lê as tags ID3 de vários arquivos de uma vez, indexando pelo caminho. */
+    /**
+     * Lê as tags ID3 de vários arquivos de uma vez, indexando pelo caminho.
+     * Cada arquivo é lido em uma thread virtual, acelerando a carga inicial da
+     * playlist/coleção sem bloquear o request.
+     */
     public Map<String, Map<String, String>> getBulk(List<String> paths) {
         Map<String, Map<String, String>> result = new LinkedHashMap<>();
-        for (String path : paths) {
-            result.put(path, getForFile(path));
+        List<Future<Map<String, String>>> futures = new ArrayList<>(paths.size());
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            for (String path : paths) {
+                futures.add(executor.submit(() -> getForFile(path)));
+            }
+            for (int i = 0; i < futures.size(); i++) {
+                try {
+                    result.put(paths.get(i), futures.get(i).get());
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                } catch (ExecutionException e) {
+                    // nunca acontece: getForFile captura qualquer exceção interna
+                }
+            }
         }
         return result;
     }
