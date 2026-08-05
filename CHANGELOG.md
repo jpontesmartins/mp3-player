@@ -6,6 +6,17 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/) e as
 versões seguem [Semântic Versioning](https://semver.org/lang/pt-BR/).
 
 
+
+## [1.1.0] — 2026-08-05
+
+### Alterado
+- implementada a funcionalidade de Edição de ID3 em massa
+- alteradas as portas do backend (8111) e frontend (8112)
+- alterado tamanho campos ID3
+
+### Corrigido
+- fix: alinhar tauri e tauri-build para v2
+
 ## [1.0.0] — 2026-08-04
 
 ### Alterado
@@ -37,6 +48,17 @@ versões seguem [Semântic Versioning](https://semver.org/lang/pt-BR/).
 ### Refatorado
 - refatoração, criação de skills, changelog, javadoc, readmes
 - refatoracao
+
+
+## [1.1.0] — 2026-08-05
+
+### Alterado
+- implementada a funcionalidade de Edição de ID3 em massa
+- alteradas as portas do backend (8111) e frontend (8112)
+- alterado tamanho campos ID3
+
+### Corrigido
+- fix: alinhar tauri e tauri-build para v2
 
 ## [0.9.0] — 2026-07-31
 
