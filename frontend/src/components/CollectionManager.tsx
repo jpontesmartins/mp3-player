@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import type { Id3Tags } from '../App';
 import PlaylistManager from './PlaylistManager';
+import BulkId3Editor from './BulkId3Editor';
 
 const API = 'http://localhost:8111';
 
@@ -79,6 +80,7 @@ export default function CollectionManager({ libraryFiles, id3Cache, onTagsUpdate
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [playlistView, setPlaylistView] = useState(false);
+  const [bulkView, setBulkView] = useState(false);
 
   const albums = useMemo<Album[]>(() => {
     const map = new Map<string, { folder: string; files: string[]; albumNames: string[] }>();
@@ -198,8 +200,23 @@ export default function CollectionManager({ libraryFiles, id3Cache, onTagsUpdate
             onLoadPlaylist={onLoadPlaylist}
           />
         </>
+      ) : bulkView ? (
+        <>
+          <div className="collection-backrow">
+            <button className="pmanager-btn" onClick={() => setBulkView(false)}>← Voltar</button>
+          </div>
+          <BulkId3Editor
+            collectionFiles={libraryFiles}
+            onTagsUpdated={onTagsUpdated}
+          />
+        </>
       ) : (
       <>
+      <div className="collection-actions-row">
+        <button className="pmanager-btn primary" onClick={() => setBulkView(true)}>
+          Edição de ID3 em massa
+        </button>
+      </div>
       <div className="collection-lists">
         <div className="collection-list">
           <h3 className="collection-list-title">Álbuns ({albums.length})</h3>
