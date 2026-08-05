@@ -7,6 +7,12 @@ versões seguem [Semântic Versioning](https://semver.org/lang/pt-BR/).
 
 
 
+
+## [1.1.1] — 2026-08-05
+
+### Alterado
+- adicionadas informações de log e portas nas configurações
+
 ## [1.1.0] — 2026-08-05
 
 ### Alterado
@@ -16,6 +22,12 @@ versões seguem [Semântic Versioning](https://semver.org/lang/pt-BR/).
 
 ### Corrigido
 - fix: alinhar tauri e tauri-build para v2
+
+
+## [1.1.1] — 2026-08-05
+
+### Alterado
+- adicionadas informações de log e portas nas configurações
 
 ## [1.0.0] — 2026-08-04
 
@@ -50,6 +62,12 @@ versões seguem [Semântic Versioning](https://semver.org/lang/pt-BR/).
 - refatoracao
 
 
+
+## [1.1.1] — 2026-08-05
+
+### Alterado
+- adicionadas informações de log e portas nas configurações
+
 ## [1.1.0] — 2026-08-05
 
 ### Alterado
@@ -59,6 +77,12 @@ versões seguem [Semântic Versioning](https://semver.org/lang/pt-BR/).
 
 ### Corrigido
 - fix: alinhar tauri e tauri-build para v2
+
+
+## [1.1.1] — 2026-08-05
+
+### Alterado
+- adicionadas informações de log e portas nas configurações
 
 ## [0.9.0] — 2026-07-31
 
