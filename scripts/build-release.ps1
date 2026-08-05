@@ -147,10 +147,10 @@ Write-Host "Atualizado: package.json -> $newVersion" -ForegroundColor Green
     Set-Content $tauriConf -NoNewline
 Write-Host "Atualizado: tauri.conf.json -> $newVersion" -ForegroundColor Green
 
-# Cargo.toml (apenas a versão do [package], primeira ocorrência — não as dependências)
-$cargoContent = Get-Content $cargoToml -Raw
-$cargoContent = [regex]::Replace($cargoContent, 'version\s*=\s*"[^"]*"', "version = `"$newVersion`"", 1)
-Set-Content $cargoToml $cargoContent -NoNewline
+# Cargo.toml (somente a versão do [package], que fica no início da linha —
+# as dependências como tauri-build = { version = "2" } não são atingidas)
+(Get-Content $cargoToml -Raw) -replace '(?m)^version\s*=\s*"[^"]*"', "version = `"$newVersion`"" |
+    Set-Content $cargoToml -NoNewline
 Write-Host "Atualizado: Cargo.toml -> $newVersion" -ForegroundColor Green
 
 # App.tsx (statusbar)
