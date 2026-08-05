@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
+import type { AppTheme } from '../App';
 
 export type PlaybackMode = 'continuous' | 'shuffle' | 'repeat';
 
 interface Props {
   playbackMode: PlaybackMode;
   showCover: boolean;
+  theme: AppTheme;
   onPlaybackModeChange: (mode: PlaybackMode) => void;
   onShowCoverChange: (show: boolean) => void;
+  onThemeChange: (theme: AppTheme) => void;
   onLoadPlaylist: (path: string) => Promise<boolean>;
 }
 
@@ -18,7 +21,7 @@ interface SystemInfo {
 
 const API = 'http://localhost:8111';
 
-export default function SettingsPanel({ playbackMode, showCover, onPlaybackModeChange, onShowCoverChange, onLoadPlaylist }: Props) {
+export default function SettingsPanel({ playbackMode, showCover, theme, onPlaybackModeChange, onShowCoverChange, onThemeChange, onLoadPlaylist }: Props) {
   const [path, setPath] = useState('');
   const [loading, setLoading] = useState(false);
   const [info, setInfo] = useState<SystemInfo | null>(null);
@@ -45,6 +48,32 @@ export default function SettingsPanel({ playbackMode, showCover, onPlaybackModeC
     <section id="settings-panel">
       <div className="settings-content">
         <h2 className="settings-title">Configurações</h2>
+
+        <div className="settings-group">
+          <label className="settings-label">Tema</label>
+          <div className="settings-options">
+            <label className={`settings-radio ${theme === 'dark' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="theme"
+                value="dark"
+                checked={theme === 'dark'}
+                onChange={() => onThemeChange('dark')}
+              />
+              Escuro
+            </label>
+            <label className={`settings-radio ${theme === 'light' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="theme"
+                value="light"
+                checked={theme === 'light'}
+                onChange={() => onThemeChange('light')}
+              />
+              Claro
+            </label>
+          </div>
+        </div>
 
         <div className="settings-group">
           <label className="settings-label">Tipo de reprodução</label>

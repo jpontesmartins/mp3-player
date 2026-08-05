@@ -11,6 +11,13 @@ import './App.css';
 
 const API = 'http://localhost:8111';
 const STORAGE_KEY = 'mp3_folder';
+const THEME_KEY = 'mp3_theme';
+
+export type AppTheme = 'dark' | 'light';
+
+function loadTheme(): AppTheme {
+  return localStorage.getItem(THEME_KEY) === 'light' ? 'light' : 'dark';
+}
 
 export interface Id3Tags {
   title?: string;
@@ -81,6 +88,7 @@ export default function App() {
   const [playbackMode, setPlaybackMode] = useState<PlaybackMode>('continuous');
   const [showCover, setShowCover] = useState(true);
   const [showInfo, setShowInfo] = useState(false);
+  const [theme, setTheme] = useState<AppTheme>(loadTheme);
   const lastLoggedFile = useRef<string | null>(null);
   const currentFileRef = useRef(currentFile);
   currentFileRef.current = currentFile;
@@ -196,6 +204,11 @@ export default function App() {
       if (res.ok) setPlaylists(await res.json());
     } catch (_) { /* ignore */ }
   }, []);
+
+  useEffect(() => {
+    document.body.dataset.theme = theme;
+    localStorage.setItem(THEME_KEY, theme);
+  }, [theme]);
 
   useEffect(() => {
     refreshPlaylists();
@@ -398,8 +411,10 @@ export default function App() {
           <SettingsPanel
             playbackMode={playbackMode}
             showCover={showCover}
+            theme={theme}
             onPlaybackModeChange={setPlaybackMode}
             onShowCoverChange={setShowCover}
+            onThemeChange={setTheme}
             onLoadPlaylist={handleLoadPlaylist}
           />
         ) : (
