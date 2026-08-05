@@ -873,10 +873,30 @@ table.collection-grid tr.dirty td {
   background: #111;
 }
 
-.collection-duration {
-  color: #666;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
+.collection-cell-input.cell-year {
+  min-width: 45px;
+}
+
+.collection-cell-input.cell-track {
+  min-width: 44px;
+  padding-right: 4px;
+  padding-left: 4px;
+}
+
+table.collection-grid th.col-year {
+  width: 60px;
+}
+
+table.collection-grid td.col-year {
+  width: 60px;
+}
+
+table.collection-grid th.col-track {
+  width: 58px;
+}
+
+table.collection-grid td.col-track {
+  width: 58px;
 }
 
 .collection-file {

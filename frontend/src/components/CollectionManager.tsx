@@ -54,15 +54,6 @@ function fileName(p: string): string {
   return p.split('\\').pop()!.split('/').pop()!;
 }
 
-function formatTime(ms: number): string {
-  if (!ms || ms <= 0) return '00:00:00';
-  const total = Math.floor(ms / 1000);
-  const h = Math.floor(total / 3600);
-  const m = Math.floor((total % 3600) / 60);
-  const s = total % 60;
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-}
-
 function emptyRow(): Record<EditableField, string> {
   return { title: '', artist: '', album: '', genre: '', track: '', year: '' };
 }
@@ -283,9 +274,10 @@ export default function CollectionManager({ libraryFiles, id3Cache, onTagsUpdate
               <thead>
                 <tr>
                   {EDITABLE_FIELDS.map(f => (
-                    <th key={f}>{FIELD_LABELS[f]}</th>
+                    <th key={f} className={f === 'year' ? 'col-year' : f === 'track' ? 'col-track' : ''}>
+                      {FIELD_LABELS[f]}
+                    </th>
                   ))}
-                  <th>Duração</th>
                   <th>Arquivo</th>
                 </tr>
               </thead>
@@ -294,19 +286,17 @@ export default function CollectionManager({ libraryFiles, id3Cache, onTagsUpdate
                   const row = edits.get(file) ?? emptyRow();
                   const tags = id3Cache.get(file);
                   const dirty = isDirty(row, tags);
-                  const dur = tags?.duration_ms ? formatTime(Number(tags.duration_ms)) : '';
                   return (
                     <tr key={file} className={dirty ? 'dirty' : ''}>
                       {EDITABLE_FIELDS.map(f => (
-                        <td key={f}>
+                        <td key={f} className={f === 'year' ? 'col-year' : f === 'track' ? 'col-track' : ''}>
                           <input
-                            className="collection-cell-input"
+                            className={`collection-cell-input cell-${f}`}
                             value={row[f]}
                             onChange={e => handleFieldChange(file, f, e.target.value)}
                           />
                         </td>
                       ))}
-                      <td className="collection-duration">{dur}</td>
                       <td className="collection-file">{fileName(file)}</td>
                     </tr>
                   );
