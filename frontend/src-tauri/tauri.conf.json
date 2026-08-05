@@ -5,7 +5,7 @@
   "identifier": "com.mp3player.app",
   "build": {
     "frontendDist": "../dist",
-    "devUrl": "http://localhost:5173",
+    "devUrl": "http://localhost:8112",
     "beforeDevCommand": "npm run dev:vite",
     "beforeBuildCommand": "npm run build:vite"
   },
