@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export type PlaybackMode = 'continuous' | 'shuffle' | 'repeat';
 
@@ -10,9 +10,29 @@ interface Props {
   onLoadPlaylist: (path: string) => Promise<boolean>;
 }
 
+interface SystemInfo {
+  logFile: string;
+  backendPort: string;
+  frontendPort: string;
+}
+
+const API = 'http://localhost:8111';
+
 export default function SettingsPanel({ playbackMode, showCover, onPlaybackModeChange, onShowCoverChange, onLoadPlaylist }: Props) {
   const [path, setPath] = useState('');
   const [loading, setLoading] = useState(false);
+  const [info, setInfo] = useState<SystemInfo | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${API}/info`)
+      .then(res => (res.ok ? res.json() : null))
+      .then((data: SystemInfo | null) => {
+        if (!cancelled && data) setInfo(data);
+      })
+      .catch(() => { /* servidor indisponível */ });
+    return () => { cancelled = true; };
+  }, []);
 
   const handleLoad = async () => {
     if (!path.trim()) return;
@@ -90,6 +110,26 @@ export default function SettingsPanel({ playbackMode, showCover, onPlaybackModeC
               {loading ? 'Carregando...' : 'Carregar'}
             </button>
           </div>
+        </div>
+
+        <div className="settings-divider" />
+
+        <div className="settings-group">
+          <label className="settings-label">Informações do sistema</label>
+          <dl className="settings-info">
+            <div className="settings-info-row">
+              <dt>Local do log do backend</dt>
+              <dd className="settings-info-path">{info?.logFile || '—'}</dd>
+            </div>
+            <div className="settings-info-row">
+              <dt>Porta do backend</dt>
+              <dd>{info?.backendPort || '8111'}</dd>
+            </div>
+            <div className="settings-info-row">
+              <dt>Porta do frontend</dt>
+              <dd>{info?.frontendPort || '8112'}</dd>
+            </div>
+          </dl>
         </div>
       </div>
     </section>

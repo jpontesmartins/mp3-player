@@ -284,6 +284,40 @@ button:disabled {
   background: #1a1a1a;
 }
 
+.settings-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-info-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-info-row dt {
+  font-size: 0.75rem;
+  color: #888;
+}
+
+.settings-info-row dd {
+  font-size: 0.85rem;
+  color: #eee;
+  font-variant-numeric: tabular-nums;
+}
+
+.settings-info-path {
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 0.8rem !important;
+  word-break: break-all;
+  color: #ccc !important;
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 4px;
+  padding: 4px 6px;
+}
+
 .settings-folder-row {
   display: flex;
   gap: 8px;

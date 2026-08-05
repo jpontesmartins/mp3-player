@@ -29,7 +29,8 @@ fn spawn_backend(app: &tauri::AppHandle) -> Option<Child> {
     cmd.arg("-jar")
         .arg(&jar)
         .arg("--server.address=127.0.0.1")
-        .arg("--server.port=8111");
+        .arg("--server.port=8111")
+        .arg("--mp3.frontend-port=8112");
 
     // No console window for the child (CREATE_NO_WINDOW).
     #[cfg(windows)]
@@ -38,7 +39,8 @@ fn spawn_backend(app: &tauri::AppHandle) -> Option<Child> {
     // Redirect backend logs to a file so they can be inspected later.
     if let Ok(log_dir) = app.path().app_log_dir() {
         let _ = std::fs::create_dir_all(&log_dir);
-        let log_file = log_dir.join("backend.log");
+        let log_file = normalize_path(&log_dir.join("backend.log"));
+        cmd.arg(format!("--mp3.log-file={}", log_file.to_string_lossy()));
         if let Ok(out) = std::fs::File::create(&log_file) {
             if let Ok(err) = out.try_clone() {
                 cmd.stdout(Stdio::from(out));
