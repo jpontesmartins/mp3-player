@@ -28,7 +28,7 @@ public class Id3MagicCodec implements Id3Codec {
     public Music read(String filePath) {
         try {
             Mp3File mp3file = new Mp3File(filePath);
-            String title = null, artist = null, album = null, year = null, genre = null, track = null;
+            String title = null, artist = null, album = null, year = null, genre = null, track = null, disc = null;
 
             if (mp3file.hasId3v2Tag()) {
                 var id3 = mp3file.getId3v2Tag();
@@ -38,6 +38,7 @@ public class Id3MagicCodec implements Id3Codec {
                 year = id3.getYear();
                 genre = id3.getGenreDescription();
                 track = id3.getTrack();
+                disc = id3.getPartOfSet();
             }
             if (mp3file.hasId3v1Tag()) {
                 var id3 = mp3file.getId3v1Tag();
@@ -53,12 +54,12 @@ public class Id3MagicCodec implements Id3Codec {
             Integer bitrateKbps = bitrate > 0 ? bitrate : null;
 
             Music.Metadata metadata = new Music.Metadata(
-                    title, artist, album, year, genre, track,
+                    title, artist, album, year, genre, track, disc,
                     durationMs > 0 ? durationMs : null, bitrateKbps);
 
             Music music = new Music(filePath, metadata);
             if (music.toTagMap().isEmpty()) {
-                return new Music(filePath, new Music.Metadata(fileName(filePath), null, null, null, null, null,
+                return new Music(filePath, new Music.Metadata(fileName(filePath), null, null, null, null, null, null,
                         durationMs > 0 ? durationMs : null, bitrateKbps));
             }
             return music;
@@ -88,6 +89,7 @@ public class Id3MagicCodec implements Id3Codec {
                 }
             }
             tag.setTrack(tags.getOrDefault("track", null));
+            tag.setPartOfSet(tags.getOrDefault("disc", null));
             mp3file.setId3v2Tag(tag);
             mp3file.removeId3v1Tag();
 

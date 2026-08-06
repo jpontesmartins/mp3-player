@@ -3,7 +3,7 @@ import type { Id3Tags } from '../App';
 
 const API = 'http://localhost:8111';
 
-const TAGS = ['title', 'artist', 'album', 'genre', 'track', 'year'] as const;
+const TAGS = ['title', 'artist', 'album', 'genre', 'track', 'disc', 'year'] as const;
 type TagKey = typeof TAGS[number];
 
 const TAG_LABELS: Record<TagKey, string> = {
@@ -12,6 +12,7 @@ const TAG_LABELS: Record<TagKey, string> = {
   album: 'Álbum',
   genre: 'Gênero',
   track: 'Faixa',
+  disc: 'CD',
   year: 'Ano',
 };
 
@@ -22,6 +23,9 @@ const VAR_ALIASES: Record<string, TagKey> = {
   album: 'album',
   genre: 'genre',
   track: 'track',
+  disc: 'disc',
+  cd: 'disc',
+  disk: 'disc',
   year: 'year',
 };
 
@@ -57,7 +61,7 @@ function escapeRegex(s: string): string {
 }
 
 function emptyMerged(): Record<TagKey, string> {
-  return { title: '', artist: '', album: '', genre: '', track: '', year: '' };
+  return { title: '', artist: '', album: '', genre: '', track: '', disc: '', year: '' };
 }
 
 function compilePattern(pattern: string): CompiledPattern {
@@ -217,7 +221,7 @@ export default function BulkId3Editor({ collectionFiles, onTagsUpdated }: Props)
         <div className="bulk-hint">
           Tags: <code>&lt;title&gt;</code> (ou <code>&lt;song&gt;</code>), <code>&lt;artist&gt;</code>,{' '}
           <code>&lt;album&gt;</code>, <code>&lt;genre&gt;</code>, <code>&lt;track&gt;</code>,{' '}
-          <code>&lt;year&gt;</code>
+          <code>&lt;disc&gt;</code> (ou <code>&lt;cd&gt;</code>), <code>&lt;year&gt;</code>
         </div>
       </div>
 
@@ -229,7 +233,7 @@ export default function BulkId3Editor({ collectionFiles, onTagsUpdated }: Props)
               <span className="bulk-field-label">{TAG_LABELS[k]}</span>
               <input
                 className="bulk-input"
-                placeholder={k === 'track' ? 'ex: 03' : ''}
+                placeholder={k === 'track' ? 'ex: 03' : k === 'disc' ? 'ex: 1/2' : ''}
                 value={fixed[k]}
                 onChange={e => setFixed(prev => ({ ...prev, [k]: e.target.value }))}
               />

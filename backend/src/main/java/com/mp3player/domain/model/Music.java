@@ -50,6 +50,7 @@ public final class Music {
         metadata.putIfNotBlank(map, "year", metadata.getYear());
         metadata.putIfNotBlank(map, "genre", metadata.getGenre());
         metadata.putIfNotBlank(map, "track", metadata.getTrack());
+        metadata.putIfNotBlank(map, "disc", metadata.getDisc());
         if (metadata.getDurationMs() != null) {
             map.put("duration_ms", String.valueOf(metadata.getDurationMs()));
         }
@@ -69,26 +70,28 @@ public final class Music {
         private final String year;
         private final String genre;
         private final String track;
+        private final String disc;
         private final Long durationMs;
         private final Integer bitrateKbps;
 
         public Metadata(String title, String artist, String album, String year, String genre, String track, Long durationMs) {
-            this(title, artist, album, year, genre, track, durationMs, null);
+            this(title, artist, album, year, genre, track, null, durationMs, null);
         }
 
-        public Metadata(String title, String artist, String album, String year, String genre, String track, Long durationMs, Integer bitrateKbps) {
+        public Metadata(String title, String artist, String album, String year, String genre, String track, String disc, Long durationMs, Integer bitrateKbps) {
             this.title = title;
             this.artist = artist;
             this.album = album;
             this.year = year;
             this.genre = genre;
             this.track = track;
+            this.disc = disc;
             this.durationMs = durationMs;
             this.bitrateKbps = bitrateKbps;
         }
 
         public static Metadata empty() {
-            return new Metadata(null, null, null, null, null, null, null, null);
+            return new Metadata(null, null, null, null, null, null, null, null, null);
         }
 
         public static Metadata fromTags(Map<String, String> tags) {
@@ -115,6 +118,7 @@ public final class Music {
                     blankToNull(tags.get("year")),
                     blankToNull(tags.get("genre")),
                     blankToNull(tags.get("track")),
+                    blankToNull(tags.get("disc")),
                     duration,
                     bitrate
             );
@@ -126,6 +130,7 @@ public final class Music {
         public String getYear() { return year; }
         public String getGenre() { return genre; }
         public String getTrack() { return track; }
+        public String getDisc() { return disc; }
         public Long getDurationMs() { return durationMs; }
         public Integer getBitrateKbps() { return bitrateKbps; }
 

@@ -26,6 +26,7 @@ export interface Id3Tags {
   year?: string;
   genre?: string;
   track?: string;
+  disc?: string;
   duration_ms?: string;
   kbps?: string;
   error?: string;

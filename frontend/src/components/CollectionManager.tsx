@@ -5,7 +5,7 @@ import BulkId3Editor from './BulkId3Editor';
 
 const API = 'http://localhost:8111';
 
-const EDITABLE_FIELDS = ['title', 'artist', 'album', 'genre', 'track', 'year'] as const;
+const EDITABLE_FIELDS = ['title', 'artist', 'album', 'genre', 'track', 'disc', 'year'] as const;
 type EditableField = typeof EDITABLE_FIELDS[number];
 
 const FIELD_LABELS: Record<EditableField, string> = {
@@ -14,8 +14,13 @@ const FIELD_LABELS: Record<EditableField, string> = {
   album: 'Álbum',
   genre: 'Gênero',
   track: 'Faixa',
+  disc: 'CD',
   year: 'Ano',
 };
+
+function colClass(f: EditableField): string {
+  return f === 'year' ? 'col-year' : f === 'track' ? 'col-track' : f === 'disc' ? 'col-disc' : '';
+}
 
 interface Props {
   libraryFiles: string[];
@@ -56,7 +61,7 @@ function fileName(p: string): string {
 }
 
 function emptyRow(): Record<EditableField, string> {
-  return { title: '', artist: '', album: '', genre: '', track: '', year: '' };
+  return { title: '', artist: '', album: '', genre: '', track: '', disc: '', year: '' };
 }
 
 function fromTags(tags: Id3Tags | undefined): Record<EditableField, string> {
@@ -66,6 +71,7 @@ function fromTags(tags: Id3Tags | undefined): Record<EditableField, string> {
     album: tags?.album ?? '',
     genre: tags?.genre ?? '',
     track: tags?.track ?? '',
+    disc: tags?.disc ?? '',
     year: tags?.year ?? '',
   };
 }
@@ -291,7 +297,7 @@ export default function CollectionManager({ libraryFiles, id3Cache, onTagsUpdate
               <thead>
                 <tr>
                   {EDITABLE_FIELDS.map(f => (
-                    <th key={f} className={f === 'year' ? 'col-year' : f === 'track' ? 'col-track' : ''}>
+                    <th key={f} className={colClass(f)}>
                       {FIELD_LABELS[f]}
                     </th>
                   ))}
@@ -306,7 +312,7 @@ export default function CollectionManager({ libraryFiles, id3Cache, onTagsUpdate
                   return (
                     <tr key={file} className={dirty ? 'dirty' : ''}>
                       {EDITABLE_FIELDS.map(f => (
-                        <td key={f} className={f === 'year' ? 'col-year' : f === 'track' ? 'col-track' : ''}>
+                        <td key={f} className={colClass(f)}>
                           <input
                             className={`collection-cell-input cell-${f}`}
                             value={row[f]}

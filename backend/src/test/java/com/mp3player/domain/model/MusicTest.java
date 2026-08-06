@@ -25,4 +25,13 @@ class MusicTest {
         assertEquals(a, b);
         assertEquals(a.hashCode(), b.hashCode());
     }
+
+    @Test
+    void fromTagsAndToTagMapRoundTripDisc() {
+        Map<String, String> tags = Map.of("title", "Titulo", "disc", "1/2", "duration_ms", "180000");
+        Music.Metadata metadata = Music.Metadata.fromTags(tags);
+        assertEquals("1/2", metadata.getDisc());
+        Map<String, String> out = new Music("p.mp3", metadata).toTagMap();
+        assertEquals("1/2", out.get("disc"));
+    }
 }

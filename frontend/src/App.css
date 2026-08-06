@@ -979,6 +979,12 @@ table.collection-grid tr.dirty td {
   padding-left: 4px;
 }
 
+.collection-cell-input.cell-disc {
+  min-width: 44px;
+  padding-right: 4px;
+  padding-left: 4px;
+}
+
 table.collection-grid th.col-year {
   width: 60px;
 }
@@ -992,6 +998,14 @@ table.collection-grid th.col-track {
 }
 
 table.collection-grid td.col-track {
+  width: 58px;
+}
+
+table.collection-grid th.col-disc {
+  width: 58px;
+}
+
+table.collection-grid td.col-disc {
   width: 58px;
 }
 
