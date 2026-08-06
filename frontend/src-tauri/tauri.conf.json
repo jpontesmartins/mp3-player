@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/nicoverbruggen/tauri-v2-schema/main/schema.json",
   "productName": "MP3 Player",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "identifier": "com.mp3player.app",
   "build": {
     "frontendDist": "../dist",
