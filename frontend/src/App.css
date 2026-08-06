@@ -1343,6 +1343,25 @@ table.collection-grid td.col-disc {
   color: var(--c-136);
 }
 
+.bulk-fields-narrow {
+  display: flex;
+  gap: 8px;
+}
+
+.bulk-field-grow {
+  flex: 1;
+}
+
+.bulk-field-narrow {
+  width: 96px;
+}
+
+.bulk-field-narrow .bulk-input {
+  flex: none;
+  width: 6ch;
+  padding: 8px;
+}
+
 .bulk-table-wrap {
   overflow: auto;
   border: 1px solid var(--c-26);

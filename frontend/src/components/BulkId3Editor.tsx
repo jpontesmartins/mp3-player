@@ -12,9 +12,11 @@ const TAG_LABELS: Record<TagKey, string> = {
   album: 'Álbum',
   genre: 'Gênero',
   track: 'Faixa',
-  disc: 'CD',
+  disc: 'Disco',
   year: 'Ano',
 };
+
+const NARROW_TAGS: readonly TagKey[] = ['track', 'disc', 'year'];
 
 const VAR_ALIASES: Record<string, TagKey> = {
   title: 'title',
@@ -228,8 +230,29 @@ export default function BulkId3Editor({ collectionFiles, onTagsUpdated }: Props)
       <div className="bulk-group">
         <label className="settings-label">Valores fixos (aplicados a todos os arquivos)</label>
         <div className="bulk-fields">
-          {TAGS.map(k => (
+          {TAGS.filter(k => k !== 'genre' && !NARROW_TAGS.includes(k)).map(k => (
             <div className="bulk-field" key={k}>
+              <span className="bulk-field-label">{TAG_LABELS[k]}</span>
+              <input
+                className="bulk-input"
+                placeholder={k === 'track' ? 'ex: 03' : k === 'disc' ? 'ex: 1/2' : ''}
+                value={fixed[k]}
+                onChange={e => setFixed(prev => ({ ...prev, [k]: e.target.value }))}
+              />
+            </div>
+          ))}
+        </div>
+        <div className="bulk-fields bulk-fields-narrow">
+          <div className="bulk-field bulk-field-grow">
+            <span className="bulk-field-label">{TAG_LABELS.genre}</span>
+            <input
+              className="bulk-input"
+              value={fixed.genre}
+              onChange={e => setFixed(prev => ({ ...prev, genre: e.target.value }))}
+            />
+          </div>
+          {NARROW_TAGS.map(k => (
+            <div className="bulk-field bulk-field-narrow" key={k}>
               <span className="bulk-field-label">{TAG_LABELS[k]}</span>
               <input
                 className="bulk-input"

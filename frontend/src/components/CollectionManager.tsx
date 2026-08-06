@@ -14,7 +14,7 @@ const FIELD_LABELS: Record<EditableField, string> = {
   album: 'Álbum',
   genre: 'Gênero',
   track: 'Faixa',
-  disc: 'CD',
+  disc: 'Disco',
   year: 'Ano',
 };
 
