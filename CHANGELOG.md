@@ -8,10 +8,24 @@ versões seguem [Semântic Versioning](https://semver.org/lang/pt-BR/).
 
 
 
+
+## [1.2.0] — 2026-08-06
+
+### Alterado
+- alterado para usar virtual threads no carregamento dos id3
+- adicionada funcionalidade de temas. claro e escuro
+
 ## [1.1.1] — 2026-08-05
 
 ### Alterado
 - adicionadas informações de log e portas nas configurações
+
+
+## [1.2.0] — 2026-08-06
+
+### Alterado
+- alterado para usar virtual threads no carregamento dos id3
+- adicionada funcionalidade de temas. claro e escuro
 
 ## [1.1.0] — 2026-08-05
 
@@ -24,10 +38,24 @@ versões seguem [Semântic Versioning](https://semver.org/lang/pt-BR/).
 - fix: alinhar tauri e tauri-build para v2
 
 
+
+## [1.2.0] — 2026-08-06
+
+### Alterado
+- alterado para usar virtual threads no carregamento dos id3
+- adicionada funcionalidade de temas. claro e escuro
+
 ## [1.1.1] — 2026-08-05
 
 ### Alterado
 - adicionadas informações de log e portas nas configurações
+
+
+## [1.2.0] — 2026-08-06
+
+### Alterado
+- alterado para usar virtual threads no carregamento dos id3
+- adicionada funcionalidade de temas. claro e escuro
 
 ## [1.0.0] — 2026-08-04
 
@@ -63,10 +91,24 @@ versões seguem [Semântic Versioning](https://semver.org/lang/pt-BR/).
 
 
 
+
+## [1.2.0] — 2026-08-06
+
+### Alterado
+- alterado para usar virtual threads no carregamento dos id3
+- adicionada funcionalidade de temas. claro e escuro
+
 ## [1.1.1] — 2026-08-05
 
 ### Alterado
 - adicionadas informações de log e portas nas configurações
+
+
+## [1.2.0] — 2026-08-06
+
+### Alterado
+- alterado para usar virtual threads no carregamento dos id3
+- adicionada funcionalidade de temas. claro e escuro
 
 ## [1.1.0] — 2026-08-05
 
@@ -79,10 +121,24 @@ versões seguem [Semântic Versioning](https://semver.org/lang/pt-BR/).
 - fix: alinhar tauri e tauri-build para v2
 
 
+
+## [1.2.0] — 2026-08-06
+
+### Alterado
+- alterado para usar virtual threads no carregamento dos id3
+- adicionada funcionalidade de temas. claro e escuro
+
 ## [1.1.1] — 2026-08-05
 
 ### Alterado
 - adicionadas informações de log e portas nas configurações
+
+
+## [1.2.0] — 2026-08-06
+
+### Alterado
+- alterado para usar virtual threads no carregamento dos id3
+- adicionada funcionalidade de temas. claro e escuro
 
 ## [0.9.0] — 2026-07-31
 
