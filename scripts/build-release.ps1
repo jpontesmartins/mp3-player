@@ -167,7 +167,8 @@ $changelog = $changelog -replace '(?s)\n## \[Não publicado\].*?(?=\n## \[)', ''
 
 # Inserir nova seção antes da primeira versão existente (## [X.Y.Z])
 if ($changelog -match '(?m)^## \[') {
-    $changelog = $changelog -replace '(?m)(## \[)', "$changelogEntry`n`$1"
+    $index = $changelog.IndexOf('## [')
+    $changelog = $changelog.Substring(0, $index) + $changelogEntry + "`n" + $changelog.Substring($index)
 } else {
     # Sem versão anterior, adicionar ao final
     $changelog = $changelog.TrimEnd() + "`n" + $changelogEntry
