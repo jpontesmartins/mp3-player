@@ -52,8 +52,10 @@ public class MetadataController {
     public record Id3UpdateRequest(String path, Map<String, String> tags) {}
 
     @PostMapping("/id3/bulk")
-    public ResponseEntity<Map<String, Map<String, String>>> getBulkId3(@RequestBody List<String> paths) {
-        return ResponseEntity.ok(id3Service.getBulk(paths));
+    public ResponseEntity<Map<String, Map<String, String>>> getBulkId3(
+            @RequestBody List<String> paths,
+            @RequestParam(defaultValue = "false") boolean refresh) {
+        return ResponseEntity.ok(id3Service.getBulk(paths, refresh));
     }
 
     @GetMapping("/cover")

@@ -10,11 +10,12 @@ interface Props {
   onPlaybackModeChange: (mode: PlaybackMode) => void;
   onShowCoverChange: (show: boolean) => void;
   onThemeChange: (theme: AppTheme) => void;
-  onLoadPlaylist: (path: string) => Promise<boolean>;
+  onLoadPlaylist: (path: string, refresh?: boolean) => Promise<boolean>;
 }
 
 interface SystemInfo {
   logFile: string;
+  cacheFile: string;
   backendPort: string;
   frontendPort: string;
 }
@@ -40,7 +41,7 @@ export default function SettingsPanel({ playbackMode, showCover, theme, onPlayba
   const handleLoad = async () => {
     if (!path.trim()) return;
     setLoading(true);
-    await onLoadPlaylist(path.trim());
+    await onLoadPlaylist(path.trim(), true);
     setLoading(false);
   };
 
@@ -149,6 +150,10 @@ export default function SettingsPanel({ playbackMode, showCover, theme, onPlayba
             <div className="settings-info-row">
               <dt>Local do log do backend</dt>
               <dd className="settings-info-path">{info?.logFile || '—'}</dd>
+            </div>
+            <div className="settings-info-row">
+              <dt>Local do cache de metadados</dt>
+              <dd className="settings-info-path">{info?.cacheFile || '—'}</dd>
             </div>
             <div className="settings-info-row">
               <dt>Porta do backend</dt>

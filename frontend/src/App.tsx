@@ -98,7 +98,7 @@ export default function App() {
   modeRef.current = playbackMode;
   const intentionalStopRef = useRef(false);
 
-  const handleLoadPlaylist = useCallback(async (folder: string): Promise<boolean> => {
+  const handleLoadPlaylist = useCallback(async (folder: string, forceRefresh = false): Promise<boolean> => {
     intentionalStopRef.current = true;
     try {
       const res = await fetch(`${API}/playlist?path=${encodeURIComponent(folder)}`);
@@ -119,7 +119,7 @@ export default function App() {
           try {
             for (let i = 0; i < files.length; i += id3BatchSize) {
               const batch = files.slice(i, i + id3BatchSize);
-              const id3Res = await fetch(`${API}/id3/bulk`, {
+              const id3Res = await fetch(`${API}/id3/bulk?refresh=${forceRefresh}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(batch),
