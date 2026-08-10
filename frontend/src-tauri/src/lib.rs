@@ -28,7 +28,7 @@ fn spawn_backend(app: &tauri::AppHandle) -> Option<Child> {
     let mut cmd = Command::new(&java);
     cmd.arg("-jar")
         .arg(&jar)
-        .arg("--server.address=127.0.0.1")
+        .arg("--server.address=0.0.0.0")
         .arg("--server.port=8111")
         .arg("--mp3.frontend-port=8112");
 
