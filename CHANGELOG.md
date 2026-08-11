@@ -5,6 +5,16 @@ Todas as alterações notáveis deste projeto serão documentadas neste arquivo.
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/) e as
 versões seguem [Semântic Versioning](https://semver.org/lang/pt-BR/).
 
+
+## [1.2.2] — 2026-08-11
+
+### Alterado
+- endereço para a rede
+
+### Corrigido
+- fix: tamanho dos campos faixa, disco e ano
+- ajuste changelog
+
 ## [1.2.1] — 2026-08-06
 
 ### Adicionado
