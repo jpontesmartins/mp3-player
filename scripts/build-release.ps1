@@ -1,5 +1,5 @@
 # build-release.ps1
-# Gerencia empacotamento, changelog e versionamento semântico do MP3 Player.
+# Gerencia empacotamento, changelog e versionamento semântico do ovelhafy.
 #
 # Uso:
 #   powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build-release.ps1

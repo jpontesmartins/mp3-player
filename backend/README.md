@@ -1,4 +1,4 @@
-# Backend — MP3 Player API
+# Backend — ovelhafy API
 
 API REST em **Java 21** com **Spring Boot 3.3.5** para reprodução de MP3 e serviços auxiliares.
 

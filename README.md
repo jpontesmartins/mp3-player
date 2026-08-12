@@ -1,4 +1,4 @@
-# MP3 Player
+# ovelhafy
 
 Player de música MP3 com frontend desktop (Tauri + React) e backend em Java (Spring Boot).
 

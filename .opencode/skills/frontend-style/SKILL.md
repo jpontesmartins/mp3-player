@@ -5,7 +5,7 @@ description: Estilo de frontend monocromático. (React 18 + Vite + TypeScript st
 
 # Skill: Frontend Monocromático & Minimalista (React + Vite + TS + CSS)
 
-Guia portátil para reproduzir o estilo visual e a arquitetura de componentes usados no MP3 Player em outros projetos.
+Guia portátil para reproduzir o estilo visual e a arquitetura de componentes usados no ovelhafy em outros projetos.
 
 ## Objetivo
 Interfaces limpas, coerentes e elegantes com paleta estritamente monocromática (dark),

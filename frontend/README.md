@@ -1,4 +1,4 @@
-# Frontend — MP3 Player
+# Frontend — ovelhafy
 
 Aplicação desktop construída com **Tauri + React 18 + Vite + TypeScript (strict)**.
 

@@ -1,9 +1,9 @@
 ---
 name: build-release
-description: Gerenciar empacotamento, changelog e versionamento semântico do MP3 Player. Use quando o usuário quiser gerar um build, criar release, empacotar o projeto, ou bump de versão.
+description: Gerenciar empacotamento, changelog e versionamento semântico do ovelhafy. Use quando o usuário quiser gerar um build, criar release, empacotar o projeto, ou bump de versão.
 ---
 
-# Skill: Build, Release & Changelog (MP3 Player)
+# Skill: Build, Release & Changelog (ovelhafy)
 
 Fluxo automatizado de empacotamento que gera changelog a partir do git log,
 aplica versionamento semântico (SemVer) e atualiza todos os arquivos de versão

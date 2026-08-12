@@ -34,4 +34,39 @@ class MusicTest {
         Map<String, String> out = new Music("p.mp3", metadata).toTagMap();
         assertEquals("1/2", out.get("disc"));
     }
+
+    @Test
+    void fromTagsParsesBitrateIntoTagMap() {
+        Map<String, String> tags = Map.of("kbps", "320", "duration_ms", "180000");
+        Music.Metadata metadata = Music.Metadata.fromTags(tags);
+        assertEquals(Integer.valueOf(320), metadata.getBitrateKbps());
+        Map<String, String> out = new Music("p.mp3", metadata).toTagMap();
+        assertEquals("320", out.get("kbps"));
+    }
+
+    @Test
+    void fromTagsIgnoresInvalidNumbers() {
+        Map<String, String> tags = Map.of("kbps", "abc", "duration_ms", "xyz");
+        Music.Metadata metadata = Music.Metadata.fromTags(tags);
+        assertNull(metadata.getBitrateKbps());
+        assertNull(metadata.getDurationMs());
+    }
+
+    @Test
+    void fromTagsTurnsBlankTextFieldsToNull() {
+        Music.Metadata metadata = Music.Metadata.fromTags(Map.of("title", "  ", "artist", "Artista"));
+        assertNull(metadata.getTitle());
+        assertEquals("Artista", metadata.getArtist());
+    }
+
+@Test
+    void toTagMapOmitsBlankAndTrimsValues() {
+        Music.Metadata metadata = new Music.Metadata(" Titulo ", null, null, null, null, "3", null, 120000L, 256);
+        Map<String, String> tags = new Music("p.mp3", metadata).toTagMap();
+        assertEquals("Titulo", tags.get("title"));
+        assertFalse(tags.containsKey("artist"));
+        assertEquals("3", tags.get("track"));
+        assertEquals("120000", tags.get("duration_ms"));
+        assertEquals("256", tags.get("kbps"));
+    }
 }

@@ -1,4 +1,4 @@
-# Empaa coloca o MP3 Player em um instalador Windows auto-contido
+# Empaa coloca o ovelhafy em um instalador Windows auto-contido
 # (frontend Tauri + JAR do backend + JRE minimo via jlink).
 # Requisitos: Java 21 (com jmods), Maven, Node.js, Rust/Cargo e Tauri CLI.
 $ErrorActionPreference = 'Stop'
