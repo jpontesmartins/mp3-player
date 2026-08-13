@@ -10,13 +10,28 @@ const MIN_SIZE = 0.7;
 const MAX_SIZE = 2.0;
 const STEP = 0.1;
 
+const FONT_SIZE_KEY = 'lyrics_font_size';
+
+function loadFontSize(): number {
+  const saved = localStorage.getItem(FONT_SIZE_KEY);
+  if (saved) {
+    const n = parseFloat(saved);
+    if (!isNaN(n) && n >= MIN_SIZE && n <= MAX_SIZE) return n;
+  }
+  return 0.9;
+}
+
 export default function LyricsPanel({ currentFile }: Props) {
   const [lyrics, setLyrics] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [fontSize, setFontSize] = useState(0.9);
+  const [fontSize, setFontSize] = useState(loadFontSize);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
+
+  useEffect(() => {
+    localStorage.setItem(FONT_SIZE_KEY, String(fontSize));
+  }, [fontSize]);
 
   useEffect(() => {
     if (!currentFile) {

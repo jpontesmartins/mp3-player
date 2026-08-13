@@ -4,7 +4,6 @@ import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
 import PauseIcon from '@mui/icons-material/Pause';
 import StopIcon from '@mui/icons-material/Stop';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import type { Id3Tags } from '../App';
 
 import { API } from '../config';
