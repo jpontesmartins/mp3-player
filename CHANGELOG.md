@@ -6,6 +6,18 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/) e as
 versões seguem [Semântic Versioning](https://semver.org/lang/pt-BR/).
 
 
+
+## [1.2.3] — 2026-08-13
+
+### Alterado
+- externalizadas propriedades de obtencao de capa e letras
+- melhroada a cobertura de testes
+- alterado o nome; adicionados mais testes;
+
+### Corrigido
+- corrigido para manter o tamanho da fonte da tela de letras
+- ajustes visuais na tela de configurações; adicionada opção de rolagem para a música corrente
+
 ## [1.2.2] — 2026-08-11
 
 ### Alterado
