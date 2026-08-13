@@ -184,4 +184,25 @@ class MusicAlbumCoverSearcherTest {
             assertNull(searcher.findCover("Artista Album"));
         }
     }
+
+    @Test
+    void findCoverDefaultsToJpegWhenContentTypeIsNull() throws IOException {
+        try (MockedStatic<Jsoup> jsoup = mockStatic(Jsoup.class)) {
+            Connection.Response itunesResponse = responseMock(
+                    "{\"results\":[{\"artworkUrl100\":\"https://example.com/art/100x100bb.jpg\"}]}", null, null);
+            Connection.Response imageResponse = responseMock("", new byte[]{1, 2}, null);
+            Connection itunesConnection = connectionMock(itunesResponse);
+            Connection imageConnection = connectionMock(imageResponse);
+            jsoup.when(() -> Jsoup.connect(anyString())).thenAnswer(invocation -> {
+                String url = invocation.getArgument(0);
+                return url.startsWith("https://example.com") ? imageConnection : itunesConnection;
+            });
+
+            MusicAlbumCoverSearcher searcher = new MusicAlbumCoverSearcher();
+
+            CoverImage cover = searcher.findCover("Artista Album");
+            assertNotNull(cover);
+            assertEquals("image/jpeg", cover.contentType());
+        }
+    }
 }

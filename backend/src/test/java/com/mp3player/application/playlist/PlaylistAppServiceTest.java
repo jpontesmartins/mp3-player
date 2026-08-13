@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,6 +45,20 @@ class PlaylistAppServiceTest {
         service.createOrUpdate("Rock", List.of("a.mp3", "b.mp3"));
         verify(repository).save(argThat(p -> "Rock".equals(p.getName())
                 && p.getSongPaths().equals(List.of("a.mp3", "b.mp3"))));
+    }
+
+    @Test
+    void loadDelegatesToRepository() {
+        when(repository.load("Rock")).thenReturn(List.of("a.mp3", "b.mp3"));
+        PlaylistAppService service = new PlaylistAppService(repository, scanner);
+        assertEquals(List.of("a.mp3", "b.mp3"), service.load("Rock"));
+    }
+
+    @Test
+    void scanFolderThrowsOnIoException() throws IOException {
+        when(scanner.scanFolder("C:\\bad")).thenThrow(new IOException("acesso negado"));
+        PlaylistAppService service = new PlaylistAppService(repository, scanner);
+        assertThrows(IOException.class, () -> service.scanFolder("C:\\bad"));
     }
 
     @Test

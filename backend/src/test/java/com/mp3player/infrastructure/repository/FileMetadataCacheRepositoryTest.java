@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -54,6 +55,30 @@ class FileMetadataCacheRepositoryTest {
 
         assertNotNull(cacheFile().toFile());
         assertNotNull(Files.readString(cacheFile()));
+    }
+
+    @Test
+    void locationReturnsCacheFilePath() {
+        FileMetadataCacheRepository repo = new FileMetadataCacheRepository(cacheFile());
+        assertEquals(cacheFile().toString(), repo.location());
+    }
+
+    @Test
+    void putAllWithEmptyMapDoesNotPersist() {
+        FileMetadataCacheRepository repo = new FileMetadataCacheRepository(cacheFile());
+
+        repo.putAll(Map.of());
+
+        assertFalse(Files.exists(cacheFile()));
+    }
+
+    @Test
+    void loadWithCorruptJsonIsGraceful() throws Exception {
+        Files.writeString(cacheFile(), "{{{not json}}}");
+
+        FileMetadataCacheRepository repo = new FileMetadataCacheRepository(cacheFile());
+
+        assertNull(repo.get("a.mp3"));
     }
 
     private Path cacheFile() {

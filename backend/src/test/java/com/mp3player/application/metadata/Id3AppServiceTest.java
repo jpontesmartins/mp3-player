@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -108,5 +109,20 @@ class Id3AppServiceTest {
         Map<String, String> tags = service.update("a.mp3", Map.of("title", "Novo"));
         assertEquals("Novo", tags.get("title"));
         verify(cache).put("a.mp3", tags);
+    }
+
+    @Test
+    void updateFailurePropagatesException() {
+        when(id3Codec.update("bad.mp3", Map.of("title", "X")))
+                .thenThrow(new IllegalStateException("arquivo corrompido"));
+
+        assertThrows(IllegalStateException.class,
+                () -> service.update("bad.mp3", Map.of("title", "X")));
+    }
+
+    @Test
+    void cacheLocationReturnsLocation() {
+        when(cache.location()).thenReturn("/tmp/id3cache");
+        assertEquals("/tmp/id3cache", service.cacheLocation());
     }
 }

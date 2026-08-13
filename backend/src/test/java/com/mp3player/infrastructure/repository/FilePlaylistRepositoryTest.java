@@ -65,4 +65,31 @@ class FilePlaylistRepositoryTest {
         assertEquals("a_b", repository.sanitize("a/b"));
         assertEquals("rock", repository.sanitize("rock"));
     }
+
+    @Test
+    void sanitizeFallsBackToPlaylistForBlankName() {
+        assertEquals("playlist", repository.sanitize("   "));
+    }
+
+    @Test
+    void listReturnsEmptyWhenDirectoryIsUnavailable() throws IOException {
+        Files.delete(dir);
+
+        assertTrue(repository.list().isEmpty());
+    }
+
+    @Test
+    void saveThrowsIllegalStateExceptionWhenDirectoryIsUnavailable() throws IOException {
+        Files.delete(dir);
+
+        assertThrows(IllegalStateException.class,
+                () -> repository.save(new Playlist("Rock", List.of("a.mp3"))));
+    }
+
+    @Test
+    void renameThrowsIllegalArgumentExceptionWhenSourceMissing() {
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
+                () -> repository.rename("NaoExiste", "Novo"));
+        assertTrue(e.getMessage().contains("NaoExiste"));
+    }
 }

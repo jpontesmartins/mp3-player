@@ -69,4 +69,26 @@ class LyricsAppServiceTest {
         LyricsAppService service = new LyricsAppService(id3Codec, scraper, repository);
         assertEquals("letra", service.get(path));
     }
+
+    @Test
+    void saveDelegatesToRepository() throws IOException {
+        String path = "C:\\Artist - Song.mp3";
+        Music music = new Music(path, new Music.Metadata("Song", "Artist", null, null, null, null, null));
+        when(id3Codec.read(path)).thenReturn(music);
+
+        LyricsAppService service = new LyricsAppService(id3Codec, scraper, repository);
+        service.save(path, "minha letra");
+
+        ArgumentCaptor<Lyric> captor = ArgumentCaptor.forClass(Lyric.class);
+        verify(repository).save(captor.capture(), eq(music));
+        assertEquals("minha letra", captor.getValue().getText());
+        assertEquals(path, captor.getValue().getMusicPath());
+    }
+
+    @Test
+    void deleteDelegatesToRepository() {
+        LyricsAppService service = new LyricsAppService(id3Codec, scraper, repository);
+        service.delete("C:\\song.mp3");
+        verify(repository).delete("C:\\song.mp3");
+    }
 }

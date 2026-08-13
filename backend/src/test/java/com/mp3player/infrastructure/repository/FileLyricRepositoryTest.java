@@ -76,4 +76,55 @@ class FileLyricRepositoryTest {
         assertFalse(repository.exists(mp3.toString()));
         assertTrue(repository.find(mp3.toString()).isEmpty());
     }
+
+    @Test
+    void deleteRemovesTheLyricFile() throws IOException {
+        Path dir = Files.createTempDirectory("lyrics-test");
+        Path mp3 = dir.resolve("arquivo01.mp3");
+        Files.write(mp3, new byte[0]);
+        when(id3Codec.read(anyString())).thenReturn(music(mp3.toString(), "Artist", "Song"));
+
+        repository.save(new Lyric(mp3.toString(), "texto"), null);
+        Path txt = dir.resolve("Artist - Song.txt");
+        assertTrue(Files.exists(txt));
+
+        repository.delete(mp3.toString());
+
+        assertFalse(repository.exists(mp3.toString()));
+        assertFalse(Files.exists(txt));
+    }
+
+    @Test
+    void saveWithPathWithoutParentIsANoOp() throws IOException {
+        when(id3Codec.read(anyString())).thenReturn(music("song.mp3", null, null));
+
+        repository.save(new Lyric("song.mp3", "texto"), null);
+
+        assertFalse(repository.exists("song.mp3"));
+        assertTrue(repository.find("song.mp3").isEmpty());
+    }
+
+    @Test
+    void fallsBackToFilenameWhenCodecThrows() throws IOException {
+        Path dir = Files.createTempDirectory("lyrics-test");
+        Path mp3 = dir.resolve("Artist - Song.mp3");
+        Files.write(mp3, new byte[0]);
+        when(id3Codec.read(anyString())).thenThrow(new RuntimeException("arquivo corrompido"));
+
+        repository.save(new Lyric(mp3.toString(), "texto"), null);
+
+        assertTrue(Files.exists(dir.resolve("Artist - Song.txt")));
+    }
+
+    @Test
+    void usesArtistFromId3AndBaseFromFilenameWhenTitleMissing() throws IOException {
+        Path dir = Files.createTempDirectory("lyrics-test");
+        Path mp3 = dir.resolve("track.mp3");
+        Files.write(mp3, new byte[0]);
+        when(id3Codec.read(anyString())).thenReturn(music(mp3.toString(), "Artist", null));
+
+        repository.save(new Lyric(mp3.toString(), "texto"), null);
+
+        assertTrue(Files.exists(dir.resolve("Artist - track.txt")));
+    }
 }
