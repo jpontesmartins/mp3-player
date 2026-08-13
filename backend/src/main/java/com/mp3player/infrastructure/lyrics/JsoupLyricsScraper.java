@@ -1,5 +1,6 @@
 package com.mp3player.infrastructure.lyrics;
 
+import com.mp3player.config.LyricsProperties;
 import com.mp3player.domain.port.LyricsScraper;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -22,7 +23,11 @@ import java.util.List;
 public class JsoupLyricsScraper implements LyricsScraper {
 
     private static final Logger log = LoggerFactory.getLogger(JsoupLyricsScraper.class);
-    private static final String USER_AGENT = "Mozilla/5.0";
+    private final LyricsProperties props;
+
+    public JsoupLyricsScraper(LyricsProperties props) {
+        this.props = props;
+    }
 
     @Override
     public String fetch(String artist, String title) throws IOException {
@@ -39,9 +44,9 @@ public class JsoupLyricsScraper implements LyricsScraper {
             log.info("[Scraper] Buscando página de letra: {}", page);
             try {
                 Document lyricDoc = Jsoup.connect(page)
-                        .userAgent(USER_AGENT)
-                        .referrer("https://www.letras.mus.br")
-                        .timeout(15000)
+                        .userAgent(props.userAgent())
+                        .referrer(props.baseUrl())
+                        .timeout(props.timeoutFetch())
                         .get();
 
                 Element lyricDiv = lyricDoc.selectFirst("div.lyric-original");
@@ -82,12 +87,12 @@ public class JsoupLyricsScraper implements LyricsScraper {
         }
 
         for (String artistSlug : slugs) {
-            String url = "https://www.letras.mus.br/" + artistSlug + "/" + titleSlug + "/";
+            String url = props.baseUrl() + "/" + artistSlug + "/" + titleSlug + "/";
             log.info("[Scraper] Tentando URL direta: {}", url);
             try {
                 int status = Jsoup.connect(url)
-                        .userAgent(USER_AGENT)
-                        .timeout(8000)
+                        .userAgent(props.userAgent())
+                        .timeout(props.timeoutConnect())
                         .execute().statusCode();
                 if (status == 200) return url;
             } catch (Exception ignored) {
@@ -98,13 +103,13 @@ public class JsoupLyricsScraper implements LyricsScraper {
 
     private String searchForUrl(String artist, String title) throws IOException {
         String query = java.net.URLEncoder.encode(artist + " " + title, StandardCharsets.UTF_8);
-        String searchUrl = "https://www.letras.mus.br/?q=" + query;
+        String searchUrl = props.baseUrl() + props.searchPath() + "?q=" + query;
         log.info("[Scraper] Buscando: {}", searchUrl);
 
         Document searchDoc = Jsoup.connect(searchUrl)
-                .userAgent(USER_AGENT)
-                .referrer("https://www.letras.mus.br")
-                .timeout(15000)
+                .userAgent(props.userAgent())
+                .referrer(props.baseUrl())
+                .timeout(props.timeoutFetch())
                 .get();
 
         String href = null;
@@ -137,9 +142,9 @@ public class JsoupLyricsScraper implements LyricsScraper {
         }
 
         if (!href.startsWith("http")) {
-            href = "https://www.letras.mus.br" + (href.startsWith("/") ? "" : "/") + href;
+            href = props.baseUrl() + (href.startsWith("/") ? "" : "/") + href;
         }
-        if ("https://www.letras.mus.br/".equals(href)) {
+        if ((props.baseUrl() + "/").equals(href)) {
             return null;
         }
         return href;
@@ -178,25 +183,25 @@ public class JsoupLyricsScraper implements LyricsScraper {
      * direta da música e, se falhar, procura o link pelo título na página do artista.
      */
     private String tryArtistSlug(String inverted, String title) throws IOException {
-        String direct = "https://www.letras.mus.br/" + inverted + "/" + toSlug(title) + "/";
+        String direct = props.baseUrl() + "/" + inverted + "/" + toSlug(title) + "/";
         log.info("[Scraper] Tentando URL direta do artista invertido: {}", direct);
         try {
             int status = Jsoup.connect(direct)
-                    .userAgent(USER_AGENT)
-                    .timeout(8000)
+                    .userAgent(props.userAgent())
+                    .timeout(props.timeoutConnect())
                     .execute().statusCode();
             if (status == 200) return direct;
         } catch (Exception ignored) {
         }
 
-        String pageUrl = "https://www.letras.mus.br/" + inverted + "/";
+        String pageUrl = props.baseUrl() + "/" + inverted + "/";
         log.info("[Scraper] Buscando página do artista: {}", pageUrl);
         Document artistDoc;
         try {
             artistDoc = Jsoup.connect(pageUrl)
-                    .userAgent(USER_AGENT)
-                    .referrer("https://www.letras.mus.br")
-                    .timeout(15000)
+                    .userAgent(props.userAgent())
+                    .referrer(props.baseUrl())
+                    .timeout(props.timeoutFetch())
                     .ignoreHttpErrors(true)
                     .get();
         } catch (IOException e) {
@@ -221,7 +226,7 @@ public class JsoupLyricsScraper implements LyricsScraper {
         String page = link.absUrl("href");
         if (page.isBlank()) page = link.attr("href");
         if (!page.startsWith("http")) {
-            page = "https://www.letras.mus.br" + (page.startsWith("/") ? "" : "/") + page;
+            page = props.baseUrl() + (page.startsWith("/") ? "" : "/") + page;
         }
         return page;
     }

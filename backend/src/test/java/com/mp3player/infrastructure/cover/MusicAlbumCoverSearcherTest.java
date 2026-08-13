@@ -1,5 +1,6 @@
 package com.mp3player.infrastructure.cover;
 
+import com.mp3player.config.CoverProperties;
 import com.mp3player.domain.model.CoverImage;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
@@ -23,6 +24,14 @@ import static org.mockito.Mockito.*;
  * simulados conforme a URL acessada.
  */
 class MusicAlbumCoverSearcherTest {
+
+    private static final CoverProperties DEFAULT_PROPS = new CoverProperties(
+            "Mozilla/5.0 (compatible; MP3Player/1.0)",
+            "https://itunes.apple.com/search?entity=album&limit=1&term=",
+            "https://api.deezer.com/search/album?limit=1&q=",
+            15000,
+            25000
+    );
 
     /** Resposta HTTP simulada com corpo de busca, bytes e content-type da capa. */
     private static Connection.Response responseMock(String body, byte[] imageBytes, String contentType) throws IOException {
@@ -73,7 +82,7 @@ class MusicAlbumCoverSearcherTest {
         String itunesBody = "{\"results\":[{\"artworkUrl100\":\"https://example.com/art/100x100bb.jpg\"}]}";
         try (MockedStatic<Jsoup> jsoup = mockStatic(Jsoup.class)) {
             routeJsoup(jsoup, itunesBody, null, "https://example.com/art/600x600bb.jpg");
-            MusicAlbumCoverSearcher searcher = new MusicAlbumCoverSearcher();
+            MusicAlbumCoverSearcher searcher = new MusicAlbumCoverSearcher(DEFAULT_PROPS);
 
             CoverImage cover = searcher.findCover("Artista Album");
 
@@ -88,7 +97,7 @@ class MusicAlbumCoverSearcherTest {
         String itunesBody = "{\"results\":[{\"artworkUrl100\":\"https://example.com/art/100x100bb.jpg\"}]}";
         try (MockedStatic<Jsoup> jsoup = mockStatic(Jsoup.class)) {
             routeJsoup(jsoup, itunesBody, null, "https://example.com/art/600x600bb.jpg");
-            MusicAlbumCoverSearcher searcher = new MusicAlbumCoverSearcher();
+            MusicAlbumCoverSearcher searcher = new MusicAlbumCoverSearcher(DEFAULT_PROPS);
 
             searcher.findCover("Artista Album");
 
@@ -106,7 +115,7 @@ class MusicAlbumCoverSearcherTest {
         String deezerBody = "{\"data\":[{\"cover_xl\":\"https://example.com/art/1000x1000.jpg\"}]}";
         try (MockedStatic<Jsoup> jsoup = mockStatic(Jsoup.class)) {
             routeJsoup(jsoup, "{}", deezerBody, "https://example.com/art/1000x1000.jpg");
-            MusicAlbumCoverSearcher searcher = new MusicAlbumCoverSearcher();
+            MusicAlbumCoverSearcher searcher = new MusicAlbumCoverSearcher(DEFAULT_PROPS);
 
             CoverImage cover = searcher.findCover("Artista Album");
 
@@ -126,7 +135,7 @@ class MusicAlbumCoverSearcherTest {
         String deezerBody = "{\"data\":[{\"cover_medium\":\"https://example.com/art/250x250.jpg\"}]}";
         try (MockedStatic<Jsoup> jsoup = mockStatic(Jsoup.class)) {
             routeJsoup(jsoup, "{}", deezerBody, "https://example.com/art/250x250.jpg");
-            MusicAlbumCoverSearcher searcher = new MusicAlbumCoverSearcher();
+            MusicAlbumCoverSearcher searcher = new MusicAlbumCoverSearcher(DEFAULT_PROPS);
 
             CoverImage cover = searcher.findCover("Artista Album");
 
@@ -138,7 +147,7 @@ class MusicAlbumCoverSearcherTest {
     void findCoverReturnsNullWhenNeitherProviderMatches() throws IOException {
         try (MockedStatic<Jsoup> jsoup = mockStatic(Jsoup.class)) {
             routeJsoup(jsoup, "{}", "{}", null);
-            MusicAlbumCoverSearcher searcher = new MusicAlbumCoverSearcher();
+            MusicAlbumCoverSearcher searcher = new MusicAlbumCoverSearcher(DEFAULT_PROPS);
 
             CoverImage cover = searcher.findCover("Artista Album");
 
@@ -155,7 +164,7 @@ class MusicAlbumCoverSearcherTest {
         String itunesBody = "{\"results\":[{\"artworkUrl100\":\"https://example.com/art/100x100bb.jpg\"}]}";
         try (MockedStatic<Jsoup> jsoup = mockStatic(Jsoup.class)) {
             routeJsoup(jsoup, itunesBody, null, "https://example.com/art/600x600bb.jpg");
-            MusicAlbumCoverSearcher searcher = new MusicAlbumCoverSearcher();
+            MusicAlbumCoverSearcher searcher = new MusicAlbumCoverSearcher(DEFAULT_PROPS);
 
             searcher.findCover("Artista Album");
 
@@ -179,7 +188,7 @@ class MusicAlbumCoverSearcherTest {
                 return url.startsWith("https://example.com") ? imageConnection : itunesConnection;
             });
 
-            MusicAlbumCoverSearcher searcher = new MusicAlbumCoverSearcher();
+            MusicAlbumCoverSearcher searcher = new MusicAlbumCoverSearcher(DEFAULT_PROPS);
 
             assertNull(searcher.findCover("Artista Album"));
         }
@@ -198,7 +207,7 @@ class MusicAlbumCoverSearcherTest {
                 return url.startsWith("https://example.com") ? imageConnection : itunesConnection;
             });
 
-            MusicAlbumCoverSearcher searcher = new MusicAlbumCoverSearcher();
+            MusicAlbumCoverSearcher searcher = new MusicAlbumCoverSearcher(DEFAULT_PROPS);
 
             CoverImage cover = searcher.findCover("Artista Album");
             assertNotNull(cover);

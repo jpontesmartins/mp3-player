@@ -1,5 +1,6 @@
 package com.mp3player.infrastructure.lyrics;
 
+import com.mp3player.config.LyricsProperties;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -28,6 +29,8 @@ import static org.mockito.Mockito.when;
 class JsoupLyricsScraperTest {
 
     private static final Document EMPTY = new Document("");
+    private static final LyricsProperties DEFAULT_PROPS = new LyricsProperties(
+            "https://www.letras.mus.br", "Mozilla/5.0", "/", 8000, 15000);
 
     private static String lyricHtml() {
         return "<html><body><div class=\"lyric-original\"><p>linha um</p><p>linha dois</p></div></body></html>";
@@ -66,7 +69,7 @@ class JsoupLyricsScraperTest {
         statuses.put(directUrl, 200);
 
         try (MockedStatic<Jsoup> jsoup = mockJsoup(docs, statuses)) {
-            String text = new JsoupLyricsScraper().fetch("Legião Urbana", "Tempo Perdido");
+            String text = new JsoupLyricsScraper(DEFAULT_PROPS).fetch("Legião Urbana", "Tempo Perdido");
             assertEquals(lyricText(), text);
         }
     }
@@ -87,7 +90,7 @@ class JsoupLyricsScraperTest {
         Map<String, Integer> statuses = new HashMap<>();
 
         try (MockedStatic<Jsoup> jsoup = mockJsoup(docs, statuses)) {
-            String text = new JsoupLyricsScraper().fetch("Legião Urbana", "Tempo Perdido");
+            String text = new JsoupLyricsScraper(DEFAULT_PROPS).fetch("Legião Urbana", "Tempo Perdido");
 
             var captor = org.mockito.ArgumentCaptor.forClass(String.class);
             jsoup.verify(() -> Jsoup.connect(captor.capture()), org.mockito.Mockito.atLeastOnce());
@@ -101,7 +104,7 @@ class JsoupLyricsScraperTest {
     @Test
     void fetchReturnsNotFoundMessageWhenNothingFound() throws IOException {
         try (MockedStatic<Jsoup> jsoup = mockJsoup(new HashMap<>(), new HashMap<>())) {
-            String text = new JsoupLyricsScraper().fetch("Artista", "Musica");
+            String text = new JsoupLyricsScraper(DEFAULT_PROPS).fetch("Artista", "Musica");
             assertTrue(text.contains("Musica"));
             assertTrue(text.contains("Artista"));
             assertTrue(text.startsWith("Letra não encontrada"));
@@ -135,7 +138,7 @@ class JsoupLyricsScraperTest {
         });
 
         try {
-            String text = new JsoupLyricsScraper().fetch("Artista", "Musica");
+            String text = new JsoupLyricsScraper(DEFAULT_PROPS).fetch("Artista", "Musica");
             assertTrue(text.startsWith("Letra não encontrada"));
             assertTrue(text.contains("Artista"));
         } finally {

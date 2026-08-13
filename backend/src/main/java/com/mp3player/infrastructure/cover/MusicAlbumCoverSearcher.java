@@ -1,5 +1,6 @@
 package com.mp3player.infrastructure.cover;
 
+import com.mp3player.config.CoverProperties;
 import com.mp3player.domain.model.CoverImage;
 import com.mp3player.domain.port.AlbumCoverSearcher;
 import org.jsoup.Connection;
@@ -24,10 +25,15 @@ import java.util.regex.Pattern;
 public class MusicAlbumCoverSearcher implements AlbumCoverSearcher {
 
     private static final Logger log = LoggerFactory.getLogger(MusicAlbumCoverSearcher.class);
-    private static final String USER_AGENT = "Mozilla/5.0 (compatible; MP3Player/1.0)";
     private static final Pattern ARTWORK_URL = Pattern.compile("\"artworkUrl100\"\\s*:\\s*\"([^\"]+)\"");
     private static final Pattern DEEZER_COVER = Pattern.compile("\"cover_xl\"\\s*:\\s*\"([^\"]+)\"");
     private static final Pattern DEEZER_MEDIUM = Pattern.compile("\"cover_medium\"\\s*:\\s*\"([^\"]+)\"");
+
+    private final CoverProperties props;
+
+    public MusicAlbumCoverSearcher(CoverProperties props) {
+        this.props = props;
+    }
 
     @Override
     public CoverImage findCover(String term) throws IOException {
@@ -49,12 +55,12 @@ public class MusicAlbumCoverSearcher implements AlbumCoverSearcher {
     }
 
     /** Consulta a API de busca do iTunes (entity=album) e retorna a capa do primeiro álbum. */
-    private static String findItunes(String encoded) throws IOException {
-        String url = "https://itunes.apple.com/search?entity=album&limit=1&term=" + encoded;
+    private String findItunes(String encoded) throws IOException {
+        String url = props.itunesUrl() + encoded;
         log.info("[Capa] Buscando capa no iTunes: {}", url);
         Connection.Response res = Jsoup.connect(url)
-                .userAgent(USER_AGENT)
-                .timeout(15000)
+                .userAgent(props.userAgent())
+                .timeout(props.timeoutConnect())
                 .execute();
         Matcher matcher = ARTWORK_URL.matcher(res.body());
         if (!matcher.find()) return null;
@@ -62,12 +68,12 @@ public class MusicAlbumCoverSearcher implements AlbumCoverSearcher {
     }
 
     /** Consulta a API da Deezer e retorna a capa grande do primeiro álbum. */
-    private static String findDeezer(String encoded) throws IOException {
-        String url = "https://api.deezer.com/search/album?limit=1&q=" + encoded;
+    private String findDeezer(String encoded) throws IOException {
+        String url = props.deezerUrl() + encoded;
         log.info("[Capa] Buscando capa no Deezer: {}", url);
         String json = Jsoup.connect(url)
-                .userAgent(USER_AGENT)
-                .timeout(15000)
+                .userAgent(props.userAgent())
+                .timeout(props.timeoutConnect())
                 .ignoreContentType(true)
                 .execute()
                 .body();
@@ -80,9 +86,9 @@ public class MusicAlbumCoverSearcher implements AlbumCoverSearcher {
     /** Baixa os bytes da capa, ignorando o tipo de conteúdo. */
     private CoverImage download(String imageUrl) throws IOException {
         Connection.Response res = Jsoup.connect(imageUrl)
-                .userAgent(USER_AGENT)
+                .userAgent(props.userAgent())
                 .ignoreContentType(true)
-                .timeout(25000)
+                .timeout(props.timeoutDownload())
                 .execute();
         byte[] bytes = res.bodyAsBytes();
         if (bytes.length == 0) return null;
