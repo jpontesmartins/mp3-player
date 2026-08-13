@@ -9,7 +9,7 @@ import InfoModal from './components/InfoModal';
 import type { PlaybackMode } from './components/SettingsPanel';
 import './App.css';
 
-const API = 'http://localhost:8111';
+import { API } from './config';
 const STORAGE_KEY = 'mp3_folder';
 const THEME_KEY = 'mp3_theme';
 
@@ -393,6 +393,13 @@ export default function App() {
     });
   }, []);
 
+  const handleScrollToCurrent = useCallback(() => {
+    const active = document.querySelector('#playlist li.active');
+    if (active) {
+      active.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, []);
+
   const coverUrl = currentFile ? `${API}/cover?path=${encodeURIComponent(currentFile)}` : null;
 
   return (
@@ -442,6 +449,7 @@ export default function App() {
             onPrev={handlePrev}
             onNext={handleNext}
             onSeek={handleSeek}
+            onScrollToCurrent={handleScrollToCurrent}
           />
           <Playlist
             files={playlistFiles}

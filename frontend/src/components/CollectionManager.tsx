@@ -3,7 +3,7 @@ import type { Id3Tags } from '../App';
 import PlaylistManager from './PlaylistManager';
 import BulkId3Editor from './BulkId3Editor';
 
-const API = 'http://localhost:8111';
+import { API } from '../config';
 
 const EDITABLE_FIELDS = ['title', 'artist', 'album', 'genre', 'track', 'disc', 'year'] as const;
 type EditableField = typeof EDITABLE_FIELDS[number];

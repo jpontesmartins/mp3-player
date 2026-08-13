@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import type { Id3Tags } from '../App';
 
-const API = 'http://localhost:8111';
+import { API } from '../config';
 
 const TAGS = ['title', 'artist', 'album', 'genre', 'track', 'disc', 'year'] as const;
 type TagKey = typeof TAGS[number];
@@ -197,7 +197,7 @@ export default function BulkId3Editor({ collectionFiles, onTagsUpdated }: Props)
       <div className="bulk-row">
         <input
           className="bulk-input"
-          placeholder="Caminho da pasta com os .mp3"
+          placeholder="C:\caminho"
           value={folder}
           onChange={e => setFolder(e.target.value)}
         />
@@ -230,27 +230,18 @@ export default function BulkId3Editor({ collectionFiles, onTagsUpdated }: Props)
       <div className="bulk-group">
         <label className="settings-label">Valores fixos (aplicados a todos os arquivos)</label>
         <div className="bulk-fields">
-          {TAGS.filter(k => k !== 'genre' && !NARROW_TAGS.includes(k)).map(k => (
+          {['title', 'artist', 'album', 'genre'].map(k => (
             <div className="bulk-field" key={k}>
-              <span className="bulk-field-label">{TAG_LABELS[k]}</span>
+              <span className="bulk-field-label">{TAG_LABELS[k as TagKey]}</span>
               <input
                 className="bulk-input"
-                placeholder={k === 'track' ? 'ex: 03' : k === 'disc' ? 'ex: 1/2' : ''}
-                value={fixed[k]}
+                value={fixed[k as TagKey]}
                 onChange={e => setFixed(prev => ({ ...prev, [k]: e.target.value }))}
               />
             </div>
           ))}
         </div>
         <div className="bulk-fields bulk-fields-narrow">
-          <div className="bulk-field bulk-field-grow">
-            <span className="bulk-field-label">{TAG_LABELS.genre}</span>
-            <input
-              className="bulk-input"
-              value={fixed.genre}
-              onChange={e => setFixed(prev => ({ ...prev, genre: e.target.value }))}
-            />
-          </div>
           {NARROW_TAGS.map(k => (
             <div className="bulk-field bulk-field-narrow" key={k}>
               <span className="bulk-field-label">{TAG_LABELS[k]}</span>
@@ -265,7 +256,7 @@ export default function BulkId3Editor({ collectionFiles, onTagsUpdated }: Props)
         </div>
       </div>
 
-      {rows.length > 0 && (
+      {(rows.length > 0 || true) && (
         <>
           <div className="bulk-table-wrap">
             <table className="bulk-table">
@@ -288,6 +279,14 @@ export default function BulkId3Editor({ collectionFiles, onTagsUpdated }: Props)
                       <td key={k} className={r.parsed && r.parsed[k] ? 'bulk-fromname' : ''}>
                         {r.merged[k]}
                       </td>
+                    ))}
+                  </tr>
+                ))}
+                {Array.from({ length: Math.max(0, 5 - rows.length) }, (_, i) => (
+                  <tr key={`empty-${i}`} className="bulk-empty-row">
+                    <td className="bulk-file"></td>
+                    {TAGS.map(k => (
+                      <td key={k}></td>
                     ))}
                   </tr>
                 ))}

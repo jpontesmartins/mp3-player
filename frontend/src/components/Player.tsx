@@ -4,9 +4,10 @@ import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
 import PauseIcon from '@mui/icons-material/Pause';
 import StopIcon from '@mui/icons-material/Stop';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import type { Id3Tags } from '../App';
 
-const API = 'http://localhost:8111';
+import { API } from '../config';
 
 function formatTime(ms: number): string {
   if (!ms || ms <= 0) return '00:00:00';
@@ -30,6 +31,7 @@ interface Props {
   onPrev: () => void;
   onNext: () => void;
   onSeek: (positionMs: number) => void;
+  onScrollToCurrent: () => void;
 }
 
 function displayName(id3: Id3Tags | undefined): string {
@@ -42,7 +44,7 @@ function displayName(id3: Id3Tags | undefined): string {
   return '';
 }
 
-export default function Player({ status, position, duration, currentFile, currentId3, showCover, coverUrl, onTogglePlayPause, onStop, onPrev, onNext, onSeek }: Props) {
+export default function Player({ status, position, duration, currentFile, currentId3, showCover, coverUrl, onTogglePlayPause, onStop, onPrev, onNext, onSeek, onScrollToCurrent }: Props) {
   const barRef = useRef<HTMLDivElement>(null);
   const [coverBusy, setCoverBusy] = useState(false);
   const [coverMsg, setCoverMsg] = useState<string | null>(null);
@@ -187,7 +189,8 @@ export default function Player({ status, position, duration, currentFile, curren
         </span>
       </div>
 
-      <div id="status-section" style={{ fontSize: 14 }}>
+      <div id="status-section" style={{ fontSize: 14 }} onClick={onScrollToCurrent}>
+        
         {status === 'playing' && `${name || currentFile?.split('\\').pop()?.split('/').pop() || ''}`}
         {status === 'paused' && `Pausado: ${name || currentFile?.split('\\').pop()?.split('/').pop() || ''}`}
         {status === 'stopped' && 'Nenhuma música tocando'}

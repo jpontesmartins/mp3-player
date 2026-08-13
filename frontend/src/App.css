@@ -271,6 +271,19 @@ button:disabled {
   overflow-y: auto;
 }
 
+#settings-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+#settings-panel::-webkit-scrollbar-track {
+  background: var(--c-13);
+}
+
+#settings-panel::-webkit-scrollbar-thumb {
+  background: var(--c-51);
+  border-radius: 3px;
+}
+
 .settings-content {
   display: flex;
   flex-direction: column;
@@ -581,6 +594,30 @@ button:disabled {
   text-align: center;
   font-size: 0.8rem;
   color: var(--c-119);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.scroll-to-current-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--c-51);
+  border-radius: 4px;
+  background: var(--c-26);
+  color: var(--c-119);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.scroll-to-current-btn:hover {
+  background: var(--c-42);
+  border-color: var(--c-85);
 }
 
 /* ── Playlist ── */
@@ -1328,7 +1365,7 @@ table.collection-grid td.col-disc {
 
 .bulk-fields {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
 }
 
@@ -1407,7 +1444,12 @@ table.bulk-table td {
 }
 
 .bulk-fromname {
-  color: var(--c-238);
+  color: var(--c-136);
+  font-style: italic;
+}
+
+.bulk-empty-row {
+  height: 36px;
 }
 
 .bulk-actions {

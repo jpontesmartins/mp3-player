@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 
-const API = 'http://localhost:8111';
+import { API } from '../config';
 
 interface Props {
   currentFile: string | null;

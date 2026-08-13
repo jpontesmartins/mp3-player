@@ -20,7 +20,7 @@ interface SystemInfo {
   frontendPort: string;
 }
 
-const API = 'http://localhost:8111';
+import { API } from '../config';
 
 export default function SettingsPanel({ playbackMode, showCover, theme, onPlaybackModeChange, onShowCoverChange, onThemeChange, onLoadPlaylist }: Props) {
   const [path, setPath] = useState('');
