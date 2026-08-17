@@ -31,14 +31,43 @@ class CachedId3CodecTest {
     }
 
     @Test
-    void readReturnsCachedMetadataWhenAvailable() {
-        when(cache.get("a.mp3")).thenReturn(Map.of("title", "Cached", "artist", "Artist"));
+    void readReturnsCachedMetadataWhenTimestampMatches() {
+        Map<String, String> cachedTags = Map.of("title", "Cached", "artist", "Artist", "_lastModified", "0");
+        when(cache.get("a.mp3")).thenReturn(cachedTags);
 
         Music result = cached.read("a.mp3");
 
         assertEquals("Cached", result.getMetadata().getTitle());
         assertEquals("Artist", result.getMetadata().getArtist());
         verify(delegate, never()).read("a.mp3");
+    }
+
+    @Test
+    void readReReadsWhenTimestampDiffers() {
+        Map<String, String> staleTags = Map.of("title", "Old", "_lastModified", "1000");
+        when(cache.get("a.mp3")).thenReturn(staleTags);
+
+        Music fresh = new Music("a.mp3", new Music.Metadata("Fresh", "Artist", null, null, null, null, null));
+        when(delegate.read("a.mp3")).thenReturn(fresh);
+
+        Music result = cached.read("a.mp3");
+
+        assertEquals("Fresh", result.getMetadata().getTitle());
+        verify(delegate).read("a.mp3");
+    }
+
+    @Test
+    void readReReadsWhenNoTimestamp() {
+        Map<String, String> oldCache = Map.of("title", "Old");
+        when(cache.get("a.mp3")).thenReturn(oldCache);
+
+        Music fresh = new Music("a.mp3", new Music.Metadata("Fresh", null, null, null, null, null, null));
+        when(delegate.read("a.mp3")).thenReturn(fresh);
+
+        Music result = cached.read("a.mp3");
+
+        assertEquals("Fresh", result.getMetadata().getTitle());
+        verify(delegate).read("a.mp3");
     }
 
     @Test
@@ -51,7 +80,7 @@ class CachedId3CodecTest {
 
         assertEquals("Fresh", result.getMetadata().getTitle());
         verify(delegate).read("a.mp3");
-        verify(cache).put("a.mp3", music.toTagMap());
+        verify(cache).put(eq("a.mp3"), anyMap());
     }
 
     @Test
@@ -62,7 +91,7 @@ class CachedId3CodecTest {
         Music result = cached.update("a.mp3", Map.of("title", "Updated"));
 
         assertEquals("Updated", result.getMetadata().getTitle());
-        verify(cache).put("a.mp3", updated.toTagMap());
+        verify(cache).put(eq("a.mp3"), anyMap());
     }
 
     @Test
