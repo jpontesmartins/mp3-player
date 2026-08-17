@@ -23,3 +23,6 @@ Antes de entregar, aplique a técnica de **Boy Scout Rule** (deixar o código ma
 ## 4. Integração com Clean Architecture
 - **Injeção de Dependência:** Nunca instancie dependências concretas (`new Service()`). Use injeção via construtor ou contêiner de inversão de controle.
 - **Entrada/Saída:** Use DTOs para entrada e saída de dados. Nunca exponha entidades de banco de dados (`@Entity`) diretamente na camada de apresentação (API).
+
+## 5. Documentação e Javadoc
+- Após qualquer alteração ou inclusão de código, validar se o Javadoc existente está correto. Caso não exista um Javadoc, criá-lo.
