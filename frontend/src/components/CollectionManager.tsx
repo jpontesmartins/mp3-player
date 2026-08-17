@@ -29,6 +29,7 @@ interface Props {
   playlists: string[];
   onRefreshPlaylists: () => Promise<void>;
   onLoadPlaylist: (name: string) => Promise<boolean>;
+  onLoadAll: () => void;
 }
 
 interface Album {
@@ -80,7 +81,7 @@ function isDirty(row: Record<EditableField, string>, tags: Id3Tags | undefined):
   return EDITABLE_FIELDS.some(k => row[k] !== (tags?.[k] ?? ''));
 }
 
-export default function CollectionManager({ libraryFiles, id3Cache, onTagsUpdated, playlists, onRefreshPlaylists, onLoadPlaylist }: Props) {
+export default function CollectionManager({ libraryFiles, id3Cache, onTagsUpdated, playlists, onRefreshPlaylists, onLoadPlaylist, onLoadAll }: Props) {
   const [selected, setSelected] = useState<Selection | null>(null);
   const [edits, setEdits] = useState<Edits>(new Map());
   const [saving, setSaving] = useState(false);
@@ -259,14 +260,17 @@ export default function CollectionManager({ libraryFiles, id3Cache, onTagsUpdate
         </div>
 
         <div className="collection-list">
-          <h3 className="collection-list-title">Playlists ({playlists.length})</h3>
+          <h3 className="collection-list-title">Playlists ({playlists.length + 1})</h3>
           <ul className="collection-items">
+            <li onClick={onLoadAll}>
+              <span className="collection-item-name">Todos os arquivos</span>
+              <span className="collection-item-count">{libraryFiles.length}</span>
+            </li>
             {playlists.map(name => (
               <li key={name} onClick={() => { setPlaylistView(true); }}>
                 <span className="collection-item-name">{name}</span>
               </li>
             ))}
-            {playlists.length === 0 && <li className="collection-empty">Nenhuma playlist</li>}
           </ul>
           <button
             className="pmanager-btn primary collection-newplaylist-btn"

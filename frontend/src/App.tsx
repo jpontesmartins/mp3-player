@@ -402,6 +402,14 @@ export default function App() {
     }
   }, [refreshPlaylists]);
 
+  const handleLoadAll = useCallback(() => {
+    setPlaylistFiles(libraryFiles);
+    setCurrentFile(null);
+    setStatus('stopped');
+    setPosition(0);
+    setDuration(0);
+  }, [libraryFiles]);
+
   const handleScrollToCurrent = useCallback(() => {
     const active = document.querySelector('#playlist li.active');
     if (active) {
@@ -442,6 +450,7 @@ export default function App() {
             playlists={playlists}
             onRefreshPlaylists={refreshPlaylists}
             onLoadPlaylist={loadVirtualPlaylist}
+            onLoadAll={handleLoadAll}
           />
         )}
         <div id="right-panel">
