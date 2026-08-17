@@ -5,9 +5,8 @@ import com.mp3player.domain.model.Music;
 import com.mp3player.domain.port.Id3Codec;
 import com.mp3player.domain.port.LyricsScraper;
 import com.mp3player.domain.repository.LyricRepository;
+import com.mp3player.domain.util.MusicFileNaming;
 import org.springframework.stereotype.Service;
-
-import java.nio.file.Paths;
 
 /**
  * Service da aplicação para o módulo de letras: lê letras em cache, busca letras
@@ -68,34 +67,28 @@ public class LyricsService {
         return id3Codec.read(musicPath);
     }
 
+    /**
+     * Retorna o artista a partir das tags ID3, ou infere do nome do arquivo.
+     *
+     * @param music música com metadados
+     * @return nome do artista
+     */
     static String artistOrFilename(Music music) {
         String artist = blank(music.getMetadata().getArtist());
         if (!artist.isEmpty()) return artist;
-        return artistFromFilename(baseName(music.getPath()));
+        return MusicFileNaming.artistFromFilename(music.getPath());
     }
 
+    /**
+     * Retorna o título a partir das tags ID3, ou infere do nome do arquivo.
+     *
+     * @param music música com metadados
+     * @return título da música
+     */
     static String titleOrFilename(Music music) {
         String title = blank(music.getMetadata().getTitle());
         if (!title.isEmpty()) return title;
-        return titleFromFilename(baseName(music.getPath()));
-    }
-
-    private static String baseName(String path) {
-        String name = Paths.get(path).getFileName().toString();
-        if (name.toLowerCase().endsWith(".mp3")) {
-            name = name.substring(0, name.length() - 4);
-        }
-        return name;
-    }
-
-    private static String artistFromFilename(String name) {
-        int dash = name.indexOf(" - ");
-        return dash > 0 ? name.substring(0, dash).trim() : "";
-    }
-
-    private static String titleFromFilename(String name) {
-        int dash = name.indexOf(" - ");
-        return dash > 0 ? name.substring(dash + 3).trim() : name.trim();
+        return MusicFileNaming.titleFromFilename(music.getPath());
     }
 
     private static String blank(String s) {

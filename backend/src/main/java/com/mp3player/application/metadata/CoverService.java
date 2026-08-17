@@ -6,6 +6,7 @@ import com.mp3player.domain.port.AlbumCoverSearcher;
 import com.mp3player.domain.port.Id3Codec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.mp3player.domain.util.MusicFileNaming;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -56,7 +57,7 @@ public class CoverService {
         String artist = blank(music.getMetadata().getArtist());
         String album = blank(music.getMetadata().getAlbum());
         if (artist.isEmpty() && album.isEmpty()) {
-            artist = artistFromFilename(music.getPath());
+            artist = MusicFileNaming.artistFromFilename(music.getPath());
         }
         if (album.isEmpty() || album.equalsIgnoreCase(artist)) {
             return artist;
@@ -76,14 +77,5 @@ public class CoverService {
 
     private static String blank(String s) {
         return s == null ? "" : s.trim();
-    }
-
-    private static String artistFromFilename(String path) {
-        String name = Paths.get(path).getFileName().toString();
-        if (name.toLowerCase().endsWith(".mp3")) {
-            name = name.substring(0, name.length() - 4);
-        }
-        int dash = name.indexOf(" - ");
-        return dash > 0 ? name.substring(0, dash).trim() : "";
     }
 }

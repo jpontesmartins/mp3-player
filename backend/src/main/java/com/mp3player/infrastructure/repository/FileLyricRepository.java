@@ -6,6 +6,7 @@ import com.mp3player.domain.port.Id3Codec;
 import com.mp3player.domain.repository.LyricRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.mp3player.domain.util.MusicFileNaming;
 import org.springframework.stereotype.Repository;
 
 import java.io.IOException;
@@ -97,7 +98,7 @@ public class FileLyricRepository implements LyricRepository {
             return sanitizeFileName(id3Artist + " - " + id3Title) + ".txt";
         }
 
-        String base = baseName(musicPath);
+        String base = MusicFileNaming.baseName(musicPath);
         int dash = base.indexOf(" - ");
         if (dash > 0 && id3Artist.isBlank() && id3Title.isBlank()) {
             return sanitizeFileName(base) + ".txt";
@@ -127,11 +128,5 @@ public class FileLyricRepository implements LyricRepository {
         return s.replaceAll("[\\\\/:*?\"<>|]", "_").trim();
     }
 
-    private String baseName(String filePath) {
-        String name = Paths.get(filePath).getFileName().toString();
-        if (name.toLowerCase().endsWith(".mp3")) {
-            name = name.substring(0, name.length() - 4);
-        }
-        return name;
-    }
+
 }
