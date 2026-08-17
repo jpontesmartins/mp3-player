@@ -32,15 +32,7 @@ export interface Id3Tags {
   error?: string;
 }
 
-export interface PlaylistProps {
-  files: string[];
-  currentFile: string | null;
-  id3Cache: Map<string, Id3Tags>;
-  loading?: boolean;
-  id3Loaded?: number;
-  id3Total?: number;
-  onSelect: (file: string) => void;
-}
+
 
 interface PlayingData {
   status: 'playing' | 'paused' | 'stopped';
@@ -393,6 +385,23 @@ export default function App() {
     });
   }, []);
 
+  const handleSaveFiltered = useCallback(async (filteredFiles: string[], name: string): Promise<boolean> => {
+    try {
+      const res = await fetch(`${API}/playlist`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, paths: filteredFiles }),
+      });
+      if (res.ok) {
+        await refreshPlaylists();
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }, [refreshPlaylists]);
+
   const handleScrollToCurrent = useCallback(() => {
     const active = document.querySelector('#playlist li.active');
     if (active) {
@@ -459,6 +468,7 @@ export default function App() {
             id3Loaded={id3Loaded}
             id3Total={id3Total}
             onSelect={playFile}
+            onSaveFiltered={handleSaveFiltered}
           />
         </div>
       </div>
