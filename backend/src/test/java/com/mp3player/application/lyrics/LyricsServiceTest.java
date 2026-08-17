@@ -19,7 +19,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class LyricsAppServiceTest {
+class LyricsServiceTest {
 
     @Mock
     Id3Codec id3Codec;
@@ -34,7 +34,7 @@ class LyricsAppServiceTest {
         when(repository.exists(path)).thenReturn(true);
         when(repository.find(path)).thenReturn(Optional.of(new Lyric(path, "letras salvas")));
 
-        LyricsAppService service = new LyricsAppService(id3Codec, scraper, repository);
+        LyricsService service = new LyricsService(id3Codec, scraper, repository);
         assertEquals("letras salvas", service.getCached(path));
         verify(scraper, never()).fetch(any(), any());
     }
@@ -49,7 +49,7 @@ class LyricsAppServiceTest {
         when(id3Codec.read(path)).thenReturn(music);
         when(scraper.fetch("Artist", "Song")).thenReturn("linha1\nlinha2");
 
-        LyricsAppService service = new LyricsAppService(id3Codec, scraper, repository);
+        LyricsService service = new LyricsService(id3Codec, scraper, repository);
         assertEquals("linha1\nlinha2", service.get(path));
 
         ArgumentCaptor<Lyric> captor = ArgumentCaptor.forClass(Lyric.class);
@@ -66,7 +66,7 @@ class LyricsAppServiceTest {
         when(id3Codec.read(path)).thenReturn(music);
         when(scraper.fetch("OnlyFileName", "Bd")).thenReturn("letra");
 
-        LyricsAppService service = new LyricsAppService(id3Codec, scraper, repository);
+        LyricsService service = new LyricsService(id3Codec, scraper, repository);
         assertEquals("letra", service.get(path));
     }
 
@@ -76,7 +76,7 @@ class LyricsAppServiceTest {
         Music music = new Music(path, new Music.Metadata("Song", "Artist", null, null, null, null, null));
         when(id3Codec.read(path)).thenReturn(music);
 
-        LyricsAppService service = new LyricsAppService(id3Codec, scraper, repository);
+        LyricsService service = new LyricsService(id3Codec, scraper, repository);
         service.save(path, "minha letra");
 
         ArgumentCaptor<Lyric> captor = ArgumentCaptor.forClass(Lyric.class);
@@ -87,7 +87,7 @@ class LyricsAppServiceTest {
 
     @Test
     void deleteDelegatesToRepository() {
-        LyricsAppService service = new LyricsAppService(id3Codec, scraper, repository);
+        LyricsService service = new LyricsService(id3Codec, scraper, repository);
         service.delete("C:\\song.mp3");
         verify(repository).delete("C:\\song.mp3");
     }

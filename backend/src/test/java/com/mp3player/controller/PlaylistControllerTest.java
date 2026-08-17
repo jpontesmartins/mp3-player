@@ -1,6 +1,6 @@
 package com.mp3player.controller;
 
-import com.mp3player.application.playlist.PlaylistAppService;
+import com.mp3player.application.playlist.PlaylistService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -16,7 +16,7 @@ import static org.mockito.Mockito.*;
 class PlaylistControllerTest {
 
     @Mock
-    PlaylistAppService playlistService;
+    PlaylistService playlistService;
 
     @Test
     void getPlaylistReturnsScannedFiles() throws IOException {

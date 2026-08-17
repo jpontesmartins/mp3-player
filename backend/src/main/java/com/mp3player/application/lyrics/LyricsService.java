@@ -14,13 +14,13 @@ import java.nio.file.Paths;
  * na web via port {@link LyricsScraper} e as persiste através do {@link LyricRepository}.
  */
 @Service
-public class LyricsAppService {
+public class LyricsService {
 
     private final Id3Codec id3Codec;
     private final LyricsScraper lyricsScraper;
     private final LyricRepository lyricRepository;
 
-    public LyricsAppService(Id3Codec id3Codec, LyricsScraper lyricsScraper, LyricRepository lyricRepository) {
+    public LyricsService(Id3Codec id3Codec, LyricsScraper lyricsScraper, LyricRepository lyricRepository) {
         this.id3Codec = id3Codec;
         this.lyricsScraper = lyricsScraper;
         this.lyricRepository = lyricRepository;

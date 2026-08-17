@@ -1,7 +1,7 @@
 package com.mp3player.controller;
 
-import com.mp3player.application.metadata.CoverAppService;
-import com.mp3player.application.metadata.Id3AppService;
+import com.mp3player.application.metadata.CoverService;
+import com.mp3player.application.metadata.Id3Service;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
@@ -22,15 +22,15 @@ import java.util.Map;
 /**
  * Adaptador HTTP para o módulo de metadados: leitura/edição de tags ID3 e
  * fornecimento da capa do álbum. Apenas traduz requisições web em chamadas ao
- * {@link Id3AppService}.
+ * {@link Id3Service}.
  */
 @RestController
 public class MetadataController {
 
-    private final Id3AppService id3Service;
-    private final CoverAppService coverService;
+    private final Id3Service id3Service;
+    private final CoverService coverService;
 
-    public MetadataController(Id3AppService id3Service, CoverAppService coverService) {
+    public MetadataController(Id3Service id3Service, CoverService coverService) {
         this.id3Service = id3Service;
         this.coverService = coverService;
     }

@@ -6,7 +6,6 @@ import java.io.IOException;
 
 /**
  * Port para busca e download de uma imagem de capa de álbum na web.
- * A implementação pode usar Google Images, DuckDuckGo ou outro buscador.
  */
 public interface AlbumCoverSearcher {
 

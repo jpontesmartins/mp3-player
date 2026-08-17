@@ -20,14 +20,14 @@ import java.util.concurrent.Future;
  * de uma vez (bulk) e atualiza as tags editáveis.
  */
 @Service
-public class Id3AppService {
+public class Id3Service {
 
-    private static final Logger log = LoggerFactory.getLogger(Id3AppService.class);
+    private static final Logger log = LoggerFactory.getLogger(Id3Service.class);
 
     private final Id3Codec id3Codec;
     private final MetadataCacheRepository cache;
 
-    public Id3AppService(Id3Codec id3Codec, MetadataCacheRepository cache) {
+    public Id3Service(Id3Codec id3Codec, MetadataCacheRepository cache) {
         this.id3Codec = id3Codec;
         this.cache = cache;
     }

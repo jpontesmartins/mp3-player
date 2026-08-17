@@ -21,12 +21,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Testes unitários do {@link CoverAppService}: o {@code Id3Codec} (tags) e o
+ * Testes unitários do {@link CoverService}: o {@code Id3Codec} (tags) e o
  * {@code AlbumCoverSearcher} (web) são mockados, e a gravação da capa acontece
  * em um diretório temporário real para validar o caminho salvo e os bytes.
  */
 @ExtendWith(MockitoExtension.class)
-class CoverAppServiceTest {
+class CoverServiceTest {
 
     @Mock
     Id3Codec id3Codec;
@@ -47,7 +47,7 @@ class CoverAppServiceTest {
         when(id3Codec.read(songPath)).thenReturn(musicWith(songPath, "Artista", "Álbum"));
         when(coverSearcher.findCover("Artista Álbum"))
                 .thenReturn(new CoverImage(new byte[] { 1, 2, 3 }, "image/jpeg"));
-        CoverAppService service = new CoverAppService(id3Codec, coverSearcher);
+        CoverService service = new CoverService(id3Codec, coverSearcher);
 
         String saved = service.download(songPath);
 
@@ -62,7 +62,7 @@ class CoverAppServiceTest {
         String songPath = dir.resolve("song.mp3").toString();
         when(id3Codec.read(songPath)).thenReturn(musicWith(songPath, "Artista", "Álbum"));
         when(coverSearcher.findCover("Artista Álbum")).thenReturn(new CoverImage(new byte[] { 1 }, "image/jpeg"));
-        CoverAppService service = new CoverAppService(id3Codec, coverSearcher);
+        CoverService service = new CoverService(id3Codec, coverSearcher);
 
         service.download(songPath);
 
@@ -74,7 +74,7 @@ class CoverAppServiceTest {
         String songPath = dir.resolve("Artist - Song.mp3").toString();
         when(id3Codec.read(songPath)).thenReturn(new Music(songPath, Music.Metadata.empty()));
         when(coverSearcher.findCover("Artist")).thenReturn(new CoverImage(new byte[] { 1 }, "image/jpeg"));
-        CoverAppService service = new CoverAppService(id3Codec, coverSearcher);
+        CoverService service = new CoverService(id3Codec, coverSearcher);
 
         String saved = service.download(songPath);
 
@@ -87,7 +87,7 @@ class CoverAppServiceTest {
         String songPath = dir.resolve("song.mp3").toString();
         when(id3Codec.read(songPath)).thenReturn(musicWith(songPath, "Metallica", "Metallica"));
         when(coverSearcher.findCover("Metallica")).thenReturn(new CoverImage(new byte[] { 1 }, "image/jpeg"));
-        CoverAppService service = new CoverAppService(id3Codec, coverSearcher);
+        CoverService service = new CoverService(id3Codec, coverSearcher);
 
         service.download(songPath);
 
@@ -100,7 +100,7 @@ class CoverAppServiceTest {
         String songPath = dir.resolve("song.mp3").toString();
         when(id3Codec.read(songPath)).thenReturn(musicWith(songPath, "Artista", "Álbum"));
         when(coverSearcher.findCover("Artista Álbum")).thenReturn(null);
-        CoverAppService service = new CoverAppService(id3Codec, coverSearcher);
+        CoverService service = new CoverService(id3Codec, coverSearcher);
 
         IOException e = assertThrows(IOException.class, () -> service.download(songPath));
 
@@ -113,7 +113,7 @@ class CoverAppServiceTest {
         when(id3Codec.read(songPath)).thenReturn(musicWith(songPath, "Artista", "Álbum"));
         when(coverSearcher.findCover("Artista Álbum"))
                 .thenReturn(new CoverImage(new byte[0], "image/jpeg"));
-        CoverAppService service = new CoverAppService(id3Codec, coverSearcher);
+        CoverService service = new CoverService(id3Codec, coverSearcher);
 
         assertThrows(IOException.class, () -> service.download(songPath));
     }
@@ -123,7 +123,7 @@ class CoverAppServiceTest {
         String rootPath = "C:\\";
         when(id3Codec.read(rootPath)).thenReturn(musicWith(rootPath, "Artista", "Álbum"));
         when(coverSearcher.findCover(anyString())).thenReturn(new CoverImage(new byte[] { 1 }, "image/jpeg"));
-        CoverAppService service = new CoverAppService(id3Codec, coverSearcher);
+        CoverService service = new CoverService(id3Codec, coverSearcher);
 
         IOException e = assertThrows(IOException.class, () -> service.download(rootPath));
 
@@ -144,7 +144,7 @@ class CoverAppServiceTest {
         Files.createDirectories(Path.of(songPath).getParent());
         when(id3Codec.read(songPath)).thenReturn(musicWith(songPath, "Artista", "Álbum"));
         when(coverSearcher.findCover("Artista Álbum")).thenReturn(new CoverImage(new byte[] { 1 }, contentType));
-        CoverAppService service = new CoverAppService(id3Codec, coverSearcher);
+        CoverService service = new CoverService(id3Codec, coverSearcher);
 
         String saved = service.download(songPath);
 

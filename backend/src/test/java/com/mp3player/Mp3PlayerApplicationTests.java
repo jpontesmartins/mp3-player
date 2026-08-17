@@ -1,8 +1,8 @@
 package com.mp3player;
 
-import com.mp3player.application.lyrics.LyricsAppService;
-import com.mp3player.application.metadata.Id3AppService;
-import com.mp3player.application.playlist.PlaylistAppService;
+import com.mp3player.application.lyrics.LyricsService;
+import com.mp3player.application.metadata.Id3Service;
+import com.mp3player.application.playlist.PlaylistService;
 import com.mp3player.application.player.PlayerService;
 import com.mp3player.controller.LyricsController;
 import com.mp3player.controller.MetadataController;
@@ -28,11 +28,11 @@ class Mp3PlayerApplicationTests {
     @Autowired
     PlayerService playerService;
     @Autowired
-    PlaylistAppService playlistAppService;
+    PlaylistService playlistAppService;
     @Autowired
-    LyricsAppService lyricsAppService;
+    LyricsService lyricsAppService;
     @Autowired
-    Id3AppService id3AppService;
+    Id3Service id3AppService;
 
     @Test
     void contextLoads() {

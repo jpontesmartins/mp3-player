@@ -19,7 +19,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class Id3AppServiceTest {
+class Id3ServiceTest {
 
     @Mock
     Id3Codec id3Codec;
@@ -27,11 +27,11 @@ class Id3AppServiceTest {
     @Mock
     MetadataCacheRepository cache;
 
-    private Id3AppService service;
+    private Id3Service service;
 
     @BeforeEach
     void setUp() {
-        service = new Id3AppService(id3Codec, cache);
+        service = new Id3Service(id3Codec, cache);
     }
 
     @Test

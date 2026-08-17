@@ -1,6 +1,6 @@
 package com.mp3player.controller;
 
-import com.mp3player.application.metadata.Id3AppService;
+import com.mp3player.application.metadata.Id3Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,13 +23,13 @@ public class InfoController {
     private final String logFile;
     private final String backendPort;
     private final String frontendPort;
-    private final Id3AppService id3Service;
+    private final Id3Service id3Service;
 
     public InfoController(
             @Value("${mp3.log-file:}") String logFile,
             @Value("${server.port:8111}") String backendPort,
             @Value("${mp3.frontend-port:8112}") String frontendPort,
-            Id3AppService id3Service) {
+            Id3Service id3Service) {
         this.logFile = logFile;
         this.backendPort = backendPort;
         this.frontendPort = frontendPort;

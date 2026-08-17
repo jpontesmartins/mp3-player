@@ -13,12 +13,12 @@ import java.util.List;
  * listar, excluir e renomear playlists, além do scan da pasta física.
  */
 @Service
-public class PlaylistAppService {
+public class PlaylistService {
 
     private final PlaylistRepository playlistRepository;
     private final MusicScanner musicScanner;
 
-    public PlaylistAppService(PlaylistRepository playlistRepository, MusicScanner musicScanner) {
+    public PlaylistService(PlaylistRepository playlistRepository, MusicScanner musicScanner) {
         this.playlistRepository = playlistRepository;
         this.musicScanner = musicScanner;
     }

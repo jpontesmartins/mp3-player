@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class PlaylistAppServiceTest {
+class PlaylistServiceTest {
 
     @Mock
     PlaylistRepository repository;
@@ -26,7 +26,7 @@ class PlaylistAppServiceTest {
     @Test
     void listDelegatesToRepository() {
         when(repository.list()).thenReturn(List.of("Rock", "Pop"));
-        PlaylistAppService service = new PlaylistAppService(repository, scanner);
+        PlaylistService service = new PlaylistService(repository, scanner);
         assertEquals(List.of("Rock", "Pop"), service.list());
     }
 
@@ -35,13 +35,13 @@ class PlaylistAppServiceTest {
         when(scanner.scanFolder("C:\\musica"))
                 .thenReturn(List.of(new Music("C:\\musica\\a.mp3", Music.Metadata.empty()),
                         new Music("C:\\musica\\b.mp3", Music.Metadata.empty())));
-        PlaylistAppService service = new PlaylistAppService(repository, scanner);
+        PlaylistService service = new PlaylistService(repository, scanner);
         assertEquals(List.of("C:\\musica\\a.mp3", "C:\\musica\\b.mp3"), service.scanFolder("C:\\musica"));
     }
 
     @Test
     void createOrUpdateSavesAsPlaylist() {
-        PlaylistAppService service = new PlaylistAppService(repository, scanner);
+        PlaylistService service = new PlaylistService(repository, scanner);
         service.createOrUpdate("Rock", List.of("a.mp3", "b.mp3"));
         verify(repository).save(argThat(p -> "Rock".equals(p.getName())
                 && p.getSongPaths().equals(List.of("a.mp3", "b.mp3"))));
@@ -50,20 +50,20 @@ class PlaylistAppServiceTest {
     @Test
     void loadDelegatesToRepository() {
         when(repository.load("Rock")).thenReturn(List.of("a.mp3", "b.mp3"));
-        PlaylistAppService service = new PlaylistAppService(repository, scanner);
+        PlaylistService service = new PlaylistService(repository, scanner);
         assertEquals(List.of("a.mp3", "b.mp3"), service.load("Rock"));
     }
 
     @Test
     void scanFolderThrowsOnIoException() throws IOException {
         when(scanner.scanFolder("C:\\bad")).thenThrow(new IOException("acesso negado"));
-        PlaylistAppService service = new PlaylistAppService(repository, scanner);
+        PlaylistService service = new PlaylistService(repository, scanner);
         assertThrows(IOException.class, () -> service.scanFolder("C:\\bad"));
     }
 
     @Test
     void deleteAndRenameDelegate() {
-        PlaylistAppService service = new PlaylistAppService(repository, scanner);
+        PlaylistService service = new PlaylistService(repository, scanner);
         service.delete("Rock");
         service.rename("Rock", "Classic");
         verify(repository).delete("Rock");

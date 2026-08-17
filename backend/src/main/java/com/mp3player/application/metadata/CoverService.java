@@ -19,14 +19,14 @@ import java.nio.file.Paths;
  * encontrada na pasta do álbum.
  */
 @Service
-public class CoverAppService {
+public class CoverService {
 
-    private static final Logger log = LoggerFactory.getLogger(CoverAppService.class);
+    private static final Logger log = LoggerFactory.getLogger(CoverService.class);
 
     private final Id3Codec id3Codec;
     private final AlbumCoverSearcher coverSearcher;
 
-    public CoverAppService(Id3Codec id3Codec, AlbumCoverSearcher coverSearcher) {
+    public CoverService(Id3Codec id3Codec, AlbumCoverSearcher coverSearcher) {
         this.id3Codec = id3Codec;
         this.coverSearcher = coverSearcher;
     }

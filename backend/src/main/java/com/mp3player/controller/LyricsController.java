@@ -1,6 +1,6 @@
 package com.mp3player.controller;
 
-import com.mp3player.application.lyrics.LyricsAppService;
+import com.mp3player.application.lyrics.LyricsService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,14 +12,14 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * Adaptador HTTP para o módulo de letras: consulta em cache e busca na web com
  * armazenamento em cache. Apenas traduz requisições web em chamadas ao
- * {@link LyricsAppService}.
+ * {@link LyricsService}.
  */
 @RestController
 public class LyricsController {
 
-    private final LyricsAppService lyricsService;
+    private final LyricsService lyricsService;
 
-    public LyricsController(LyricsAppService lyricsService) {
+    public LyricsController(LyricsService lyricsService) {
         this.lyricsService = lyricsService;
     }
 

@@ -1,6 +1,6 @@
 package com.mp3player.controller;
 
-import com.mp3player.application.playlist.PlaylistAppService;
+import com.mp3player.application.playlist.PlaylistService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -16,16 +16,16 @@ import java.util.List;
 
 /**
  * Adaptador HTTP para o módulo de playlist: scan de pasta e CRUD de playlists
- * virtuais. Apenas traduz requisições web em chamadas ao {@link PlaylistAppService}.
+ * virtuais. Apenas traduz requisições web em chamadas ao {@link PlaylistService}.
  */
 @RestController
 public class PlaylistController {
 
     private static final Logger log = LoggerFactory.getLogger(PlaylistController.class);
 
-    private final PlaylistAppService playlistService;
+    private final PlaylistService playlistService;
 
-    public PlaylistController(PlaylistAppService playlistService) {
+    public PlaylistController(PlaylistService playlistService) {
         this.playlistService = playlistService;
     }
 

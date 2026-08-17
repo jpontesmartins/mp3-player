@@ -1,6 +1,6 @@
 package com.mp3player.controller;
 
-import com.mp3player.application.metadata.Id3AppService;
+import com.mp3player.application.metadata.Id3Service;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -13,7 +13,7 @@ import static org.mockito.Mockito.when;
 class InfoControllerTest {
 
     @Mock
-    Id3AppService id3Service;
+    Id3Service id3Service;
 
     @Test
     void getInfoReturnsLogCacheAndPorts() {

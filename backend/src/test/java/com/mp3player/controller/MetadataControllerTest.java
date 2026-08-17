@@ -1,7 +1,7 @@
 package com.mp3player.controller;
 
-import com.mp3player.application.metadata.CoverAppService;
-import com.mp3player.application.metadata.Id3AppService;
+import com.mp3player.application.metadata.CoverService;
+import com.mp3player.application.metadata.Id3Service;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -23,10 +23,10 @@ import static org.mockito.Mockito.*;
 class MetadataControllerTest {
 
     @Mock
-    Id3AppService id3Service;
+    Id3Service id3Service;
 
     @Mock
-    CoverAppService coverService;
+    CoverService coverService;
 
     @Test
     void getId3ReturnsTagMap() {
