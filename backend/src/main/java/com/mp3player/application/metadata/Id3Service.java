@@ -34,14 +34,7 @@ public class Id3Service {
 
     /** Lê as tags ID3 de um único arquivo como mapa de troca (wire). */
     public Map<String, String> getForFile(String filePath) {
-        Map<String, String> cached = cache.get(filePath);
-        if (cached != null) {
-            log.info("[ID3] Servido do cache: {}", filePath);
-            return cached;
-        }
-        Map<String, String> tags = readForFile(filePath);
-        cache.put(filePath, tags);
-        return tags;
+        return id3Codec.read(filePath).toTagMap();
     }
 
     /**
@@ -70,7 +63,6 @@ public class Id3Service {
         if (!toRead.isEmpty()) {
             Map<String, Map<String, String>> read = readBulk(toRead);
             result.putAll(read);
-            cache.putAll(read);
             log.info("[ID3] Bulk: {} do cache, {} processados dos arquivos", cachedCount, toRead.size());
         } else {
             log.info("[ID3] Bulk: {} arquivos servidos do cache", cachedCount);
@@ -112,10 +104,7 @@ public class Id3Service {
     /** Atualiza as tags editáveis do arquivo e retorna as tags resultantes. */
     public Map<String, String> update(String filePath, Map<String, String> tags) {
         Music updated = id3Codec.update(filePath, tags);
-        Map<String, String> result = updated.toTagMap();
-        cache.put(filePath, result);
-        log.info("[ID3] Cache atualizado para: {}", filePath);
-        return result;
+        return updated.toTagMap();
     }
 
     /** Localização do arquivo onde o cache de ID3 é persistido. */

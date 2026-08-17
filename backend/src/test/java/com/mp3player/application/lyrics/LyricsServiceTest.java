@@ -31,7 +31,6 @@ class LyricsServiceTest {
     @Test
     void getReturnsCachedLyricsWithoutScraping() throws IOException {
         String path = "C:\\A - B.mp3";
-        when(repository.exists(path)).thenReturn(true);
         when(repository.find(path)).thenReturn(Optional.of(new Lyric(path, "letras salvas")));
 
         LyricsService service = new LyricsService(id3Codec, scraper, repository);
@@ -45,7 +44,7 @@ class LyricsServiceTest {
         Music music = new Music(path,
                 new Music.Metadata("Song", "Artist", null, null, null, null, null));
 
-        when(repository.exists(path)).thenReturn(false);
+        when(repository.find(path)).thenReturn(Optional.empty());
         when(id3Codec.read(path)).thenReturn(music);
         when(scraper.fetch("Artist", "Song")).thenReturn("linha1\nlinha2");
 
@@ -62,7 +61,7 @@ class LyricsServiceTest {
     void getFallsBackToFilenameWhenNoId3() throws IOException {
         String path = "C:\\OnlyFileName - Bd.mp3";
         Music music = new Music(path, Music.Metadata.empty());
-        when(repository.exists(path)).thenReturn(false);
+        when(repository.find(path)).thenReturn(Optional.empty());
         when(id3Codec.read(path)).thenReturn(music);
         when(scraper.fetch("OnlyFileName", "Bd")).thenReturn("letra");
 

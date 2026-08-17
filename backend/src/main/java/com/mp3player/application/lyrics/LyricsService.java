@@ -27,7 +27,6 @@ public class LyricsService {
 
     /** Retorna a letra em cache para o áudio informado, ou {@code null} se não houver. */
     public String getCached(String musicPath) {
-        if (!lyricRepository.exists(musicPath)) return null;
         return lyricRepository.find(musicPath).map(Lyric::getText).orElse(null);
     }
 

@@ -79,6 +79,63 @@ com.mp3player
 
 A persistência **passa sempre por repositórios** (`PlaylistRepository` e `LyricRepository`). Hoje cada repositório salva em arquivos `.txt`, mas o contrato é independente do armazenamento: para migrar a um banco de dados, basta trocar a implementação em `infrastructure/repository/` sem tocar no domínio nem na aplicação.
 
+## Cache de metadados ID3
+
+Ler tags ID3 de cada arquivo MP3 é uma operação custosa (abrir arquivo, parsear binário). Para evitar reler os mesmos arquivos toda vez, a aplicação mantém um **cache em disco** (`~/.mp3-player/metadata-cache.json`) com os metadados já extraídos. Na primeira leitura, o arquivo MP3 é parseado e o resultado salvo no JSON; nas leituras seguintes, o JSON é consultado diretamente, sem tocar no MP3.
+
+A aplicação utiliza **Decorator Pattern** para cache transparente. O decorator `CachedId3Codec` envolve a implementação real (`Id3MagicCodec`) e adiciona cache automático sem que os consumidores precisem saber disso.
+
+### Componentes
+
+```
+Id3Codec (port)
+  └── CachedId3Codec (decorator)   ← verifica cache antes de delegar
+        └── Id3MagicCodec           ← leitura/escrita real via mp3agic
+```
+
+- **`Id3Codec`** — port (interface) com `read()` e `update()`
+- **`CachedId3Codec`** — decorator que verifica `MetadataCacheRepository` antes de delegar
+- **`Id3MagicCodec`** — implementação concreta que lê/grava tags ID3
+- **`MetadataCacheRepository`** — persistência do cache em disco (`~/.mp3-player/metadata-cache.json`)
+
+### Fluxo de leitura
+
+```
+1. CachedId3Codec.read(caminho)
+2. → Verifica MetadataCacheRepository.get(caminho)
+3.   → Hit:  retorna Music a partir do cache (sem ler arquivo)
+4.   → Miss: delega para Id3MagicCodec.read(caminho)
+5.          → Armazena resultado no cache via MetadataCacheRepository.put()
+6.          → Retorna Music
+```
+
+### Fluxo de atualização
+
+```
+1. CachedId3Codec.update(caminho, tags)
+2. → Delega para Id3MagicCodec.update(caminho, tags)
+3. → Armazena resultado atualizado no cache
+4. → Retorna Music atualizado
+```
+
+### Consumidores
+
+Todos os consumidores de `Id3Codec` recebem automaticamente o cache via injeção de dependência:
+
+| Consumidor | O que faz |
+|------------|-----------|
+| `Id3Service` | Leitura de tags para edição (single + bulk) |
+| `JLayerPlayerEngine` | Leitura de tags ao iniciar reprodução |
+| `FileLyricRepository` | Leitura de artista/título para resolver nome do arquivo de letra |
+
+### Configuração
+
+O cache é configurado via `application.properties`:
+
+```properties
+mp3.log-file=              # caminho do arquivo de cache (padrão: ~/.mp3-player/metadata-cache.json)
+```
+
 ## Testes
 
 ```bash

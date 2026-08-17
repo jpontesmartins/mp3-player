@@ -12,11 +12,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class Id3ServiceTest {
@@ -36,7 +33,6 @@ class Id3ServiceTest {
 
     @Test
     void getForFileReturnsTagMap() {
-        when(cache.get("a.mp3")).thenReturn(null);
         when(id3Codec.read("a.mp3"))
                 .thenReturn(new Music("a.mp3", new Music.Metadata("Titulo", "Artista", "Album", "2020", "Rock", "3", 180000L)));
 
@@ -44,16 +40,12 @@ class Id3ServiceTest {
         assertEquals("Titulo", tags.get("title"));
         assertEquals("Artista", tags.get("artist"));
         assertEquals("180000", tags.get("duration_ms"));
-        verify(cache).put("a.mp3", tags);
     }
 
     @Test
-    void getForFileServesFromCache() {
-        when(cache.get("a.mp3")).thenReturn(Map.of("title", "Em cache"));
-
-        Map<String, String> tags = service.getForFile("a.mp3");
-        assertEquals("Em cache", tags.get("title"));
-        verify(id3Codec, never()).read("a.mp3");
+    void getForFilePropagatesException() {
+        when(id3Codec.read("bad.mp3")).thenThrow(new RuntimeException("broken"));
+        assertThrows(RuntimeException.class, () -> service.getForFile("bad.mp3"));
     }
 
     @Test
@@ -67,7 +59,6 @@ class Id3ServiceTest {
         assertEquals(2, bulk.size());
         assertEquals("A", bulk.get("a.mp3").get("title"));
         assertEquals("B", bulk.get("b.mp3").get("title"));
-        verify(cache).putAll(bulk);
     }
 
     @Test
@@ -91,24 +82,16 @@ class Id3ServiceTest {
         assertEquals("Fresh", bulk.get("a.mp3").get("title"));
         assertEquals("B", bulk.get("b.mp3").get("title"));
         verify(id3Codec).read("a.mp3");
-        verify(cache).putAll(bulk);
+        verify(id3Codec).read("b.mp3");
     }
 
     @Test
-    void readFailureYieldsErrorTag() {
-        when(cache.get("bad.mp3")).thenReturn(null);
-        when(id3Codec.read("bad.mp3")).thenThrow(new RuntimeException("broken"));
-        assertEquals("Could not read ID3 tags", service.getForFile("bad.mp3").get("error"));
-    }
-
-    @Test
-    void updateCachesResult() {
+    void updateReturnsUpdatedTags() {
         Music updated = new Music("a.mp3", new Music.Metadata("Novo", "Artista", null, null, null, null, 180000L));
         when(id3Codec.update("a.mp3", Map.of("title", "Novo"))).thenReturn(updated);
 
         Map<String, String> tags = service.update("a.mp3", Map.of("title", "Novo"));
         assertEquals("Novo", tags.get("title"));
-        verify(cache).put("a.mp3", tags);
     }
 
     @Test
