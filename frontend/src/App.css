@@ -454,6 +454,7 @@ button:disabled {
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  transition: opacity 0.2s ease, max-height 0.3s ease, margin 0.3s ease;
 }
 
 #album-cover {
@@ -629,6 +630,121 @@ button:disabled {
   padding: 10px;
   overflow-y: auto;
   min-height: 0;
+}
+
+/* ── Playlist Search ── */
+#playlist-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 4px 8px;
+  background: var(--c-17);
+  border: 1px solid var(--c-34);
+  border-radius: 6px;
+  transition: border-color 0.2s;
+}
+
+#playlist-search-bar.expanded {
+  border-color: var(--c-85);
+}
+
+.search-icon {
+  display: flex;
+  align-items: center;
+  color: var(--c-85);
+  flex-shrink: 0;
+  font-size: 1.1rem;
+}
+
+.playlist-search-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  color: var(--c-238);
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 0.82rem;
+  outline: none;
+  padding: 2px 0;
+  height: 22px;
+}
+
+.playlist-search-input::placeholder {
+  color: var(--c-85);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 0.8rem;
+}
+
+.playlist-search-field {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.playlist-search-count {
+  flex-shrink: 0;
+  color: var(--c-102);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.playlist-save-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  flex-shrink: 0;
+  background: var(--c-34);
+  border: 1px solid var(--c-51);
+  border-radius: 4px;
+  color: var(--c-170);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.playlist-save-btn svg {
+  font-size: 1rem;
+}
+
+.playlist-save-btn:hover {
+  background: var(--c-51);
+  border-color: var(--c-85);
+  color: var(--c-238);
+}
+
+.playlist-save-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.playlist-save-input {
+  flex: 1;
+  min-width: 0;
+  background: var(--c-17);
+  border: 1px solid var(--c-42);
+  border-radius: 6px;
+  color: var(--c-238);
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.playlist-save-input:focus {
+  border-color: var(--c-85);
+}
+
+.playlist-save-msg {
+  color: #7cd67c;
+  font-size: 0.8rem;
+  margin-top: 6px;
 }
 
 #playlist-header {
