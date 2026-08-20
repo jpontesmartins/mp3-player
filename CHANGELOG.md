@@ -7,6 +7,25 @@ versões seguem [Semântic Versioning](https://semver.org/lang/pt-BR/).
 
 
 
+
+## [1.3.0] — 2026-08-20
+
+### Adicionado
+- Merge pull request #2 from jpontesmartins/feature/busca-avancada
+- skill backend-dev adicionar javadoc
+
+### Alterado
+- adicionada opção de todos os arquivos na lista de playlists da Coleção
+- busca com operadores logicos e tags da ID3
+- Merge pull request #1 from jpontesmartins/refactor/design-patterns
+- cache com lasModified do arquivo mp3
+- Decorator no cache de ID3
+- Template Method no dowload do album. AbstractCoverSearcher eh a classe abstrata com as etapas
+- MusicFileNaming (DRY nas operações com o nome da musica)
+
+### Refatorado
+- refatoração: Strategy no download da capa do album e remoção de App no nome dos services
+
 ## [1.2.3] — 2026-08-13
 
 ### Alterado
