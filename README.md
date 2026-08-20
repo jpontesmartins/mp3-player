@@ -7,11 +7,38 @@ Player de música MP3 com frontend desktop (Tauri + React) e backend em Java (Sp
 ```
 mp3-player/
 ├── backend/        # API REST em Java 21 + Spring Boot (Clean Architecture / DDD)
-├── frontend/       # App desktop com Tauri + React + Vite + TypeScript
+├── frontend/       # App desktop com Tauri v2 + React 18 + Vite + TypeScript
+├── scripts/        # Scripts de build e release
 └── README.md       # Este arquivo
 ```
 
-## Como executar
+## Funcionalidades
+
+| Funcionalidade | Descrição |
+|---|---|
+| Reprodução MP3 | Play, pausa, stop, resume e seek em arquivos MP3 locais |
+| Navegação entre faixas | Anterior / próxima com três modos: Contínua, Aleatória e Repetição |
+| Auto-play | Reproduz automaticamente a próxima faixa ao término da atual, conforme o modo selecionado |
+| Tags ID3 | Leitura e edição de artista, título, álbum, ano, gênero, faixa, disco, bitrate e duração |
+| Edição em lote (bulk) | Edição de tags ID3 de múltiplos arquivos a partir de padrões de nome do arquivo |
+| Capa do álbum | Exibição automática de arquivos `cover`/`folder`/`album`/`front`/`art`/`artwork` (jpg/png/webp/gif) |
+| Download de capa | Busca automática via APIs do iTunes (fallback: Deezer) com clique direito no placeholder |
+| Letras (lyrics) | Busca via web scraping em letras.mus.br com cache local, edição e controle de tamanho da fonte |
+| Playlists físicas | Escaneamento de pastas para arquivos MP3 |
+| Playlists virtuais | Criação, edição (duas colunas: todas as músicas × playlist), renomeação, exclusão e carregamento |
+| Gerenciador de coleção | Lista de álbuns e artistas com edição de tags ID3 em grade |
+| Busca avançada | Filtros com operadores lógicos (`&&`, `||`) e filtros por tag (`<artist> == Nirvana`, `<year> > 1990`) |
+| Temas | Suporte a tema escuro e claro com CSS custom properties |
+| Cache de metadados | Cache em disco (`~/.mp3-player/metadata-cache.json`) usando Decorator Pattern |
+
+## Como rodar (desenvolvimento)
+
+### Pré-requisitos
+
+- **Java 21**
+- **Maven 3.8+**
+- **Node.js 18+** e **npm**
+- **Rust** (para compilar o Tauri)
 
 ### Backend
 
@@ -22,7 +49,17 @@ mvn spring-boot:run
 
 A API roda em `http://localhost:8111`.
 
-### Frontend (desenvolvimento)
+### Frontend (apenas Vite)
+
+```bash
+cd frontend
+npm install
+npm run dev:vite
+```
+
+O Vite roda em `http://localhost:8112`.
+
+### Frontend (Tauri desktop)
 
 ```bash
 cd frontend
@@ -30,28 +67,55 @@ npm install
 npm run dev
 ```
 
-O Vite abre em `http://localhost:5173`.
+Inicia o Vite e abre a janela desktop do Tauri apontando para `http://localhost:8112`.
 
-### Frontend (build Tauri)
+### Testes do backend
+
+```bash
+cd backend
+mvn test
+```
+
+## Como empacotar
+
+### Build rápido (apenas frontend)
 
 ```bash
 cd frontend
-npm run tauri build
+npm run build
 ```
 
-### Empacotamento para Windows
+Gera o binário Tauri + instaladores MSI/NSIS em `frontend/src-tauri/target/release/bundle/`.
 
-Gera um instalador auto-contido (MSI e NSIS) que já embute o backend Java e um JRE mínimo (jlink), sem exigir Java instalado na máquina de destino:
+### Release completa (automatizada)
 
-```bash
-.\scripts\package-windows.ps1
+O script `scripts/build-release.ps1` faz tudo automaticamente: versionamento semântico, changelog, compilação do JAR, geração do JRE mínimo via `jlink`, e empacotamento Tauri:
+
+```powershell
+# Do diretório raiz do projeto:
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build-release.ps1
+
+# Opções:
+#   -Minor              # Bump de versão minor
+#   -Major              # Bump de versão major
+#   -Version "X.Y.Z"   # Versão explícita
+#   -DryRun             # Simula sem alterar nada
 ```
 
-O script compila o JAR do backend, gera o JRE com `jlink`, copia os recursos para `frontend/src-tauri/resources/` e roda `npm run build`. Os instaladores saem em `frontend/src-tauri/target/release/bundle/{msi,nsis}/`. O app inicia e encerra o backend automaticamente em `127.0.0.1:8111`.
+O que o script faz:
+1. Lê a última tag git
+2. Coleta e classifica commits desde a última tag
+3. Calcula a nova versão semântica
+4. Atualiza versão em `package.json`, `tauri.conf.json`, `Cargo.toml` e `App.tsx`
+5. Gera e insere entrada no `CHANGELOG.md`
+6. Empacota: `mvn package -DskipTests` → `jlink` (JRE mínimo) → copia JAR para `resources/` → `npm run build` (Tauri)
+7. Cria commit e tag git
+
+O app gerado é auto-contido: embute o backend Java e um JRE mínimo (`jlink`), sem exigir Java instalado na máquina de destino.
 
 ## Arquitetura do backend
 
-O backend foi refatorado seguindo **Clean Architecture**, **Clean Code** e **Domain-Driven Design (DDD)**. As dependências apontam sempre para dentro: o domínio não conhece as tecnologias de infraestrutura (JLayer, mp3agic, Jsoup, sistema de arquivos).
+O backend segue **Clean Architecture**, **Clean Code** e **Domain-Driven Design (DDD)**. As dependências apontam sempre para dentro: o domínio não conhece as tecnologias de infraestrutura (JLayer, mp3agic, Jsoup, sistema de arquivos).
 
 ```
 com.mp3player
@@ -59,46 +123,39 @@ com.mp3player
 │   ├── model/              #   entidades: Music, Artist, Album, Playlist, Lyric, Settings, CoverImage
 │   ├── port/               #   contratos (interfaces): PlayerEngine, Id3Codec,
 │   │                       #                           MusicScanner, LyricsScraper, AlbumCoverSearcher
-│   └── repository/         #   portas de persistência: PlaylistRepository, LyricRepository
+│   └── repository/         #   portas de persistência: PlaylistRepository, LyricRepository, MetadataCacheRepository
 ├── application/            # casos de uso (orquestram os ports, sem infra)
-│   ├── player/           #   PlayerService (play, pause, stop, resume, seek, próxima/anterior)
-│   ├── playlist/         #   PlaylistAppService (carregar, criar, editar, listar, excluir, renomear, scan de pasta)
-│   ├── lyrics/           #   LyricsAppService (buscar letra, web scraping, cache)
-│   └── metadata/         #   Id3AppService (ler, bulk, editar tags ID3), CoverAppService (baixar capa)
+│   ├── player/             #   PlayerService (play, pause, stop, resume, seek, próxima/anterior)
+│   ├── playlist/           #   PlaylistService (carregar, criar, editar, listar, excluir, renomear, scan de pasta)
+│   ├── lyrics/             #   LyricsService (buscar letra, web scraping, cache)
+│   └── metadata/           #   Id3Service (ler, bulk, editar tags ID3), CoverService (baixar capa)
 ├── infrastructure/         # implementações concretas dos ports
-│   ├── audio/            #   JLayerPlayerEngine (decodificação JLayer)
-│   ├── metadata/         #   Id3MagicCodec (mp3agic)
-│   ├── music/            #   FileMusicScanner (escaneia pasta)
-│   ├── lyrics/           #   JsoupLyricsScraper (letras.mus.br)
-│   ├── cover/            #   MusicAlbumCoverSearcher (iTunes + Deezer)
-│   └── repository/       #   FilePlaylistRepository, FileLyricRepository
-├── web/                  # adaptadores HTTP: PlayerController, PlaylistController,
-│                       #                      MetadataController (ID3 + cover), LyricsController
-└── config/               # configuração (CORS)
+│   ├── audio/              #   JLayerPlayerEngine (decodificação JLayer)
+│   ├── metadata/           #   Id3MagicCodec (mp3agic), CachedId3Codec (Decorator)
+│   ├── music/              #   FileMusicScanner (escaneia pasta)
+│   ├── lyrics/             #   JsoupLyricsScraper (letras.mus.br)
+│   ├── cover/              #   AbstractCoverSearcher, ItunesCoverSearcher, DeezerCoverSearcher, CompositeCoverSearcher, CoverDownloader
+│   └── repository/         #   FilePlaylistRepository, FileLyricRepository, FileMetadataCacheRepository
+├── controller/             # adaptadores HTTP: PlayerController, PlaylistController,
+│                           #                     MetadataController, LyricsController, InfoController
+└── config/                 # configuração (CORS, beans, propriedades)
 ```
 
-A persistência **passa sempre por repositórios** (`PlaylistRepository` e `LyricRepository`). Hoje cada repositório salva em arquivos `.txt`, mas o contrato é independente do armazenamento: para migrar a um banco de dados, basta trocar a implementação em `infrastructure/repository/` sem tocar no domínio nem na aplicação.
+A persistência **passa sempre por repositórios** (`PlaylistRepository`, `LyricRepository` e `MetadataCacheRepository`). Hoje cada repositório salva em arquivos `.txt`/`.json`, mas o contrato é independente do armazenamento.
+
+### Padrões de design aplicados
+
+| Padrão | Onde | O que faz |
+|---|---|---|
+| Decorator | `CachedId3Codec` | Envolv `Id3MagicCodec` com cache transparente |
+| Template Method | `AbstractCoverSearcher` | Define fluxo de busca; subclasses implementam passos específicos |
+| Strategy / Composite | `CompositeCoverSearcher` | Encadeia múltiplos buscadors (iTunes → Deezer fallback) |
+| Ports & Adapters | Domain defines interfaces | Infrastructure fornece implementações |
+| Repository | `PlaylistRepository`, etc. | Abstrai persistência, facilmente trocável |
 
 ## Cache de metadados ID3
 
-Ler tags ID3 de cada arquivo MP3 é uma operação custosa (abrir arquivo, parsear binário). Para evitar reler os mesmos arquivos toda vez, a aplicação mantém um **cache em disco** (`~/.mp3-player/metadata-cache.json`) com os metadados já extraídos. Na primeira leitura, o arquivo MP3 é parseado e o resultado salvo no JSON; nas leituras seguintes, o JSON é consultado diretamente, sem tocar no MP3.
-
-A aplicação utiliza **Decorator Pattern** para cache transparente. O decorator `CachedId3Codec` envolve a implementação real (`Id3MagicCodec`) e adiciona cache automático sem que os consumidores precisem saber disso.
-
-### Componentes
-
-```
-Id3Codec (port)
-  └── CachedId3Codec (decorator)   ← verifica cache antes de delegar
-        └── Id3MagicCodec           ← leitura/escrita real via mp3agic
-```
-
-- **`Id3Codec`** — port (interface) com `read()` e `update()`
-- **`CachedId3Codec`** — decorator que verifica `MetadataCacheRepository` antes de delegar
-- **`Id3MagicCodec`** — implementação concreta que lê/grava tags ID3
-- **`MetadataCacheRepository`** — persistência do cache em disco (`~/.mp3-player/metadata-cache.json`)
-
-### Fluxo de leitura
+Ler tags ID3 de cada arquivo MP3 é uma operação custosa. Para evitar reler os mesmos arquivos toda vez, a aplicação mantém um **cache em disco** (`~/.mp3-player/metadata-cache.json`).
 
 ```
 1. CachedId3Codec.read(caminho)
@@ -108,64 +165,6 @@ Id3Codec (port)
 5.          → Armazena resultado no cache via MetadataCacheRepository.put()
 6.          → Retorna Music
 ```
-
-### Fluxo de atualização
-
-```
-1. CachedId3Codec.update(caminho, tags)
-2. → Delega para Id3MagicCodec.update(caminho, tags)
-3. → Armazena resultado atualizado no cache
-4. → Retorna Music atualizado
-```
-
-### Consumidores
-
-Todos os consumidores de `Id3Codec` recebem automaticamente o cache via injeção de dependência:
-
-| Consumidor | O que faz |
-|------------|-----------|
-| `Id3Service` | Leitura de tags para edição (single + bulk) |
-| `JLayerPlayerEngine` | Leitura de tags ao iniciar reprodução |
-| `FileLyricRepository` | Leitura de artista/título para resolver nome do arquivo de letra |
-
-### Configuração
-
-O cache é configurado via `application.properties`:
-
-```properties
-mp3.log-file=              # caminho do arquivo de cache (padrão: ~/.mp3-player/metadata-cache.json)
-```
-
-## Testes
-
-```bash
-cd backend
-mvn test
-```
-
-O backend cobre com testes unitários (JUnit 5 + Mockito) e um teste de contexto Spring:
-
-- **Repositórios**: `FilePlaylistRepositoryTest`, `FileLyricRepositoryTest` (persistência TXT ida-e-volta em diretório temporário)
-- **Casos de uso**: `PlayerServiceTest`, `PlaylistAppServiceTest`, `LyricsAppServiceTest`, `Id3AppServiceTest` (com mocks dos ports/repositórios)
-- **Domínio**: `MusicTest`, `PlaylistTest` (identidade e valor)
-- **Integração**: `Mp3PlayerApplicationTests` valida a injeção de todos os beans (contexto sobe)
-
-## Funcionalidades principais
-
-- Reprodução de arquivos MP3 (play, pausa, stop, resume, seek)
-- Navegação entre faixas (anterior / próxima) com três modos: Contínua, Aleatória e Repetição
-- Leitura e edição de tags ID3 (artista, título, álbum, ano, gênero, faixa, duração, bitrate)
-- Capa do álbum exibida a partir de arquivos `cover`/`folder`/`album`/`front`/`art`/`artwork` (jpg/png/webp/gif) na pasta da música
-- **Download de capa**: clique com o botão direito no placeholder `🎵` abre o menu "Baixar capa do álbum"; o backend busca a capa pelas APIs do iTunes (fallback: Deezer) e salva na pasta do álbum, com atualização automática no Player
-- Busca e cache de letras via letras.mus.br com múltiplos fallbacks (URL direta, busca, página do artista com variantes "The", nome invertido e normal)
-- **Múltiplas playlists** — além da playlist física (pasta), cria playlists virtuais com o caminho físico de cada música, salvas em `.txt` por um repositório
-- Playlist com carregamento, criação, edição, listagem e exclusão (painel de Coleção com duas colunas: todas as músicas × músicas da playlist), cabeçalho com colunas redimensionáveis (Artista | Música | Tempo) e tooltip com os metadados ID3 da faixa
-- Gerenciador de coleção: lista de álbuns e artistas de toda a biblioteca com edição das tags ID3 em grade por álbum/artista
-- Edição das letras ("Alterar letra") com persistência via `POST /lyrics`
-- Barra de progresso clicável (seek)
-- Interface escura com tema `#000`/`#0d0d0d`
-- Toolbar com navegação entre painéis (letra / coleção / configurações)
-- Lógica de negócio reutilizável e testável, independente de frameworks
 
 ## Logging
 

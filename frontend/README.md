@@ -1,94 +1,155 @@
 # Frontend — ovelhafy
 
-Aplicação desktop construída com **Tauri + React 18 + Vite + TypeScript (strict)**.
+Aplicação desktop construída com **Tauri v2 + React 18 + Vite + TypeScript (strict)**.
 
 ## Tecnologias
 
 | Camada | Tecnologia |
 |---|---|
 | Framework UI | React 18 |
-| Bundler | Vite |
+| Bundler | Vite 6 |
 | Linguagem | TypeScript (strict, noUnusedLocals, noUnusedParameters) |
 | Desktop | Tauri v2 (Rust) |
+| Ícones | MUI (Material UI) 9.2 |
 | Estilização | CSS puro |
 
-## Paleta de cores
+## Funcionalidades
 
-Tema escuro com tons de cinza e detalhes sutis:
+| Funcionalidade | Descrição |
+|---|---|
+| Reprodução MP3 | Play, pausa, stop, resume e seek via barra de progresso |
+| Navegação entre faixas | Botões anterior/próxima com modos: Contínua, Aleatória e Repetição |
+| Auto-play | Reproduz automaticamente a próxima faixa ao término da atual |
+| Capa do álbum | Exibe arquivos `cover`/`folder`/`album`/`front`/`art`/`artwork` (jpg/png/webp/gif) |
+| Download de capa | Clique direito no placeholder → busca via APIs iTunes/Deezer |
+| Letras (lyrics) | Busca via backend, exibição, edição, cache local, controles A+/A- |
+| Tags ID3 | Tooltip com metadados, edição inline, edição em grade por álbum/artista |
+| Edição em lote | Edição de tags ID3 a partir de padrões de nome do arquivo |
+| Playlists físicas | Escaneamento de pastas para arquivos MP3 |
+| Playlists virtuais | CRUD completo: criar, editar (duas colunas), renomear, excluir, carregar |
+| Busca avançada | Filtros com operadores `&&`, `||` e filtros por tag ID3 |
+| Temas | Escuro e claro com CSS custom properties |
+| Coleção | Lista de álbuns e artistas com edição de tags |
+
+## Componentes
+
+| Componente | Arquivo | Descrição |
+|---|---|---|
+| App | `App.tsx` | Componente raiz, gerenciamento de estado, polling, auto-play, cache de ID3 |
+| Toolbar | `Toolbar.tsx` | Botões de navegação: Letra, Coleção, Configurações, Info |
+| Player | `Player.tsx` | Capa do álbum, controles de mídia, barra de progresso, status, menu de download de capa |
+| Playlist | `Playlist.tsx` | Lista de músicas com colunas redimensionáveis, tooltip ID3, busca/filtro |
+| LyricsPanel | `LyricsPanel.tsx` | Exibição/edição de letras, controles de tamanho de fonte |
+| SettingsPanel | `SettingsPanel.tsx` | Modo de reprodução, tema, exibição de capa, seletor de pasta |
+| CollectionManager | `CollectionManager.tsx` | Lista de álbuns/artistas com edição de tags em grade |
+| PlaylistManager | `PlaylistManager.tsx` | CRUD de playlists virtuais (duas colunas) |
+| BulkId3Editor | `BulkId3Editor.tsx` | Edição em lote de tags a partir de padrões de nome |
+| InfoModal | `InfoModal.tsx` | Diálogo "Sobre" com ícone e informações do desenvolvedor |
+| FolderSelector | `FolderSelector.tsx` | Input de caminho de pasta + botão carregar |
+
+## Paleta de cores
 
 | Elemento | Cor | Uso |
 |---|---|---|
 | Fundo da página | `#000` | Body |
 | Superfícies | `#0d0d0d` | Painéis (letra, playlist, configurações) |
 | Botões padrão | `#1a1a1a` / borda `#333` | Ações genéricas |
-| Botões toolbar | `#1a1a1a` / `32×32` | ⚙️ 📃 |
-| Botões de mídia | `#2a2a2a` / `32×32` | ⏮ ▶ ⏸ ⏹ ⏭ |
+| Botões de mídia | `#2a2a2a` / `32×32` | Play/pause/stop/anterior/próxima |
 | Texto primário | `#eee` | Títulos, labels |
 | Texto secundário | `#888` / `#777` | Status, dicas |
 | Link/ativo | `#ccc` / `#eee` | Item selecionado |
 | Desabilitado | Opacity `0.4` | Botão inativo |
 
-## Ícones
-
-Todos os ícones são caracteres unicode — sem dependência de bibliotecas de ícones:
-
-| Ícone | Significado |
-|---|---|
-| `▶` | Tocar / Retomar |
-| `⏸` | Pausar |
-| `⏹` | Parar |
-| `⏮` | Música anterior |
-| `⏭` | Próxima música |
-| `⚙️` | Abrir configurações |
-| `📃` | Abrir letra |
-| `🎵` | Placeholder da capa |
-
-Ícones da janela (Tauri) gerados com `npx tauri icon` a partir de `icone-v1.png`.
-
-## Componentes
-
-### Toolbar
-- Botões de navegação entre painéis (📃 letra / ⚙️ configurações)
-- Botão ativo fica desabilitado (opacity reduzida)
-
-### LyricsPanel
-- Exibe "Buscar letra" se não houver letra em cache
-- Ao trocar de música, verifica automaticamente se existe arquivo `.txt`
-- Se existir, carrega e exibe o conteúdo
-- Botão "Buscar letra" faz scraping via backend (`GET /lyrics`)
-- Botão "Alterar letra" abre editor em textarea com Salvar/Cancelar (persistência via `POST /lyrics`)
-- Controles A+/A- para aumentar/diminuir tamanho da fonte (0.7rem–2.0rem, passo 0.1)
-
-### Player
-- Capa do álbum (cover/folder/album/front/art/artwork.jpg/png/webp/gif na mesma pasta do MP3)
-- Só renderiza quando `showCover=true` e há música carregada
-- Placeholder `🎵` apenas quando a imagem falha (`onError`)
-- **Clique com botão direito no 🎵** abre um menu de contexto com "Baixar capa do álbum"; ao clicar, o backend baixa a capa (iTunes/Deezer) e o Player recarrega a imagem automaticamente
-- Controles: ⏮ ▶/⏸ ⏹ ⏭ (todos 32×32)
-- Barra de progresso clicável (seek via `POST /seek`)
-- Exibe nome da faixa e status
-
-### Playlist
-- Lista de músicas da pasta selecionada
-- Cabeçalho com colunas redimensionáveis (artista 15–55%, tempo 40–160px) com grade compartilhada
-- Tooltip com metad ID3 da faixa (Música, Artista, Álbum, Ano, Gênero, Faixa, Duração, Bitrate) após 1s de hover, com posição ajustada à janela
-- Destaque na faixa atual
-- Duração ao lado do nome
-- Clique para tocar
-- Footer com total de músicas e duração total (soma de `duration_ms` das tags ID3)
-
-### SettingsPanel
-- Tipo de reprodução: Contínua / Aleatória / Repetição
-- Habilitar capa do álbum (checkbox `showCover`)
-- Campo para selecionar pasta da playlist + botão "Carregar"
-
 ## Interações
 
-- **Auto-play**: ao fim da música, toca a próxima conforme o modo selecionado (Contínua → próxima, Aleatória → aleatória, Repetição → mesma)
-- **Intentional stop**: `intentionalStopRef` impede auto-play em Stop manual ou carregamento de nova playlist
+- **Auto-play**: ao fim da música, toca a próxima conforme o modo (Contínua → próxima, Aleatória → aleatória, Repetição → mesma)
+- **Intentional stop**: impede auto-play em Stop manual ou carregamento de nova playlist
 - **Seek**: clique na barra de progresso para ir a qualquer ponto
-- **Capa**: se a imagem falhar (`onError`), exibe o placeholder `🎵`; `key={currentFile}:{coverVersion}` força recriação do `<img>` ao trocar de música e ao concluir o download da capa (revela a imagem mesmo que a anterior tenha falhado)
-- **Menu de capa**: botão direito no 🎵 abre o menu de contexto com "Baixar capa do álbum" (fecha em clique fora/scroll/redimensionar)
-- **Cache de letras**: arquivos `.txt` são salvos na pasta do álbum e reutilizados
-- **Reset de letra**: `useEffect` em `currentFile` limpa letra ao trocar de música
+- **Capa**: se a imagem falhar (`onError`), exibe placeholder `🎵`; `key` força recriação do `<img>` ao trocar de música
+- **Menu de capa**: botão direito no placeholder abre "Baixar capa do álbum"
+- **Cache de letras**: arquivos `.txt` salvos na pasta do álbum e reutilizados
 - **Polling**: `setInterval` a cada 500ms atualiza barra de progresso e status
+
+## Como rodar (desenvolvimento)
+
+### Pré-requisitos
+
+- **Node.js 18+** e **npm**
+- **Rust** (para compilar o Tauri)
+- Backend rodando em `http://localhost:8111`
+
+### Instalar dependências
+
+```bash
+npm install
+```
+
+### Apenas Vite (navegador)
+
+```bash
+npm run dev:vite
+```
+
+Rota em `http://localhost:8112`.
+
+### Tauri desktop (recomendado)
+
+```bash
+npm run dev
+```
+
+Inicia o Vite e abre a janela desktop do Tauri. O Rust compila automaticamente na primeira execução.
+
+## Como empacotar
+
+### Build de produção (Tauri)
+
+```bash
+npm run build
+```
+
+Executa `vite build` (via `beforeBuildCommand`) e compila o binário Tauri + instaladores MSI/NSIS.
+
+Os instaladores ficam em `src-tauri/target/release/bundle/{msi,nsis}/`.
+
+### Pré-requisitos para build
+
+- **Rust toolchain** instalado (via [rustup](https://rustup.rs))
+- **Tauri CLI** (incluído nas dependências do projeto)
+- **MSVC Build Tools** (Windows) ou equivalentes (Linux/macOS)
+
+## Scripts npm
+
+| Script | Comando | Descrição |
+|---|---|---|
+| `dev` | `tauri dev` | Modo desenvolvimento desktop (Vite + Tauri) |
+| `build` | `tauri build` | Build de produção desktop |
+| `dev:vite` | `vite` | Servidor Vite apenas (porta 8112) |
+| `build:vite` | `vite build` | Build Vite apenas |
+| `preview` | `vite preview` | Preview do build de produção |
+
+## Configuração Tauri
+
+| Configuração | Valor |
+|---|---|
+| Nome do produto | `ovelhafy` |
+| Identificador | `com.mp3player.app` |
+| Tamanho da janela | 1400×800 (mínimo: 1000×600) |
+| URL de dev | `http://localhost:8112` |
+| Frontend dist | `../dist` |
+| Bundle targets | `all` (MSI, NSIS, etc.) |
+
+## Estrutura Tauri
+
+```
+src-tauri/
+├── src/
+│   ├── main.rs          # Ponto de entrada
+│   └── lib.rs           # Spawn do backend Java como processo filho
+├── tauri.conf.json      # Configuração do Tauri
+├── Cargo.toml           # Dependências Rust (tauri v2, serde)
+├── capabilities/        # Permissões do Tauri
+└── icons/               # Ícones da aplicação
+```
+
+O `lib.rs` gerencia o ciclo de vida do backend Java: inicia o processo ao abrir a janela e o encerra ao fechar.
