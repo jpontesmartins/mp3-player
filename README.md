@@ -9,7 +9,6 @@ mp3-player/
 ├── backend/        # API REST em Java 21 + Spring Boot (Clean Architecture / DDD)
 ├── frontend/       # App desktop com Tauri v2 + React 18 + Vite + TypeScript
 ├── scripts/        # Scripts de build e release
-└── README.md       # Este arquivo
 ```
 
 ## Funcionalidades
