@@ -1,10 +1,11 @@
 package com.mp3player.config;
 
-import com.mp3player.domain.port.AlbumCoverSearcher;
-import com.mp3player.infrastructure.cover.CoverDownloader;
-import com.mp3player.infrastructure.cover.DeezerCoverSearcher;
-import com.mp3player.infrastructure.cover.CompositeCoverSearcher;
-import com.mp3player.infrastructure.cover.ItunesCoverSearcher;
+import com.mp3player.metadata.domain.port.AlbumCoverSearcher;
+import com.mp3player.metadata.infrastructure.CoverProperties;
+import com.mp3player.metadata.infrastructure.CoverDownloader;
+import com.mp3player.metadata.infrastructure.DeezerCoverSearcher;
+import com.mp3player.metadata.infrastructure.CompositeCoverSearcher;
+import com.mp3player.metadata.infrastructure.ItunesCoverSearcher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

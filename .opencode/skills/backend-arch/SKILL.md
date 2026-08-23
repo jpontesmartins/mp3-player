@@ -1,6 +1,6 @@
 ---
 name: backend-arch
-description: Usar a arquitetura de backend (Java 21 + Spring Boot + Clean Architecture + Clean Code + DDD). Use em APIs REST Java quando o usuário quiser a mesma hierarquia de pastas (domain/application/infrastructure/web), ports & adapters, testes unitários com JUnit/Mockito e logging com SLF4J.
+description: Usar a arquitetura de backend (Java 21 + Spring Boot + Clean Architecture + Clean Code + DDD). Use em APIs REST Java quando o usuário quiser organização por módulos de negócio (Bounded Contexts) com camadas internas (domain/application/infrastructure/web), ports & adapters, testes unitários com JUnit/Mockito e logging com SLF4J.
 ---
 
 # Skill: Backend Clean Architecture + Clean Code + DDD (Java 21 + Spring Boot)
@@ -8,7 +8,7 @@ description: Usar a arquitetura de backend (Java 21 + Spring Boot + Clean Archit
 Guia portátil de arquitetura de backend, hierarquia de pastas, padrões de testes e de logging para replicar em qualquer projeto.
 
 ## Objetivo
-APIs REST Java bem estruturadas, testáveis e independentes de tecnologia. O **domínio** é o núcleo isolado (sem dependências externas), o **application** orquestra casos de uso, a **infrastructure** implementa os ports e o **web** expõe HTTP. Toda decisão tecnológica fica na borda — nunca no núcleo.
+APIs REST Java bem estruturadas, testáveis e independentes de tecnologia. O código é organizado por **módulos de negócio** (Bounded Contexts), onde cada módulo encapsula suas próprias camadas arquiteturais (`domain`, `application`, `infrastructure`, `web`). O **domínio** é o núcleo isolado (sem dependências externas), o **application** orquestra casos de uso, a **infrastructure** implementa os ports e o **web** expõe HTTP. Toda decisão tecnológica fica na borda — nunca no núcleo.
 
 ## Tech stack
 
@@ -23,52 +23,79 @@ APIs REST Java bem estruturadas, testáveis e independentes de tecnologia. O **d
 
 ## 1. Regra de dependência (a regra de ouro)
 
-A dependência sempre aponta **para dentro**:
+A dependência sempre aponta **para dentro** — tanto dentro de cada módulo quanto entre módulos:
 
 ```
-web → application → domain ← infrastructure
-                    ↑
+Dentro de cada módulo:
+  web → application → domain ← infrastructure
+                      ↑
+
+Entre módulos:
+  moduloB → moduloA (apenas via ports de domain)
 ```
 
+**Dentro do módulo:**
 - `domain/` **não importa** nada de Spring, bibliotecas ou HTTP.
 - `application/` importa apenas `domain` e Java puro.
 - `infrastructure/` implementa as interfaces de `domain` (ports e repositories).
 - `web/` traduz HTTP → `application`; não contém regra de negócio.
 
-Trocar biblioteca, framework ou armazenamento (arquivo → banco) **não toca** o núcleo: basta criar uma nova implementação de port/repository.
+**Entre módulos:**
+- Um módulo pode depender de outro, mas **apenas via interfaces de `domain`** (ports).
+- Nunca importar classes de `infrastructure` ou `web` de outro módulo.
+
+Trocar biblioteca, framework ou armazenamento (arquivo → banco) **não toca** o núcleo: basta criar uma nova implementação de port/repository dentro do mesmo módulo.
 
 ## 2. Hierarquia de pastas
+
+O código é organizado por **módulos de negócio** (Bounded Contexts). Cada módulo encapsula suas próprias camadas arquiteturais.
 
 ```
 src/main/java/com.<projeto>
 ├── Application.java               # @SpringBootApplication
-├── domain/                        # NÚCLEO — regras de negócio, zero dependências externas
-│   ├── model/                     #   entidades e value objects (invariantes próprias)
-│   ├── port/                      #   contratos tecnológicos (interfaces)
-│   └── repository/                #   portas de persistência
-├── application/                   # CASOS DE USO — orquestra ports + modelos; um pacote por módulo
-│   ├── <modulo1>/                 #   <Modulo>AppService / <Modulo>Service
-│   └── <modulo2>/                 #   ...
-├── infrastructure/                # IMPLEMENTAÇÕES dos ports — um pacote por adaptador
-│   ├── <tecnologia1>/             #   <Tecnologia><Port>Impl
-│   └── <tecnologia2>/             #   ...
-├── web/ (ou controller/)          # ADAPTADORES HTTP — um Controller por módulo
-│   ├── <Modulo1>Controller
-│   └── <Modulo2>Controller
-└── config/                        # Beans de infra: CorsConfig, etc.
+├── shared/                        # COMPARTILHADO entre módulos
+│   ├── domain/model/              #   modelos usados por vários módulos
+│   ├── domain/util/               #   helpers estáticos
+│   └── config/                    #   beans de infra compartilhados (CorsConfig, etc.)
+├── config/                        # WIRING de beans entre módulos
+│   └── <Modulo>Config.java        #   @Configuration que injeta adapters nos services
+│
+├── <modulo1>/                     # BOUNDED CONTEXT 1
+│   ├── domain/                    #   NÚCLEO — regras de negócio, zero dependências externas
+│   │   ├── model/                 #     entidades e value objects (invariantes próprias)
+│   │   ├── port/                  #     contratos tecnológicos (interfaces)
+│   │   └── repository/            #     portas de persistência
+│   ├── application/               #   CASOS DE USO — orquestra ports + modelos
+│   │   └── <Modulo>Service.java   #     um @Service por módulo
+│   ├── infrastructure/            #   IMPLEMENTAÇÕES dos ports
+│   │   └── <Tecnologia><Port>     #     um adaptador por implementação
+│   └── web/                       #   ADAPTADORES HTTP — Controllers
+│       └── <Modulo>Controller.java
+│
+├── <modulo2>/                     # BOUNDED CONTEXT 2
+│   └── ...                        #   mesma estrutura interna
+│
+└── <moduloN>/                     # BOUNDED CONTEXT N
+    └── ...
 
 src/test/java/com.<projeto>        # espelha a hierarquia de main/
-├── domain/model/…Test             #   regras puras de domínio
-├── application/…/…Test            #   casos de uso com ports mockados (Mockito)
-├── infrastructure/…/…Test         #   adapters com @TempDir / recursos reais
+├── shared/domain/model/…Test      #   testes de modelos compartilhados
+├── <modulo1>/                     #   espelha a estrutura do módulo
+│   ├── domain/model/…Test         #     regras puras de domínio
+│   ├── application/…Test          #     casos de uso com ports mockados (Mockito)
+│   ├── infrastructure/…Test       #     adapters com @TempDir / recursos reais
+│   └── web/…Test                  #     controllers com MockMvc
+├── <modulo2>/…
 └── ApplicationTests               #   smoke test: contexto Spring carrega
 ```
 
 Convenções:
-- Um `@Service` por módulo em `application/`, com sufixo `AppService` ou `Service`.
+- Cada funcionalidade pertence a **um único módulo**: lógica não distribuída entre pastas.
+- Um `@Service` por módulo em `application/`, com sufixo `Service`.
 - Uma interface por port em `domain/port/` e `domain/repository/`.
 - Implementações em `infrastructure/` com nome descritivo da tecnologia (`File`, `Http`, `Jpa`, `Aws`), seguido do port.
 - Controllers **finos**: traduzem HTTP → service, sem lógica de negócio.
+- `shared/` contém apenas o que é genuinamente usado por 2+ módulos; evite colocar coisas aqui prematuramente.
 
 ## 3. Clean Code — convenções obrigatórias
 
@@ -99,11 +126,12 @@ Regras:
 
 ## 5. Testes unitários (JUnit 5 + Mockito)
 
-Espelhe a hierarquia de `main/` em `src/test/java`. Dois estilos:
+Espelhe a hierarquia de `main/` em `src/test/java`, organizado por módulos. Dois estilos:
 
 ### Domínio — puro, sem mocks
 Testa identidade, invariantes e regras de valor:
 ```java
+// src/test/java/com.<projeto>/<modulo>/domain/model/OrderTest.java
 class OrderTest {
     @Test
     void addItemAvoidsDuplicates() { ... }
@@ -112,6 +140,7 @@ class OrderTest {
 
 ### Application — ports mockados com `@ExtendWith(MockitoExtension.class)`
 ```java
+// src/test/java/com.<projeto>/<modulo>/application/OrderServiceTest.java
 @ExtendWith(MockitoExtension.class)
 class OrderServiceTest {
     @Mock OrderRepository repository;
@@ -131,6 +160,7 @@ class OrderServiceTest {
 
 ### Infrastructure — recursos reais temporários
 ```java
+// src/test/java/com.<projeto>/<modulo>/infrastructure/FileOrderRepositoryTest.java
 @BeforeEach
 void setUp() throws IOException {
     dir = Files.createTempDirectory("repo-test");
@@ -139,6 +169,22 @@ void setUp() throws IOException {
 ```
 - Use `Files.createTempDirectory` ou `@TempDir` para I/O de arquivos; nunca grave em diretórios reais.
 - Teste ida-e-volta: criar → carregar → listar → renomear → excluir.
+
+### Web — controllers com MockMvc
+```java
+// src/test/java/com.<projeto>/<modulo>/web/OrderControllerTest.java
+@SpringBootTest
+@AutoConfigureMockMvc
+class OrderControllerTest {
+    @Autowired MockMvc mockMvc;
+
+    @Test
+    void getReturnsOrder() throws Exception {
+        mockMvc.perform(get("/orders/1"))
+               .andExpect(status().isOk());
+    }
+}
+```
 
 ### Integração — smoke test
 ```java
@@ -153,15 +199,17 @@ Rodar: `mvn test`. Critério de aceite: **100% de testes verdes** antes de consi
 ## 6. Checklist ao criar um novo projeto com esta arquitetura
 
 1. Criar projeto Spring Boot (Java 21 + Maven), dependências: `starter-web`, `starter-test`, `junit-jupiter`, `mockito-core`.
-2. Criar a hierarquia `domain/ → application/ → infrastructure/ → web/ → config/` conforme a seção 2.
-3. Definir os **modelos de domínio** primeiro (imutáveis, com invariantes).
-4. Declarar **ports** (`domain/port/`, `domain/repository/`) — são os contratos que o domínio exige.
-5. Implementar os **casos de uso** em `application/` usando apenas ports; um `@Service` por módulo.
-6. Criar as **implementações** em `infrastructure/` para cada port (biblioteca/arquivo/banco).
-7. Criar os **Controllers** finos em `web/`, delegando aos services.
-8. Adicionar `@Configuration` de infra (ex.: CORS) em `config/`.
-9. Adicionar logging SLF4J em services, controllers e infra (seção 4).
-10. Escrever testes unitários espelhando a hierarquia (seção 5) e rodar `mvn test`.
+2. Criar pasta `shared/` para modelos e helpers usados por vários módulos.
+3. Criar o primeiro **módulo de negócio** (Bounded Context) com a estrutura `domain/ → application/ → infrastructure/ → web/`.
+4. Dentro do módulo, definir os **modelos de domínio** primeiro (imutáveis, com invariantes).
+5. Declarar **ports** (`domain/port/`, `domain/repository/`) — são os contratos que o domínio exige.
+6. Implementar os **casos de uso** em `application/` usando apenas ports; um `@Service` por módulo.
+7. Criar as **implementações** em `infrastructure/` para cada port (biblioteca/arquivo/banco).
+8. Criar os **Controllers** finos em `web/`, delegando aos services.
+9. Criar módulos adicionais seguindo o mesmo padrão; dependências entre módulos via ports de `domain`.
+10. Adicionar `config/` para wiring de beans entre módulos (ex.: injetar adapters de um módulo em services de outro).
+11. Adicionar logging SLF4J em services, controllers e infra (seção 4).
+12. Escrever testes unitários espelhando a hierarquia por módulo (seção 5) e rodar `mvn test`.
 
 ## Referência de contexto
 
