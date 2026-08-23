@@ -39,15 +39,22 @@ public class JLayerPlayerEngine implements PlayerEngine {
     private volatile long pauseStartNanos;
     private volatile long totalPausedNanos;
 
+    /**
+     * Construtor com injeção do codec ID3.
+     *
+     * @param id3Codec codec para leitura de metadados ID3
+     */
     public JLayerPlayerEngine(Id3Codec id3Codec) {
         this.id3Codec = id3Codec;
     }
 
+    /** {@inheritDoc} */
     @Override
     public void play(String filePath) throws IOException {
         play(filePath, 0);
     }
 
+    /** {@inheritDoc} */
     @Override
     public void play(String filePath, long startPositionMillis) throws IOException {
         stopCurrent();
@@ -123,6 +130,7 @@ public class JLayerPlayerEngine implements PlayerEngine {
         });
     }
 
+    /** {@inheritDoc} */
     @Override
     public void seekTo(long positionMillis) {
         if (currentFilePath == null) return;
@@ -156,6 +164,7 @@ public class JLayerPlayerEngine implements PlayerEngine {
         }
     }
 
+    /** {@inheritDoc} */
     @Override
     public void pause() {
         log.info("[Player] Pausado");
@@ -163,6 +172,7 @@ public class JLayerPlayerEngine implements PlayerEngine {
         this.pauseStartNanos = System.nanoTime();
     }
 
+    /** {@inheritDoc} */
     @Override
     public void resume() {
         log.info("[Player] Retomado");
@@ -173,21 +183,25 @@ public class JLayerPlayerEngine implements PlayerEngine {
         this.paused = false;
     }
 
+    /** {@inheritDoc} */
     @Override
     public String getCurrentFilePath() {
         return currentFilePath;
     }
 
+    /** {@inheritDoc} */
     @Override
     public boolean isPlaying() {
         return playing;
     }
 
+    /** {@inheritDoc} */
     @Override
     public boolean isPaused() {
         return paused;
     }
 
+    /** {@inheritDoc} */
     @Override
     public long getElapsedMillis() {
         if (playStartNanos == 0) return 0;
@@ -195,12 +209,14 @@ public class JLayerPlayerEngine implements PlayerEngine {
         return (now - playStartNanos - totalPausedNanos) / 1_000_000;
     }
 
+    /** {@inheritDoc} */
     @Override
     public long getTotalMillis() {
         if (totalFrames <= 0 || sampleRate <= 0) return 0;
         return (long) totalFrames * SAMPLES_PER_FRAME * 1000 / sampleRate;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Map<String, String> getId3Tags() {
         return id3Tags;
@@ -211,6 +227,7 @@ public class JLayerPlayerEngine implements PlayerEngine {
         log.info("[Player] Tags ID3: {}", id3Tags);
     }
 
+    /** {@inheritDoc} */
     @Override
     public void stop() {
         log.info("[Player] Parado");

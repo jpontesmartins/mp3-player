@@ -25,6 +25,14 @@ public class InfoController {
     private final String frontendPort;
     private final Id3Service id3Service;
 
+    /**
+     * Construtor do controlador de informações.
+     *
+     * @param logFile caminho do arquivo de log do backend
+     * @param backendPort porta do backend
+     * @param frontendPort porta do frontend
+     * @param id3Service serviço de metadados ID3
+     */
     public InfoController(
             @Value("${mp3.log-file:}") String logFile,
             @Value("${server.port:8111}") String backendPort,
@@ -36,6 +44,11 @@ public class InfoController {
         this.id3Service = id3Service;
     }
 
+    /**
+     * Retorna informações de execução da aplicação (log, cache, portas).
+     *
+     * @return mapa com as informações de configuração
+     */
     @GetMapping("/info")
     public ResponseEntity<Map<String, String>> getInfo() {
         log.info("GET /info: logFile={}, backend={}, frontend={}", logFile, backendPort, frontendPort);

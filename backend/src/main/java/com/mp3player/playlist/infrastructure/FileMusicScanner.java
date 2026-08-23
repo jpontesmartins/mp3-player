@@ -18,6 +18,13 @@ import java.util.stream.Stream;
 @Component
 public class FileMusicScanner implements MusicScanner {
 
+    /**
+     * Escaneia uma pasta recursivamente e retorna as músicas (.mp3) encontradas.
+     *
+     * @param folderPath caminho absoluto da pasta a ser escaneada.
+     * @return lista de músicas encontradas.
+     * @throws IOException se a pasta não existir, não for um diretório ou não puder ser lida.
+     */
     @Override
     public List<Music> scanFolder(String folderPath) throws IOException {
         Path start = Paths.get(folderPath);

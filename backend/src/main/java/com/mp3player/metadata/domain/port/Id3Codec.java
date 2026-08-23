@@ -10,9 +10,20 @@ import java.util.Map;
  */
 public interface Id3Codec {
 
-    /** Lê os metadados do arquivo no caminho informado, retornando um agregado {@link Music}. */
+    /**
+     * Lê os metadados do arquivo no caminho informado e retorna um agregado {@link Music}.
+     *
+     * @param filePath caminho absoluto do arquivo MP3
+     * @return agregado de música com os metadados lidos
+     */
     Music read(String filePath);
 
-    /** Atualiza os campos editáveis e retorna o {@link Music} atualizado. */
+    /**
+     * Atualiza os campos editáveis do arquivo e retorna o {@link Music} atualizado.
+     *
+     * @param filePath caminho absoluto do arquivo MP3
+     * @param tags mapa de tags a serem atualizadas (chave → valor)
+     * @return agregado de música com os metadados atualizados
+     */
     Music update(String filePath, Map<String, String> tags);
 }

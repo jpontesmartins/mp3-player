@@ -24,11 +24,24 @@ public abstract class AbstractCoverSearcher implements AlbumCoverSearcher {
     protected final CoverDownloader downloader;
     protected final CoverProperties props;
 
+    /**
+     * Construtor da classe base para buscadores de capa.
+     *
+     * @param downloader responsável pelo download das imagens
+     * @param props propriedades de configuração (URL, timeouts, etc.)
+     */
     protected AbstractCoverSearcher(CoverDownloader downloader, CoverProperties props) {
         this.downloader = downloader;
         this.props = props;
     }
 
+    /**
+     * Busca a primeira imagem de capa para o termo de busca informado.
+     *
+     * @param query termo de busca (ex: "artista álbum")
+     * @return imagem de capa encontrada, ou {@code null} se nenhuma for encontrada
+     * @throws IOException se ocorrer erro de rede ou leitura
+     */
     @Override
     public CoverImage findCover(String query) throws IOException {
         String encoded = URLEncoder.encode(query, StandardCharsets.UTF_8);
@@ -66,6 +79,13 @@ public abstract class AbstractCoverSearcher implements AlbumCoverSearcher {
         return false;
     }
 
+    /**
+     * Realiza a requisição HTTP GET e retorna o corpo da resposta.
+     *
+     * @param url URL da requisição
+     * @return corpo da resposta HTTP
+     * @throws IOException se ocorrer erro de rede ou timeout
+     */
     private String fetchSearchResponse(String url) throws IOException {
         Connection.Response res = Jsoup.connect(url)
                 .userAgent(props.userAgent())

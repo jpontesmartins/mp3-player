@@ -30,16 +30,34 @@ public class MetadataController {
     private final Id3Service id3Service;
     private final CoverService coverService;
 
+    /**
+     * Construtor do controlador de metadados.
+     *
+     * @param id3Service serviço de metadados ID3
+     * @param coverService serviço de download de capas
+     */
     public MetadataController(Id3Service id3Service, CoverService coverService) {
         this.id3Service = id3Service;
         this.coverService = coverService;
     }
 
+    /**
+     * Retorna as tags ID3 de um único arquivo.
+     *
+     * @param path caminho absoluto do arquivo MP3
+     * @return mapa de tags do arquivo
+     */
     @GetMapping("/id3")
     public ResponseEntity<Map<String, String>> getId3(@RequestParam String path) {
         return ResponseEntity.ok(id3Service.getForFile(path));
     }
 
+    /**
+     * Atualiza as tags ID3 de um arquivo.
+     *
+     * @param request requisição com caminho e tags a serem atualizadas
+     * @return tags atualizadas ou mensagem de erro
+     */
     @PostMapping("/id3/update")
     public ResponseEntity<?> updateId3(@RequestBody Id3UpdateRequest request) {
         try {
@@ -49,8 +67,21 @@ public class MetadataController {
         }
     }
 
+    /**
+     * Requisição de atualização de tags ID3.
+     *
+     * @param path caminho do arquivo
+     * @param tags mapa de tags a serem atualizadas
+     */
     public record Id3UpdateRequest(String path, Map<String, String> tags) {}
 
+    /**
+     * Retorna as tags ID3 de vários arquivos de uma vez.
+     *
+     * @param paths lista de caminhos dos arquivos MP3
+     * @param refresh se {@code true}, relê todos os arquivos ignorando o cache
+     * @return mapa de caminho → tags de cada arquivo
+     */
     @PostMapping("/id3/bulk")
     public ResponseEntity<Map<String, Map<String, String>>> getBulkId3(
             @RequestBody List<String> paths,
@@ -58,6 +89,13 @@ public class MetadataController {
         return ResponseEntity.ok(id3Service.getBulk(paths, refresh));
     }
 
+    /**
+     * Retorna a imagem de capa do álbum associado ao arquivo informado.
+     * Busca por arquivos com nomes como "cover.jpg", "folder.png", etc.
+     *
+     * @param path caminho absoluto do arquivo MP3
+     * @return recurso da imagem de capa ou 404 se não encontrada
+     */
     @GetMapping("/cover")
     public ResponseEntity<Resource> getCover(@RequestParam String path) {
         try {
@@ -92,6 +130,18 @@ public class MetadataController {
         }
     }
 
+    /**
+     * Retorna o content-type baseado na extensão do arquivo.
+     *
+     * @param name nome do arquivo
+     * @return content-type correspondente
+     */
+    /**
+     * Retorna o content-type baseado na extensão do arquivo.
+     *
+     * @param name nome do arquivo
+     * @return content-type correspondente
+     */
     private static String contentTypeFor(String name) {
         if (name.endsWith("png")) return "image/png";
         if (name.endsWith("webp")) return "image/webp";
@@ -99,8 +149,19 @@ public class MetadataController {
         return "image/jpeg";
     }
 
+    /**
+     * Requisição de download de capa.
+     *
+     * @param path caminho do arquivo MP3
+     */
     public record CoverDownloadRequest(String path) {}
 
+    /**
+     * Baixa a capa do álbum a partir da web e salva na pasta do arquivo.
+     *
+     * @param request requisição com o caminho do arquivo MP3
+     * @return caminho do arquivo de capa salvo ou mensagem de erro
+     */
     @PostMapping("/cover/download")
     public ResponseEntity<String> downloadCover(@RequestBody CoverDownloadRequest request) {
         if (request.path() == null || request.path().isBlank()) {

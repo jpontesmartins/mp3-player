@@ -14,15 +14,31 @@ public final class Playlist {
     private final String name;
     private final List<String> songPaths;
 
+    /**
+     * Cria uma nova playlist.
+     *
+     * @param name     nome da playlist; {@code null} resulta em string vazia.
+     * @param songPaths lista de caminhos absolutos das músicas; {@code null} resulta em lista vazia.
+     */
     public Playlist(String name, List<String> songPaths) {
         this.name = name == null ? "" : name.trim();
         this.songPaths = songPaths == null ? List.of() : List.copyOf(songPaths);
     }
 
+    /**
+     * Retorna o nome da playlist.
+     *
+     * @return nome da playlist.
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Retorna os caminhos das músicas da playlist em ordem.
+     *
+     * @return lista imutável de caminhos absolutos.
+     */
     public List<String> getSongPaths() {
         return Collections.unmodifiableList(songPaths);
     }

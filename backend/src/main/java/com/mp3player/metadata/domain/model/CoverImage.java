@@ -6,6 +6,11 @@ package com.mp3player.metadata.domain.model;
  */
 public record CoverImage(byte[] bytes, String contentType) {
 
+    /**
+     * Verifica se a imagem está vazia (bytes nulos ou array vazio).
+     *
+     * @return {@code true} se a imagem estiver vazia
+     */
     public boolean isEmpty() {
         return bytes == null || bytes.length == 0;
     }

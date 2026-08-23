@@ -25,10 +25,21 @@ public class PlayerController {
 
     private final PlayerService playerService;
 
+    /**
+     * Construtor com injeção do serviço de player.
+     *
+     * @param playerService serviço de aplicação do player
+     */
     public PlayerController(PlayerService playerService) {
         this.playerService = playerService;
     }
 
+    /**
+     * Inicia a reprodução do arquivo especificado.
+     *
+     * @param filePath caminho absoluto do arquivo MP3
+     * @return ResponseEntity com mensagem de confirmação ou erro
+     */
     @PostMapping("/play")
     public ResponseEntity<String> play(@RequestBody String filePath) {
         log.info("[Player] Reproduzindo: {}", filePath);
@@ -41,6 +52,11 @@ public class PlayerController {
         }
     }
 
+    /**
+     * Pausa a reprodução atual.
+     *
+     * @return ResponseEntity com mensagem indicando o resultado
+     */
     @PostMapping("/pause")
     public ResponseEntity<String> pause() {
         String result = playerService.pause();
@@ -52,6 +68,11 @@ public class PlayerController {
         return ResponseEntity.badRequest().body(result);
     }
 
+    /**
+     * Para a reprodução.
+     *
+     * @return ResponseEntity com confirmação
+     */
     @PostMapping("/stop")
     public ResponseEntity<String> stop() {
         playerService.stop();
@@ -59,6 +80,12 @@ public class PlayerController {
         return ResponseEntity.ok("Stopped");
     }
 
+    /**
+     * Salta para a posição especificada no corpo da requisição.
+     *
+     * @param body mapa contendo a chave {@code position} com o valor em milissegundos
+     * @return ResponseEntity com mensagem indicando o resultado
+     */
     @PostMapping("/seek")
     public ResponseEntity<String> seek(@RequestBody Map<String, Long> body) {
         Long position = body.get("position");
@@ -73,6 +100,11 @@ public class PlayerController {
         return ResponseEntity.badRequest().body(result);
     }
 
+    /**
+     * Retoma a reprodução pausada.
+     *
+     * @return ResponseEntity com mensagem indicando o resultado
+     */
     @PostMapping("/resume")
     public ResponseEntity<String> resume() {
         String result = playerService.resume();
@@ -84,6 +116,11 @@ public class PlayerController {
         return ResponseEntity.badRequest().body(result);
     }
 
+    /**
+     * Retorna o estado atual da reprodução.
+     *
+     * @return ResponseEntity com mapa contendo status, arquivo, posição, duração e tags ID3
+     */
     @GetMapping("/playing")
     public ResponseEntity<Map<String, Object>> playing() {
         return ResponseEntity.ok(playerService.status());

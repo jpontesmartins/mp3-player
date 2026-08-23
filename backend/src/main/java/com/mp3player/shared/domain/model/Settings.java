@@ -5,11 +5,20 @@ import java.util.Objects;
 /** Preferências do usuário para o player. */
 public final class Settings {
 
+    /**
+     * Modos de reprodução disponíveis no player.
+     */
     public enum PlaybackMode { CONTINUOUS, SHUFFLE, REPEAT }
 
     private final PlaybackMode playbackMode;
     private final boolean showCover;
 
+    /**
+     * Cria uma instância de configurações com os valores informados.
+     *
+     * @param playbackMode modo de reprodução; {@code null} assume {@link PlaybackMode#CONTINUOUS}
+     * @param showCover    {@code true} para exibir a capa do álbum
+     */
     public Settings(PlaybackMode playbackMode, boolean showCover) {
         this.playbackMode = Objects.requireNonNullElse(playbackMode, PlaybackMode.CONTINUOUS);
         this.showCover = showCover;
@@ -20,10 +29,20 @@ public final class Settings {
         return new Settings(PlaybackMode.CONTINUOUS, true);
     }
 
+    /**
+     * Retorna o modo de reprodução configurado.
+     *
+     * @return modo de reprodução atual
+     */
     public PlaybackMode getPlaybackMode() {
         return playbackMode;
     }
 
+    /**
+     * Indica se a capa do álbum deve ser exibida.
+     *
+     * @return {@code true} se a capa está habilitada
+     */
     public boolean isShowCover() {
         return showCover;
     }

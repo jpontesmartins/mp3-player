@@ -28,6 +28,12 @@ public class CachedId3Codec implements Id3Codec {
         this.cache = cache;
     }
 
+    /**
+     * Lê os metadados do arquivo, verificando o cache antes de delegar para o codec.
+     *
+     * @param filePath caminho absoluto do arquivo MP3
+     * @return agregado de música com os metadados lidos
+     */
     @Override
     public Music read(String filePath) {
         Map<String, String> cached = cache.get(filePath);
@@ -40,6 +46,13 @@ public class CachedId3Codec implements Id3Codec {
         return music;
     }
 
+    /**
+     * Atualiza as tags editáveis do arquivo e atualiza o cache.
+     *
+     * @param filePath caminho absoluto do arquivo MP3
+     * @param tags mapa de tags a serem atualizadas
+     * @return agregado de música com os metadados atualizados
+     */
     @Override
     public Music update(String filePath, Map<String, String> tags) {
         Music updated = delegate.update(filePath, tags);
@@ -48,6 +61,13 @@ public class CachedId3Codec implements Id3Codec {
         return updated;
     }
 
+    /**
+     * Verifica se o cache está desatualizado comparando o timestamp de modificação.
+     *
+     * @param filePath caminho do arquivo
+     * @param cached tags em cache
+     * @return {@code true} se o cache estiver desatualizado
+     */
     private boolean isStale(String filePath, Map<String, String> cached) {
         String stored = cached.get(LAST_MODIFIED_KEY);
         if (stored == null) return true;
@@ -55,12 +75,24 @@ public class CachedId3Codec implements Id3Codec {
         return current != Long.parseLong(stored);
     }
 
+    /**
+     * Armazena as tags no cache com o timestamp de modificação atual.
+     *
+     * @param filePath caminho do arquivo
+     * @param tags tags a serem armazenadas
+     */
     private void putWithTimestamp(String filePath, Map<String, String> tags) {
         Map<String, String> toStore = new HashMap<>(tags);
         toStore.put(LAST_MODIFIED_KEY, String.valueOf(lastModified(filePath)));
         cache.put(filePath, toStore);
     }
 
+    /**
+     * Retorna o timestamp de última modificação do arquivo.
+     *
+     * @param filePath caminho do arquivo
+     * @return timestamp de última modificação em milissegundos
+     */
     private long lastModified(String filePath) {
         return Path.of(filePath).toFile().lastModified();
     }

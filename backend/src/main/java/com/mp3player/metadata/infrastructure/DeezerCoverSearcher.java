@@ -5,20 +5,42 @@ import com.mp3player.metadata.infrastructure.CoverProperties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Buscador de capas que utiliza a API de busca do Deezer.
+ */
 public class DeezerCoverSearcher extends AbstractCoverSearcher {
 
     private static final Pattern DEEZER_COVER = Pattern.compile("\"cover_xl\"\\s*:\\s*\"([^\"]+)\"");
     private static final Pattern DEEZER_MEDIUM = Pattern.compile("\"cover_medium\"\\s*:\\s*\"([^\"]+)\"");
 
+    /**
+     * Construtor do buscador do Deezer.
+     *
+     * @param downloader responsável pelo download das imagens
+     * @param props propriedades de configuração (URL, timeouts, etc.)
+     */
     public DeezerCoverSearcher(CoverDownloader downloader, CoverProperties props) {
         super(downloader, props);
     }
 
+    /**
+     * Monta a URL de busca do Deezer a partir do termo codificado.
+     *
+     * @param encoded termo de busca URL-encoded
+     * @return URL completa da API de busca do Deezer
+     */
     @Override
     protected String buildSearchUrl(String encoded) {
         return props.deezerUrl() + encoded;
     }
 
+    /**
+     * Extrai a URL da imagem da resposta JSON da API do Deezer.
+     * Prioriza a imagem XL; se não encontrar, usa a média.
+     *
+     * @param responseBody corpo da resposta HTTP
+     * @return URL da imagem ou {@code null} se não encontrou
+     */
     @Override
     protected String extractImageUrl(String responseBody) {
         Matcher big = DEEZER_COVER.matcher(responseBody);
@@ -27,6 +49,11 @@ public class DeezerCoverSearcher extends AbstractCoverSearcher {
         return medium.find() ? medium.group(1) : null;
     }
 
+    /**
+     * Indica que o content-type deve ser ignorado na requisição de busca.
+     *
+     * @return {@code true} para ignorar content-type
+     */
     @Override
     protected boolean ignoreContentType() {
         return true;

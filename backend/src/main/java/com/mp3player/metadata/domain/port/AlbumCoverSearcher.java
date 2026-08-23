@@ -10,8 +10,11 @@ import java.io.IOException;
 public interface AlbumCoverSearcher {
 
     /**
-     * Busca a primeira imagem para o texto informado e retorna os bytes baixados,
-     * ou {@code null} se nenhuma imagem for encontrada.
+     * Busca a primeira imagem de capa para o termo de busca informado.
+     *
+     * @param query termo de busca (ex: "artista álbum")
+     * @return imagem de capa encontrada, ou {@code null} se nenhuma for encontrada
+     * @throws IOException se ocorrer erro de rede ou leitura
      */
     CoverImage findCover(String query) throws IOException;
 }

@@ -10,7 +10,10 @@ public interface LyricsScraper {
     /**
      * Busca a letra para o artista/título informados.
      *
-     * @return o texto da letra ou uma mensagem legível de "não encontrado".
+     * @param artist nome do artista
+     * @param title título da música
+     * @return o texto da letra ou uma mensagem legível de "não encontrado"
+     * @throws IOException se ocorrer erro de rede ao acessar a fonte
      */
     String fetch(String artist, String title) throws IOException;
 }
