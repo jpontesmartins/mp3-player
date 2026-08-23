@@ -1,19 +1,19 @@
 # Backend — ovelhafy
 
-API REST em **Java 21** com **Spring Boot 3.3.5**, construida sob **Clean Architecture**, **Clean Code** e **Domain-Driven Design (DDD)**.
+API REST em **Java 21** com **Spring Boot 3.3.5**, construída sob **Clean Architecture**, **Clean Code** e **Domain-Driven Design (DDD)**.
 
 ---
 
 ## Arquitetura
 
-O backend e organizado por **modulos de negocio** (Bounded Contexts). Cada modulo encapsula suas proprias camadas arquiteturais (`domain`, `application`, `infrastructure`, `web`).
+O backend é organizado por **módulos de negócio** (Bounded Contexts). Cada módulo encapsula suas próprias camadas arquiteturais (`domain`, `application`, `infrastructure`, `web`).
 
-### Principios
+### Princípios
 
-- **Dependencias apontam sempre para dentro**: o dominio nao conhece a infraestrutura.
-- **Cada funcionalidade pertence a um unico modulo**: logica nao distribuida entre pastas.
-- **Ports & Adapters**: o dominio define contratos (interfaces), a infraestrutura fornece implementacoes.
-- **Injecao de dependencia via Spring**: os adapters sao injetados nos services em runtime.
+- **Dependências apontam sempre para dentro**: o domínio não conhece a infraestrutura.
+- **Cada funcionalidade pertence a um único módulo**: lógica não distribuída entre pastas.
+- **Ports & Adapters**: o domínio define contratos (interfaces), a infraestrutura fornece implementações.
+- **Injeção de dependência via Spring**: os adapters são injetados nos services em runtime.
 
 ### Estrutura
 
@@ -21,16 +21,16 @@ O backend e organizado por **modulos de negocio** (Bounded Contexts). Cada modul
 com.mp3player
 ├── Mp3PlayerApplication.java
 │
-├── shared/                                  # Compartilhado entre modulos
+├── shared/                                  # Compartilhado entre módulos
 │   ├── domain/model/Settings.java
 │   ├── domain/util/MusicFileNaming.java
 │   └── config/CorsConfig.java
 │
-├── config/                                  # Wiring de beans entre modulos
+├── config/                                  # Wiring de beans entre módulos
 │   ├── CoverSearcherConfig.java
 │   └── Id3CodecConfig.java
 │
-├── player/                                  # Bounded Context: Reproducao
+├── player/                                  # Bounded Context: Reprodução
 │   ├── domain/
 │   │   ├── model/Music.java                 # Raiz agregada (aggregate root)
 │   │   └── port/PlayerEngine.java
@@ -91,12 +91,12 @@ com.mp3player
         └── LyricsController.java
 ```
 
-### Bounded Contexts e dependencias
+### Bounded Contexts e dependências
 
-| Modulo | Responsabilidade | Depende de |
+| Módulo | Responsabilidade | Depende de |
 |---|---|---|
 | **shared** | Config CORS, Settings, MusicFileNaming | — |
-| **player** | Reproducao de audio (raiz agregada: `Music`) | — |
+| **player** | Reprodução de áudio (raiz agregada: `Music`) | — |
 | **playlist** | CRUD de playlists + scan de pastas | `player` (usa `Music`) |
 | **metadata** | Tags ID3, capas, cache de metadados | `player` (usa `Music`) |
 | **lyrics** | Busca de letras (web scraping + cache) | `metadata` (usa `Id3Codec`), `player` (usa `Music`) |
@@ -122,18 +122,18 @@ com.mp3player
 
 ### Player (`player/web/PlayerController`)
 
-| Metodo | Rota | Descricao |
+| Método | Rota | Descrição |
 |---|---|---|
-| `POST` | `/play` | Inicia reproducao (body = caminho do arquivo) |
-| `POST` | `/pause` | Pausa a musica atual |
-| `POST` | `/resume` | Retoma a musica pausada |
-| `POST` | `/stop` | Para a reproducao e limpa o estado |
-| `POST` | `/seek` | Salta para posicao (`{ "position": <ms> }`) |
-| `GET` | `/playing` | Status atual (playing/paused/stopped), posicao, duracao e ID3 |
+| `POST` | `/play` | Inicia reprodução (body = caminho do arquivo) |
+| `POST` | `/pause` | Pausa a música atual |
+| `POST` | `/resume` | Retoma a música pausada |
+| `POST` | `/stop` | Para a reprodução e limpa o estado |
+| `POST` | `/seek` | Salta para posição (`{ "position": <ms> }`) |
+| `GET` | `/playing` | Status atual (playing/paused/stopped), posição, duração e ID3 |
 
 ### Playlist (`playlist/web/PlaylistController`)
 
-| Metodo | Rota | Descricao |
+| Método | Rota | Descrição |
 |---|---|---|
 | `GET` | `/playlist?path=<pasta>` | Escaneia pasta e retorna arquivos `.mp3` |
 | `GET` | `/playlists` | Lista playlists virtuais existentes |
@@ -144,47 +144,47 @@ com.mp3player
 
 ### Metadata (`metadata/web/MetadataController`)
 
-| Metodo | Rota | Descricao |
+| Método | Rota | Descrição |
 |---|---|---|
 | `GET` | `/id3?path=<arquivo>` | Tags ID3 de um arquivo |
-| `POST` | `/id3/bulk` | Tags ID3 de varios arquivos (body = lista de caminhos) |
+| `POST` | `/id3/bulk` | Tags ID3 de vários arquivos (body = lista de caminhos) |
 | `POST` | `/id3/update` | Atualiza tags (`{ "path", "tags" }`) |
-| `GET` | `/cover?path=<arquivo>` | Capa do album (jpg/png/webp/gif) |
+| `GET` | `/cover?path=<arquivo>` | Capa do álbum (jpg/png/webp/gif) |
 | `POST` | `/cover/download` | Baixa capa via iTunes/Deezer (`{ "path" }`) |
 
 ### Lyrics (`lyrics/web/LyricsController`)
 
-| Metodo | Rota | Descricao |
+| Método | Rota | Descrição |
 |---|---|---|
-| `GET` | `/lyrics?path=<arquivo>` | Letra (web scraping se nao houver cache) |
+| `GET` | `/lyrics?path=<arquivo>` | Letra (web scraping se não houver cache) |
 | `GET` | `/lyrics/cached?path=<arquivo>` | Letra apenas do cache |
 | `POST` | `/lyrics` | Salva/edita letra (`{ "path", "text" }`) |
 | `DELETE` | `/lyrics?path=<arquivo>` | Remove letra do cache |
 
 ### Info (`metadata/web/InfoController`)
 
-| Metodo | Rota | Descricao |
+| Método | Rota | Descrição |
 |---|---|---|
 | `GET` | `/info` | Log, cache, portas do sistema |
 
 ---
 
-## Padroes de design
+## Padrões de design
 
-| Padrao | Onde | O que faz |
+| Padrão | Onde | O que faz |
 |---|---|---|
-| Ports & Adapters | `domain/port/` | Dominio define contratos; infraestrutura implementa |
+| Ports & Adapters | `domain/port/` | Domínio define contratos; infraestrutura implementa |
 | Decorator | `CachedId3Codec` | Envolve `Id3MagicCodec` com cache transparente |
 | Template Method | `AbstractCoverSearcher` | Define fluxo de busca; subclasses implementam passos |
 | Strategy / Composite | `CompositeCoverSearcher` | Encadeia iTunes -> Deezer (fallback) |
-| Repository | `PlaylistRepository`, etc. | Abstrai persistencia (hoje TXT, facilmente trocavel) |
-| Injecao de dependencia | Spring | Injeta adapters nos services via construtor |
+| Repository | `PlaylistRepository`, etc. | Abstrai persistência (hoje TXT, facilmente trocável) |
+| Injeção de dependência | Spring | Injeta adapters nos services via construtor |
 
 ---
 
-## Persistencia
+## Persistência
 
-| Dado | Localizacao | Implementacao |
+| Dado | Localização | Implementação |
 |---|---|---|
 | Playlists virtuais | `~/.mp3-player/playlists/<nome>.txt` | `FilePlaylistRepository` |
 | Letras | `<pasta do mp3>/<artista> - <musica>.txt` | `FileLyricRepository` |
@@ -195,7 +195,7 @@ com.mp3player
 
 ## Cache de metadados ID3
 
-Ler tags ID3 de cada arquivo MP3 e uma operacao custosa. Para evitar reler os mesmos arquivos toda vez, a aplicacao mantem um **cache em disco** (`~/.mp3-player/metadata-cache.json`).
+Ler tags ID3 de cada arquivo MP3 é uma operação custosa. Para evitar reler os mesmos arquivos toda vez, a aplicação mantém um **cache em disco** (`~/.mp3-player/metadata-cache.json`).
 
 ```
 1. CachedId3Codec.read(caminho)
@@ -210,7 +210,7 @@ Ler tags ID3 de cada arquivo MP3 e uma operacao custosa. Para evitar reler os me
 
 ## Como rodar
 
-### Pre-requisitos
+### Pré-requisitos
 
 - **Java 21**
 - **Maven 3.8+**
