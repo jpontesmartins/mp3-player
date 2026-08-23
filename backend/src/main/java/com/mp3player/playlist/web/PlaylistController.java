@@ -25,10 +25,21 @@ public class PlaylistController {
 
     private final PlaylistService playlistService;
 
+    /**
+     * Construtor do controller de playlist.
+     *
+     * @param playlistService service de playlist da camada de aplicação.
+     */
     public PlaylistController(PlaylistService playlistService) {
         this.playlistService = playlistService;
     }
 
+    /**
+     * Escaneia uma pasta física e retorna os caminhos das músicas encontradas.
+     *
+     * @param path caminho absoluto da pasta a ser escaneada.
+     * @return lista de caminhos das músicas ou erro em caso de falha.
+     */
     @GetMapping("/playlist")
     public ResponseEntity<?> getPlaylist(@RequestParam String path) {
         log.info("[Playlist] Carregando pasta: {}", path);
@@ -42,6 +53,11 @@ public class PlaylistController {
         }
     }
 
+    /**
+     * Lista todas as playlists salvas.
+     *
+     * @return lista de nomes de playlists ou erro em caso de falha.
+     */
     @GetMapping("/playlists")
     public ResponseEntity<?> listPlaylists() {
         try {
@@ -51,6 +67,12 @@ public class PlaylistController {
         }
     }
 
+    /**
+     * Carrega os caminhos das músicas de uma playlist virtual.
+     *
+     * @param name nome da playlist.
+     * @return lista de caminhos das músicas ou 404 se não existir.
+     */
     @GetMapping("/playlist/{name}")
     public ResponseEntity<?> getVirtualPlaylist(@PathVariable String name) {
         try {
@@ -60,8 +82,20 @@ public class PlaylistController {
         }
     }
 
+    /**
+     * Requisição para salvar uma playlist virtual.
+     *
+     * @param name  nome da playlist.
+     * @param paths lista de caminhos absolutos das músicas.
+     */
     public record PlaylistSaveRequest(String name, List<String> paths) {}
 
+    /**
+     * Salva ou sobrescreve uma playlist virtual.
+     *
+     * @param request requisição com nome e caminhos das músicas.
+     * @return "Saved" em caso de sucesso ou erro em caso de falha.
+     */
     @PostMapping("/playlist")
     public ResponseEntity<?> saveVirtualPlaylist(@RequestBody PlaylistSaveRequest request) {
         if (request.name() == null || request.name().isBlank()) {
@@ -75,6 +109,12 @@ public class PlaylistController {
         }
     }
 
+    /**
+     * Exclui uma playlist virtual.
+     *
+     * @param name nome da playlist a ser excluída.
+     * @return "Deleted" em caso de sucesso ou 404 se não existir.
+     */
     @DeleteMapping("/playlist/{name}")
     public ResponseEntity<?> deleteVirtualPlaylist(@PathVariable String name) {
         try {
@@ -85,6 +125,12 @@ public class PlaylistController {
         }
     }
 
+    /**
+     * Renomeia uma playlist virtual existente.
+     *
+     * @param request requisição com nome atual e novo nome.
+     * @return "Renamed" em caso de sucesso ou 404 se não existir.
+     */
     @PostMapping("/playlist/rename")
     public ResponseEntity<?> renameVirtualPlaylist(@RequestBody PlaylistRenameRequest request) {
         try {
@@ -95,5 +141,11 @@ public class PlaylistController {
         }
     }
 
+    /**
+     * Requisição para renomear uma playlist virtual.
+     *
+     * @param oldName nome atual da playlist.
+     * @param newName novo nome da playlist.
+     */
     public record PlaylistRenameRequest(String oldName, String newName) {}
 }

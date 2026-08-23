@@ -11,18 +11,41 @@ import java.util.List;
  */
 public interface PlaylistRepository {
 
-    /** Nomes de todas as playlists salvas. */
+    /**
+     * Lista os nomes de todas as playlists salvas.
+     *
+     * @return lista ordenada de nomes de playlists.
+     */
     List<String> list();
 
-    /** Carrega os caminhos ordenados das músicas de uma playlist. */
+    /**
+     * Carrega os caminhos ordenados das músicas de uma playlist.
+     *
+     * @param name nome da playlist.
+     * @return lista de caminhos absolutos das músicas.
+     */
     List<String> load(String name);
 
-    /** Cria ou sobrescreve uma playlist. */
+    /**
+     * Cria ou sobrescreve uma playlist.
+     *
+     * @param playlist playlist a ser salva.
+     */
     void save(Playlist playlist);
 
-    /** Exclui uma playlist. */
+    /**
+     * Exclui uma playlist pelo nome.
+     *
+     * @param name nome da playlist a ser excluída.
+     */
     void delete(String name);
 
-    /** Renomeia uma playlist existente. */
+    /**
+     * Renomeia uma playlist existente.
+     *
+     * @param currentName nome atual da playlist.
+     * @param newName     novo nome da playlist.
+     * @throws IllegalArgumentException se a playlist não existir.
+     */
     void rename(String currentName, String newName);
 }

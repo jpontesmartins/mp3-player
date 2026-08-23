@@ -22,6 +22,17 @@ public class LetrasMusBrSource extends AbstractLyricsSource {
     private final int priority;
     private final String searchPath;
 
+    /**
+     * Cria uma nova instância da fonte letras.mus.br.
+     *
+     * @param baseUrl URL base do site
+     * @param userAgent User-Agent utilizado nas requisições HTTP
+     * @param timeoutConnect timeout de conexão em milissegundos
+     * @param timeoutFetch timeout de busca em milissegundos
+     * @param searchPath path do endpoint de busca
+     * @param enabled se a fonte está habilitada
+     * @param priority prioridade da fonte (menor = mais prioritário)
+     */
     public LetrasMusBrSource(String baseUrl, String userAgent,
                              int timeoutConnect, int timeoutFetch,
                              String searchPath, boolean enabled, int priority) {
@@ -31,17 +42,29 @@ public class LetrasMusBrSource extends AbstractLyricsSource {
         this.priority = priority;
     }
 
+    /** {@inheritDoc} */
     @Override
     public String getName() { return "letras.mus.br"; }
 
+    /** {@inheritDoc} */
     @Override
     public int getPriority() { return priority; }
 
+    /** {@inheritDoc} */
     @Override
     public boolean isEnabled() { return enabled; }
 
     // ── findPage ─────────────────────────────────────────────────────
 
+    /**
+     * Busca a URL da letra no letras.mus.br utilizando três estratégias:
+     * página do artista, URL direta e busca no site.
+     *
+     * @param artist nome do artista
+     * @param title título da música
+     * @return URL da página da letra, ou {@code null} se não encontrada
+     * @throws IOException se ocorrer erro de rede
+     */
     @Override
     public String findPage(String artist, String title) throws IOException {
         String fromArtist = findOnArtistPage(artist, title);
@@ -55,6 +78,12 @@ public class LetrasMusBrSource extends AbstractLyricsSource {
 
     // ── extractLyrics ────────────────────────────────────────────────
 
+    /**
+     * Extrai o texto da letra do elemento {@code div.lyric-original} da página.
+     *
+     * @param page documento HTML da página da letra
+     * @return texto da letra ou {@code null} se o elemento não for encontrado
+     */
     @Override
     public String extractLyrics(Document page) {
         Element lyricDiv = page.selectFirst("div.lyric-original");

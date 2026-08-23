@@ -13,6 +13,11 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 @EnableConfigurationProperties({LyricsProperties.class, CoverProperties.class})
 public class Mp3PlayerApplication {
 
+    /**
+     * Ponto de entrada da aplicação.
+     *
+     * @param args argumentos de linha de comando passados para a aplicação
+     */
     public static void main(String[] args) {
         SpringApplication.run(Mp3PlayerApplication.class, args);
     }

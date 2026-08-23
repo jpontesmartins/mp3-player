@@ -28,6 +28,12 @@ import java.util.List;
 @EnableConfigurationProperties(LyricsProperties.class)
 public class LyricsConfig {
 
+    /**
+     * Cria a lista de fontes de letras habilitadas a partir das propriedades configuradas.
+     *
+     * @param props propriedades de configuração do módulo de letras
+     * @return lista de {@link LyricsSource} habilitadas e ordenadas por prioridade
+     */
     @Bean
     public List<LyricsSource> lyricsSources(LyricsProperties props) {
         List<LyricsSource> sources = new ArrayList<>();

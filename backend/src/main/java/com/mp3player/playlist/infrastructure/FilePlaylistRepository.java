@@ -25,10 +25,18 @@ public class FilePlaylistRepository implements PlaylistRepository {
 
     private final Path baseDir;
 
+    /**
+     * Construtor padrão que usa o diretório padrão de playlists do usuário.
+     */
     public FilePlaylistRepository() {
         this(Paths.get(System.getProperty("user.home"), ".mp3-player", "playlists"));
     }
 
+    /**
+     * Construtor para testes com diretório personalizado.
+     *
+     * @param baseDir diretório base onde as playlists serão armazenadas.
+     */
     FilePlaylistRepository(Path baseDir) {
         this.baseDir = baseDir;
         try {
@@ -38,6 +46,11 @@ public class FilePlaylistRepository implements PlaylistRepository {
         }
     }
 
+    /**
+     * Lista os nomes de todas as playlists salvas no diretório base.
+     *
+     * @return lista ordenada de nomes de playlists, ou lista vazia em caso de erro.
+     */
     @Override
     public List<String> list() {
         try (Stream<Path> stream = Files.list(baseDir)) {
@@ -53,6 +66,12 @@ public class FilePlaylistRepository implements PlaylistRepository {
         }
     }
 
+    /**
+     * Carrega os caminhos ordenados das músicas de uma playlist.
+     *
+     * @param name nome da playlist.
+     * @return lista de caminhos absolutos das músicas, ou lista vazia se não existir ou houver erro.
+     */
     @Override
     public List<String> load(String name) {
         Path file = fileFor(name);
@@ -71,6 +90,12 @@ public class FilePlaylistRepository implements PlaylistRepository {
         }
     }
 
+    /**
+     * Salva uma playlist em arquivo TXT no diretório base.
+     *
+     * @param playlist playlist a ser salva.
+     * @throws IllegalStateException se ocorrer erro de I/O ao gravar o arquivo.
+     */
     @Override
     public void save(Playlist playlist) {
         Path file = fileFor(playlist.getName());
@@ -82,6 +107,12 @@ public class FilePlaylistRepository implements PlaylistRepository {
         }
     }
 
+    /**
+     * Exclui uma playlist pelo nome.
+     *
+     * @param name nome da playlist a ser excluída.
+     * @throws IllegalStateException se ocorrer erro de I/O ao excluir o arquivo.
+     */
     @Override
     public void delete(String name) {
         try {
@@ -92,6 +123,14 @@ public class FilePlaylistRepository implements PlaylistRepository {
         }
     }
 
+    /**
+     * Renomeia uma playlist existente.
+     *
+     * @param currentName nome atual da playlist.
+     * @param newName     novo nome da playlist.
+     * @throws IllegalArgumentException se a playlist não existir.
+     * @throws IllegalStateException    se ocorrer erro de I/O ao renomear o arquivo.
+     */
     @Override
     public void rename(String currentName, String newName) {
         Path from = fileFor(currentName);
@@ -106,6 +145,12 @@ public class FilePlaylistRepository implements PlaylistRepository {
         }
     }
 
+    /**
+     * Sanitiza o nome da playlist para uso como nome de arquivo, removendo caracteres inválidos.
+     *
+     * @param name nome original da playlist.
+     * @return nome sanitizado; retorna "playlist" se o resultado for vazio.
+     */
     String sanitize(String name) {
         String cleaned = name.trim().replaceAll("[\\\\/:*?\"<>|]", "_");
         return cleaned.isEmpty() ? "playlist" : cleaned;

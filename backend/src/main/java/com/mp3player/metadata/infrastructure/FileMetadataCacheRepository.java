@@ -32,6 +32,11 @@ public class FileMetadataCacheRepository implements MetadataCacheRepository {
     private final ObjectMapper objectMapper;
     private final ConcurrentHashMap<String, Map<String, String>> entries = new ConcurrentHashMap<>();
 
+    /**
+     * Construtor do repositório de cache de metadados.
+     *
+     * @param logFile caminho do arquivo de log do backend
+     */
     @Autowired
     public FileMetadataCacheRepository(@Value("${mp3.log-file:}") String logFile) {
         this(cacheFileFor(logFile));
@@ -47,7 +52,12 @@ public class FileMetadataCacheRepository implements MetadataCacheRepository {
         load();
     }
 
-    /** Cache fica na pasta do log do backend; se não houver log, em ~/.mp3-player. */
+    /**
+     * Calcula o caminho do arquivo de cache baseado na localização do log.
+     *
+     * @param logFile caminho do arquivo de log
+     * @return caminho do arquivo de cache
+     */
     private static Path cacheFileFor(String logFile) {
         if (logFile != null && !logFile.isBlank()) {
             Path parent = Paths.get(logFile).getParent();
@@ -58,17 +68,34 @@ public class FileMetadataCacheRepository implements MetadataCacheRepository {
         return Paths.get(System.getProperty("user.home"), ".mp3-player", "metadata-cache.json");
     }
 
+    /**
+     * Retorna as tags em cache para o caminho informado.
+     *
+     * @param path caminho do arquivo
+     * @return mapa de tags, ou {@code null} se não estiver em cache
+     */
     @Override
     public Map<String, String> get(String path) {
         return entries.get(path);
     }
 
+    /**
+     * Armazena as tags do arquivo no cache e persiste no disco.
+     *
+     * @param path caminho do arquivo
+     * @param tags mapa de tags a serem armazenadas
+     */
     @Override
     public void put(String path, Map<String, String> tags) {
         entries.put(path, tags);
         persist();
     }
 
+    /**
+     * Armazena várias entradas de uma vez e persiste no disco.
+     *
+     * @param tagsByPath mapa de caminho → tags
+     */
     @Override
     public void putAll(Map<String, Map<String, String>> tagsByPath) {
         if (tagsByPath.isEmpty()) return;
@@ -76,11 +103,19 @@ public class FileMetadataCacheRepository implements MetadataCacheRepository {
         persist();
     }
 
+    /**
+     * Retorna a localização do arquivo onde o cache é persistido.
+     *
+     * @return caminho do arquivo de cache
+     */
     @Override
     public String location() {
         return cacheFile.toString();
     }
 
+    /**
+     * Carrega o cache do arquivo JSON na inicialização.
+     */
     private void load() {
         if (!Files.exists(cacheFile)) return;
         try {
@@ -95,6 +130,9 @@ public class FileMetadataCacheRepository implements MetadataCacheRepository {
         }
     }
 
+    /**
+     * Persiste o cache em disco de forma atômica (arquivo temporário + move).
+     */
     private void persist() {
         try {
             Files.createDirectories(cacheFile.getParent());

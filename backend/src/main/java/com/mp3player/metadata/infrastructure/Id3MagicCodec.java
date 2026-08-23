@@ -23,7 +23,12 @@ public class Id3MagicCodec implements Id3Codec {
 
     private static final Logger log = LoggerFactory.getLogger(Id3MagicCodec.class);
 
-    /** Lê as tags ID3 do arquivo no caminho informado e monta um agregado {@link Music}. */
+    /**
+     * Lê as tags ID3 do arquivo no caminho informado e monta um agregado {@link Music}.
+     *
+     * @param filePath caminho absoluto do arquivo MP3
+     * @return agregado de música com os metadados lidos
+     */
     @Override
     public Music read(String filePath) {
         try {
@@ -69,7 +74,14 @@ public class Id3MagicCodec implements Id3Codec {
         }
     }
 
-    /** Atualiza as tags editáveis do arquivo e retorna o {@link Music} resultante. */
+    /**
+     * Atualiza as tags editáveis do arquivo e retorna o {@link Music} resultante.
+     *
+     * @param filePath caminho absoluto do arquivo MP3
+     * @param tags mapa de tags a serem atualizadas
+     * @return agregado de música com os metadados atualizados
+     * @throws IllegalStateException se ocorrer erro ao salvar o arquivo
+     */
     @Override
     public Music update(String filePath, Map<String, String> tags) {
         try {
@@ -103,10 +115,23 @@ public class Id3MagicCodec implements Id3Codec {
         }
     }
 
+    /**
+     * Retorna o valor primário se não for nulo ou em branco, senão o fallback.
+     *
+     * @param primary valor primário
+     * @param fallback valor alternativo
+     * @return valor primário ou fallback
+     */
     private static String pick(String primary, String fallback) {
         return primary != null && !primary.isBlank() ? primary.trim() : (fallback != null && !fallback.isBlank() ? fallback.trim() : null);
     }
 
+    /**
+     * Extrai o nome do arquivo a partir do caminho completo.
+     *
+     * @param path caminho completo do arquivo
+     * @return nome do arquivo
+     */
     private static String fileName(String path) {
         String filename = path.substring(path.lastIndexOf('\\') + 1);
         int lastSlash = filename.lastIndexOf('/');

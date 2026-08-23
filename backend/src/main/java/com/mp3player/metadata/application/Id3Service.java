@@ -27,12 +27,23 @@ public class Id3Service {
     private final Id3Codec id3Codec;
     private final MetadataCacheRepository cache;
 
+    /**
+     * Construtor do serviço de metadados ID3.
+     *
+     * @param id3Codec codec para leitura e escrita de tags ID3
+     * @param cache repositório de cache de metadados
+     */
     public Id3Service(Id3Codec id3Codec, MetadataCacheRepository cache) {
         this.id3Codec = id3Codec;
         this.cache = cache;
     }
 
-    /** Lê as tags ID3 de um único arquivo como mapa de troca (wire). */
+    /**
+     * Lê as tags ID3 de um único arquivo como mapa de troca (wire).
+     *
+     * @param filePath caminho absoluto do arquivo MP3
+     * @return mapa de tags do arquivo
+     */
     public Map<String, String> getForFile(String filePath) {
         return id3Codec.read(filePath).toTagMap();
     }
@@ -42,6 +53,10 @@ public class Id3Service {
      * Sem {@code refresh}, serve os arquivos já em cache e lê apenas os
      * faltantes; com {@code refresh}, relê todos e sobrescreve o cache. Cada
      * arquivo é lido em uma virtual thread.
+     *
+     * @param paths lista de caminhos dos arquivos MP3
+     * @param refresh se {@code true}, relê todos os arquivos ignorando o cache
+     * @return mapa de caminho → tags de cada arquivo
      */
     public Map<String, Map<String, String>> getBulk(List<String> paths, boolean refresh) {
         Map<String, Map<String, String>> result = new LinkedHashMap<>();
@@ -101,13 +116,23 @@ public class Id3Service {
         }
     }
 
-    /** Atualiza as tags editáveis do arquivo e retorna as tags resultantes. */
+    /**
+     * Atualiza as tags editáveis do arquivo e retorna as tags resultantes.
+     *
+     * @param filePath caminho absoluto do arquivo MP3
+     * @param tags mapa de tags a serem atualizadas
+     * @return mapa de tags atualizadas
+     */
     public Map<String, String> update(String filePath, Map<String, String> tags) {
         Music updated = id3Codec.update(filePath, tags);
         return updated.toTagMap();
     }
 
-    /** Localização do arquivo onde o cache de ID3 é persistido. */
+    /**
+     * Retorna a localização do arquivo onde o cache de ID3 é persistido.
+     *
+     * @return caminho do arquivo de cache
+     */
     public String cacheLocation() {
         return cache.location();
     }

@@ -12,19 +12,41 @@ public final class Music {
     private final String path;
     private final Metadata metadata;
 
+    /**
+     * Construtor principal.
+     *
+     * @param path     caminho absoluto do arquivo de áudio
+     * @param metadata metadados ID3 (se {@code null}, será criado vazio)
+     */
     public Music(String path, Metadata metadata) {
         this.path = path;
         this.metadata = metadata == null ? Metadata.empty() : metadata;
     }
 
+    /**
+     * Retorna o caminho absoluto do arquivo de áudio.
+     *
+     * @return caminho do arquivo
+     */
     public String getPath() {
         return path;
     }
 
+    /**
+     * Retorna os metadados ID3 associados à música.
+     *
+     * @return metadados da música
+     */
     public Metadata getMetadata() {
         return metadata;
     }
 
+    /**
+     * Duas músicas são iguais se possuírem o mesmo caminho absoluto.
+     *
+     * @param o objeto a ser comparado
+     * @return {@code true} se forem iguais
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -32,6 +54,11 @@ public final class Music {
         return path.equals(other.path);
     }
 
+    /**
+     * Hash code baseado no caminho do arquivo.
+     *
+     * @return hash code
+     */
     @Override
     public int hashCode() {
         return path.hashCode();
@@ -74,10 +101,34 @@ public final class Music {
         private final Long durationMs;
         private final Integer bitrateKbps;
 
+        /**
+         * Construtor com campos essenciais (disc e bitrate como {@code null}).
+         *
+         * @param title       título da música
+         * @param artist      artista
+         * @param album       álbum
+         * @param year        ano de lançamento
+         * @param genre       gênero
+         * @param track       número da faixa
+         * @param durationMs  duração em milissegundos
+         */
         public Metadata(String title, String artist, String album, String year, String genre, String track, Long durationMs) {
             this(title, artist, album, year, genre, track, null, durationMs, null);
         }
 
+        /**
+         * Construtor completo com todos os campos de metadados.
+         *
+         * @param title       título da música
+         * @param artist      artista
+         * @param album       álbum
+         * @param year        ano de lançamento
+         * @param genre       gênero
+         * @param track       número da faixa
+         * @param disc        número do disco
+         * @param durationMs  duração em milissegundos
+         * @param bitrateKbps bitrate em kbps
+         */
         public Metadata(String title, String artist, String album, String year, String genre, String track, String disc, Long durationMs, Integer bitrateKbps) {
             this.title = title;
             this.artist = artist;
@@ -90,10 +141,21 @@ public final class Music {
             this.bitrateKbps = bitrateKbps;
         }
 
+        /**
+         * Cria instância de metadados vazios.
+         *
+         * @return instância com todos os campos {@code null}
+         */
         public static Metadata empty() {
             return new Metadata(null, null, null, null, null, null, null, null, null);
         }
 
+        /**
+         * Constrói metadados a partir de um mapa de tags ID3 (wire format).
+         *
+         * @param tags mapa de tags no formato de troca
+         * @return instância de {@link Metadata} com os campos preenchidos
+         */
         public static Metadata fromTags(Map<String, String> tags) {
             String raw = tags.getOrDefault("duration_ms", "");
             Long duration = null;
@@ -124,14 +186,23 @@ public final class Music {
             );
         }
 
+        /** @return título da música */
         public String getTitle() { return title; }
+        /** @return artista */
         public String getArtist() { return artist; }
+        /** @return álbum */
         public String getAlbum() { return album; }
+        /** @return ano de lançamento */
         public String getYear() { return year; }
+        /** @return gênero */
         public String getGenre() { return genre; }
+        /** @return número da faixa */
         public String getTrack() { return track; }
+        /** @return número do disco */
         public String getDisc() { return disc; }
+        /** @return duração em milissegundos */
         public Long getDurationMs() { return durationMs; }
+        /** @return bitrate em kbps */
         public Integer getBitrateKbps() { return bitrateKbps; }
 
         private void putIfNotBlank(Map<String, String> map, String key, String value) {

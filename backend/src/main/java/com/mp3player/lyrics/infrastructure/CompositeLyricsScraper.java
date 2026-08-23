@@ -23,6 +23,11 @@ public class CompositeLyricsScraper implements LyricsScraper {
 
     private final List<LyricsSource> sources;
 
+    /**
+     * Cria um scraper composto com as fontes habilitadas, ordenadas por prioridade.
+     *
+     * @param sources lista de todas as fontes de letras disponíveis
+     */
     public CompositeLyricsScraper(List<LyricsSource> sources) {
         this.sources = sources.stream()
                 .filter(LyricsSource::isEnabled)
@@ -33,6 +38,14 @@ public class CompositeLyricsScraper implements LyricsScraper {
                 this.sources.stream().map(LyricsSource::getName).toList());
     }
 
+    /**
+     * Tenta buscar a letra em cada fonte habilitada, na ordem de prioridade.
+     *
+     * @param artist nome do artista
+     * @param title título da música
+     * @return texto da letra encontrada ou mensagem de erro amigável
+     * @throws IOException se ocorrer erro de rede em todas as fontes
+     */
     @Override
     public String fetch(String artist, String title) throws IOException {
         for (LyricsSource source : sources) {

@@ -29,10 +29,21 @@ public class FileLyricRepository implements LyricRepository {
 
     private final Id3Codec id3Codec;
 
+    /**
+     * Cria uma nova instância do repositório de letras baseado em arquivos.
+     *
+     * @param id3Codec codec para leitura de metadados ID3
+     */
     public FileLyricRepository(Id3Codec id3Codec) {
         this.id3Codec = id3Codec;
     }
 
+    /**
+     * Busca a letra em cache a partir do arquivo TXT correspondente.
+     *
+     * @param musicPath caminho absoluto do arquivo de áudio
+     * @return {@link Optional} com a letra encontrada, ou vazio se não existir
+     */
     @Override
     public Optional<Lyric> find(String musicPath) {
         Path file = resolveTxtFile(musicPath);
@@ -47,12 +58,24 @@ public class FileLyricRepository implements LyricRepository {
         }
     }
 
+    /**
+     * Verifica se existe um arquivo TXT de letra para a música informada.
+     *
+     * @param musicPath caminho absoluto do arquivo de áudio
+     * @return {@code true} se o arquivo existe, {@code false} caso contrário
+     */
     @Override
     public boolean exists(String musicPath) {
         Path file = resolveTxtFile(musicPath);
         return file != null && Files.exists(file);
     }
 
+    /**
+     * Salva a letra em um arquivo TXT na pasta do álbum da música.
+     *
+     * @param lyric letra a ser persistida
+     * @param music música com metadados para determinar o nome do arquivo
+     */
     @Override
     public void save(Lyric lyric, Music music) {
         Path file = resolveTxtFile(lyric.getMusicPath());
@@ -66,6 +89,11 @@ public class FileLyricRepository implements LyricRepository {
         }
     }
 
+    /**
+     * Remove o arquivo TXT de letra correspondente à música informada.
+     *
+     * @param musicPath caminho absoluto do arquivo de áudio
+     */
     @Override
     public void delete(String musicPath) {
         Path file = resolveTxtFile(musicPath);

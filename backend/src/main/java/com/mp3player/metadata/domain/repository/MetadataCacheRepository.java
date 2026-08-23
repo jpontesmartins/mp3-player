@@ -9,15 +9,33 @@ import java.util.Map;
  */
 public interface MetadataCacheRepository {
 
-    /** Retorna as tags em cache para o caminho, ou {@code null} se não estiver em cache. */
+    /**
+     * Retorna as tags em cache para o caminho informado.
+     *
+     * @param path caminho do arquivo
+     * @return mapa de tags, ou {@code null} se não estiver em cache
+     */
     Map<String, String> get(String path);
 
-    /** Armazena as tags do arquivo no cache. */
+    /**
+     * Armazena as tags do arquivo no cache.
+     *
+     * @param path caminho do arquivo
+     * @param tags mapa de tags a serem armazenadas
+     */
     void put(String path, Map<String, String> tags);
 
-    /** Armazena várias entradas de uma vez. */
+    /**
+     * Armazena várias entradas de uma vez.
+     *
+     * @param tagsByPath mapa de caminho → tags
+     */
     void putAll(Map<String, Map<String, String>> tagsByPath);
 
-    /** Localização do arquivo onde o cache é persistido. */
+    /**
+     * Retorna a localização do arquivo onde o cache é persistido.
+     *
+     * @return caminho do arquivo de cache
+     */
     String location();
 }

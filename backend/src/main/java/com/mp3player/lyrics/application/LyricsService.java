@@ -19,18 +19,35 @@ public class LyricsService {
     private final LyricsScraper lyricsScraper;
     private final LyricRepository lyricRepository;
 
+    /**
+     * Cria uma nova instância do serviço de letras.
+     *
+     * @param id3Codec codec para leitura de metadados ID3
+     * @param lyricsScraper scraper para busca de letras na web
+     * @param lyricRepository repositório para persistência de letras
+     */
     public LyricsService(Id3Codec id3Codec, LyricsScraper lyricsScraper, LyricRepository lyricRepository) {
         this.id3Codec = id3Codec;
         this.lyricsScraper = lyricsScraper;
         this.lyricRepository = lyricRepository;
     }
 
-    /** Retorna a letra em cache para o áudio informado, ou {@code null} se não houver. */
+    /**
+     * Retorna a letra em cache para o áudio informado, ou {@code null} se não houver.
+     *
+     * @param musicPath caminho absoluto do arquivo de áudio
+     * @return texto da letra em cache, ou {@code null} se não encontrada
+     */
     public String getCached(String musicPath) {
         return lyricRepository.find(musicPath).map(Lyric::getText).orElse(null);
     }
 
-    /** Retorna a letra em cache ou busca na web, salvando o resultado. */
+    /**
+     * Retorna a letra em cache ou busca na web, salvando o resultado.
+     *
+     * @param musicPath caminho absoluto do arquivo de áudio
+     * @return texto da letra encontrada ou mensagem de erro amigável
+     */
     public String get(String musicPath) {
         String cached = getCached(musicPath);
         if (cached != null) return cached;
@@ -52,12 +69,21 @@ public class LyricsService {
         }
     }
 
-    /** Persiste o texto informado como a letra da música. */
+    /**
+     * Persiste o texto informado como a letra da música.
+     *
+     * @param musicPath caminho absoluto do arquivo de áudio
+     * @param text texto da letra a ser salva
+     */
     public void save(String musicPath, String text) {
         lyricRepository.save(new Lyric(musicPath, text), musicFor(musicPath));
     }
 
-    /** Remove a letra em cache para a música informada. */
+    /**
+     * Remove a letra em cache para a música informada.
+     *
+     * @param musicPath caminho absoluto do arquivo de áudio
+     */
     public void delete(String musicPath) {
         lyricRepository.delete(musicPath);
     }
