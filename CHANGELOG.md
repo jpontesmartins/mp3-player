@@ -8,6 +8,27 @@ versões seguem [Semântic Versioning](https://semver.org/lang/pt-BR/).
 
 
 
+
+## [1.3.1] — 2026-08-23
+
+### Alterado
+- Merge pull request #6 from jpontesmartins/refactor/javadocs
+- javadocs reescritos
+- Merge pull request #5 from jpontesmartins/refactor/template-method-strategy-patterns-letras
+- correção no download da letra
+- Merge pull request #3 from jpontesmartins/refactor/camadas-em-dominio
+- readmes + skill backend-arch atualizada
+- reorganizado em módulos de acordo com o domínio
+- Update project structure in README
+- atualização readmes
+
+### Corrigido
+- Merge pull request #4 from jpontesmartins/fix/download-letra-errada
+- ajustes nos readmes
+
+### Refatorado
+- refatorado o download de música, utilizados os patterns template method + strategy
+
 ## [1.3.0] — 2026-08-20
 
 ### Adicionado
