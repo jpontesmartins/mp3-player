@@ -15,9 +15,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Scraper de letras que busca em www.letras.mus.br: URL direta primeiro, depois
- * busca pela música, e por fim tenta a página do artista com o nome invertido
- * (ex.: "Joni Mitchell" -> /mitchell-joni/), localizando a música pelo título.
+ * Scraper de letras que busca em www.letras.mus.br.
+ * Prioridade: (1) página do artista com título exato, (2) URL direta,
+ * (3) busca via Google Custom Search.
  */
 @Component
 public class JsoupLyricsScraper implements LyricsScraper {
@@ -32,12 +32,15 @@ public class JsoupLyricsScraper implements LyricsScraper {
     @Override
     public String fetch(String artist, String title) throws IOException {
         List<String> candidates = new ArrayList<>();
-        String direct = tryDirectUrl(artist, title);
-        if (direct != null) candidates.add(direct);
-        String search = searchForUrl(artist, title);
-        if (search != null) candidates.add(search);
+
         String artistPage = tryArtistPage(artist, title);
         if (artistPage != null) candidates.add(artistPage);
+
+        String direct = tryDirectUrl(artist, title);
+        if (direct != null) candidates.add(direct);
+
+        String search = searchForUrl(artist, title);
+        if (search != null) candidates.add(search);
 
         for (String candidate : candidates) {
             String page = stripTranslation(candidate);
@@ -73,6 +76,73 @@ public class JsoupLyricsScraper implements LyricsScraper {
         if (href != null && href.endsWith("traducao.html")) {
             return href.substring(0, href.length() - "traducao.html".length());
         }
+        return href;
+    }
+
+    /**
+     * Busca na página do artista. Tenta múltiplos slugs do artista (direto,
+     * invertido, sem "the") e procura um link cujo texto corresponda exatamente
+     * ao título da música (após slugificação).
+     */
+    private String tryArtistPage(String artist, String title) throws IOException {
+        if (title.isEmpty()) return null;
+        String titleSlug = toSlug(title);
+
+        List<String> artistSlugs = new ArrayList<>();
+        addSlug(artistSlugs, toSlug(artist));
+        addSlug(artistSlugs, toSlug(withoutThe(artist)));
+        addSlug(artistSlugs, invertedArtistSlug(artist));
+        addSlug(artistSlugs, invertedArtistSlug(withoutThe(artist)));
+
+        for (String artistSlug : artistSlugs) {
+            String found = searchArtistPage(artistSlug, titleSlug);
+            if (found != null) return found;
+        }
+        return null;
+    }
+
+    /**
+     * Acessa a página do artista e procura um link cujo texto, após
+     * slugificação, corresponda exatamente ao título.
+     */
+    private String searchArtistPage(String artistSlug, String titleSlug) throws IOException {
+        String pageUrl = props.baseUrl() + "/" + artistSlug + "/";
+        log.info("[Scraper] Buscando página do artista: {}", pageUrl);
+
+        Document artistDoc;
+        try {
+            artistDoc = Jsoup.connect(pageUrl)
+                    .userAgent(props.userAgent())
+                    .referrer(props.baseUrl())
+                    .timeout(props.timeoutFetch())
+                    .ignoreHttpErrors(true)
+                    .get();
+        } catch (IOException e) {
+            log.warn("[Scraper] Falha ao buscar página do artista {}", pageUrl, e);
+            return null;
+        }
+
+        // Busca exata: slug do link == slug do título
+        Element link = artistDoc.select("a[href]").stream()
+                .filter(a -> {
+                    String href = a.attr("href");
+                    return href.contains("/" + artistSlug + "/");
+                })
+                .filter(a -> toSlug(a.text()).equals(titleSlug))
+                .findFirst()
+                .orElse(null);
+
+        if (link == null) {
+            log.warn("[Scraper] Nenhum link exato para \"{}\" na página {}", titleSlug, pageUrl);
+            return null;
+        }
+
+        String href = link.absUrl("href");
+        if (href.isBlank()) href = link.attr("href");
+        if (!href.startsWith("http")) {
+            href = props.baseUrl() + (href.startsWith("/") ? "" : "/") + href;
+        }
+        log.info("[Scraper] Encontrado: {} -> {}", link.text(), href);
         return href;
     }
 
@@ -130,9 +200,9 @@ public class JsoupLyricsScraper implements LyricsScraper {
         }
 
         if (href == null || href.isEmpty()) {
-            String lowerTitle = title.toLowerCase();
+            String titleSlug = toSlug(title);
             Element matchingLink = searchDoc.select("a[href*='letras.mus.br']").stream()
-                    .filter(a -> a.text().toLowerCase().contains(lowerTitle))
+                    .filter(a -> toSlug(a.text()).equals(titleSlug))
                     .findFirst().orElse(null);
             if (matchingLink != null) href = matchingLink.attr("href");
         }
@@ -150,85 +220,11 @@ public class JsoupLyricsScraper implements LyricsScraper {
         return href;
     }
 
-    /**
-     * Tenta a página do artista com o nome invertido (ex.: "Joni Mitchell" ->
-     * /mitchell-joni/). Primeiro tenta a URL direta da música nessa página; se
-     * falhar, acessa a página do artista e procura um link cujo texto contenha
-     * o título da música.
-     */
-    private String tryArtistPage(String artist, String title) throws IOException {
-        if (title.isEmpty()) return null;
-        List<String> slugs = new ArrayList<>();
-        addSlug(slugs, invertedArtistSlug(artist));
-        addSlug(slugs, invertedArtistSlug(withoutThe(artist)));
-        addSlug(slugs, toSlug(artist));
-        addSlug(slugs, toSlug(withoutThe(artist)));
-
-        for (String slug : slugs) {
-            String href = tryArtistSlug(slug, title);
-            if (href != null) return href;
-        }
-        return null;
-    }
-
     /** Adiciona o slug à lista, ignorando vazios e duplicados. */
     private static void addSlug(List<String> slugs, String slug) {
         if (slug != null && !slug.isEmpty() && !slugs.contains(slug)) {
             slugs.add(slug);
         }
-    }
-
-    /**
-     * Dado o slug da página do artista (ex.: "velvet-underground"), tenta a URL
-     * direta da música e, se falhar, procura o link pelo título na página do artista.
-     */
-    private String tryArtistSlug(String inverted, String title) throws IOException {
-        String direct = props.baseUrl() + "/" + inverted + "/" + toSlug(title) + "/";
-        log.info("[Scraper] Tentando URL direta do artista invertido: {}", direct);
-        try {
-            int status = Jsoup.connect(direct)
-                    .userAgent(props.userAgent())
-                    .timeout(props.timeoutConnect())
-                    .execute().statusCode();
-            if (status == 200) return direct;
-        } catch (Exception ignored) {
-        }
-
-        String pageUrl = props.baseUrl() + "/" + inverted + "/";
-        log.info("[Scraper] Buscando página do artista: {}", pageUrl);
-        Document artistDoc;
-        try {
-            artistDoc = Jsoup.connect(pageUrl)
-                    .userAgent(props.userAgent())
-                    .referrer(props.baseUrl())
-                    .timeout(props.timeoutFetch())
-                    .ignoreHttpErrors(true)
-                    .get();
-        } catch (IOException e) {
-            log.warn("[Scraper] Falha ao buscar página do artista {}", pageUrl, e);
-            return null;
-        }
-
-        String lowerTitle = title.toLowerCase();
-        Element link = artistDoc.select("a[href*='" + inverted + "']").stream()
-                .filter(a -> a.text().toLowerCase().contains(lowerTitle))
-                .findFirst().orElse(null);
-        if (link == null) {
-            link = artistDoc.select("a[href*='letras.mus.br']").stream()
-                    .filter(a -> a.text().toLowerCase().contains(lowerTitle))
-                    .findFirst().orElse(null);
-        }
-        if (link == null) {
-            log.warn("[Scraper] Nenhum link de música encontrado na página do artista para \"{}\"", title);
-            return null;
-        }
-
-        String page = link.absUrl("href");
-        if (page.isBlank()) page = link.attr("href");
-        if (!page.startsWith("http")) {
-            page = props.baseUrl() + (page.startsWith("/") ? "" : "/") + page;
-        }
-        return page;
     }
 
     /** Remove o "The " inicial (case-insensitive) do nome do artista. */
@@ -259,9 +255,5 @@ public class JsoupLyricsScraper implements LyricsScraper {
                 .replaceAll("[^a-z0-9áéíóúãõâêîôûçñ\\s]", "")
                 .trim()
                 .replaceAll("\\s+", "-");
-    }
-
-    private static String lowerTitle(String s) {
-        return s.toLowerCase();
     }
 }
