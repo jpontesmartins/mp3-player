@@ -22,12 +22,6 @@ public class ItunesCoverSearcher extends AbstractCoverSearcher {
         super(downloader, props);
     }
 
-    /**
-     * Monta a URL de busca do iTunes a partir do termo codificado.
-     *
-     * @param encoded termo de busca URL-encoded
-     * @return URL completa da API de busca do iTunes
-     */
     @Override
     protected String buildSearchUrl(String encoded) {
         return props.itunesUrl() + encoded;

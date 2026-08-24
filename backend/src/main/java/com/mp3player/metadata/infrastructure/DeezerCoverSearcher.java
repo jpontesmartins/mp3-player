@@ -23,12 +23,6 @@ public class DeezerCoverSearcher extends AbstractCoverSearcher {
         super(downloader, props);
     }
 
-    /**
-     * Monta a URL de busca do Deezer a partir do termo codificado.
-     *
-     * @param encoded termo de busca URL-encoded
-     * @return URL completa da API de busca do Deezer
-     */
     @Override
     protected String buildSearchUrl(String encoded) {
         return props.deezerUrl() + encoded;
@@ -44,9 +38,13 @@ public class DeezerCoverSearcher extends AbstractCoverSearcher {
     @Override
     protected String extractImageUrl(String responseBody) {
         Matcher big = DEEZER_COVER.matcher(responseBody);
-        if (big.find()) return big.group(1);
+        if (big.find()) return unescape(big.group(1));
         Matcher medium = DEEZER_MEDIUM.matcher(responseBody);
-        return medium.find() ? medium.group(1) : null;
+        return medium.find() ? unescape(medium.group(1)) : null;
+    }
+
+    private static String unescape(String s) {
+        return s.replace("\\/", "/");
     }
 
     /**
