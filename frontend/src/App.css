@@ -484,7 +484,8 @@ button:disabled {
   padding: 3px 6px;
 }
 
-#cover-context-menu {
+#cover-context-menu,
+#album-context-menu {
   position: fixed;
   z-index: 1000;
   min-width: 180px;

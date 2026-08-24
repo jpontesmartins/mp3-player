@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import type { Id3Tags } from '../App';
 import PlaylistManager from './PlaylistManager';
 import BulkId3Editor from './BulkId3Editor';
@@ -88,6 +88,9 @@ export default function CollectionManager({ libraryFiles, id3Cache, onTagsUpdate
   const [message, setMessage] = useState('');
   const [playlistView, setPlaylistView] = useState(false);
   const [bulkView, setBulkView] = useState(false);
+  const [bulkInitialPath, setBulkInitialPath] = useState('');
+  const [albumCtxMenu, setAlbumCtxMenu] = useState<{ x: number; y: number; album: Album } | null>(null);
+  const albumCtxMenuRef = useRef<HTMLDivElement>(null);
 
   const albums = useMemo<Album[]>(() => {
     const map = new Map<string, { folder: string; files: string[]; albumNames: string[] }>();
@@ -135,7 +138,20 @@ export default function CollectionManager({ libraryFiles, id3Cache, onTagsUpdate
     for (const f of gridFiles) next.set(f, fromTags(id3Cache.get(f)));
     setEdits(next);
     setMessage('');
-  }, [selected?.key]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selected?.key]);
+
+  useEffect(() => {
+    if (!albumCtxMenu) return undefined;
+    const close = () => setAlbumCtxMenu(null);
+    window.addEventListener('mousedown', close);
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+    return () => {
+      window.removeEventListener('mousedown', close);
+      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('resize', close);
+    };
+  }, [albumCtxMenu]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const selectAlbum = useCallback((album: Album) => {
     setSelected({ type: 'album', key: album.folder, name: album.name, files: album.files });
@@ -143,6 +159,26 @@ export default function CollectionManager({ libraryFiles, id3Cache, onTagsUpdate
 
   const selectArtist = useCallback((name: string) => {
     setSelected({ type: 'artist', key: name, name, files: null });
+  }, []);
+
+  const handleAlbumContextMenu = useCallback((e: React.MouseEvent<HTMLLIElement>, album: Album) => {
+    e.preventDefault();
+    e.stopPropagation();
+    let x = e.clientX + 4;
+    let y = e.clientY + 4;
+    const menu = albumCtxMenuRef.current;
+    if (menu) {
+      const r = menu.getBoundingClientRect();
+      if (x + r.width > window.innerWidth) x = e.clientX - r.width - 4;
+      if (y + r.height > window.innerHeight) y = e.clientY - r.height - 4;
+    }
+    setAlbumCtxMenu({ x: Math.max(4, x), y: Math.max(4, y), album });
+  }, []);
+
+  const openBulkForAlbum = useCallback((folder: string) => {
+    setAlbumCtxMenu(null);
+    setBulkInitialPath(folder);
+    setBulkView(true);
   }, []);
 
   const handleFieldChange = useCallback((file: string, field: EditableField, value: string) => {
@@ -210,11 +246,12 @@ export default function CollectionManager({ libraryFiles, id3Cache, onTagsUpdate
       ) : bulkView ? (
         <>
           <div className="collection-backrow">
-            <button className="pmanager-btn" onClick={() => setBulkView(false)}>← Voltar</button>
+            <button className="pmanager-btn" onClick={() => { setBulkView(false); setBulkInitialPath(''); }}>← Voltar</button>
           </div>
           <BulkId3Editor
             collectionFiles={libraryFiles}
             onTagsUpdated={onTagsUpdated}
+            initialPath={bulkInitialPath || undefined}
           />
         </>
       ) : (
@@ -233,6 +270,7 @@ export default function CollectionManager({ libraryFiles, id3Cache, onTagsUpdate
                 key={album.folder}
                 className={selected?.type === 'album' && selected.key === album.folder ? 'active' : ''}
                 onClick={() => selectAlbum(album)}
+                onContextMenu={e => handleAlbumContextMenu(e, album)}
               >
                 <span className="collection-item-name">{album.name}</span>
                 <span className="collection-item-count">{album.files.length}</span>
@@ -334,6 +372,23 @@ export default function CollectionManager({ libraryFiles, id3Cache, onTagsUpdate
         </div>
       )}
       </>
+      )}
+
+      {albumCtxMenu && (
+        <div
+          ref={albumCtxMenuRef}
+          id="album-context-menu"
+          style={{ left: albumCtxMenu.x, top: albumCtxMenu.y }}
+          onMouseDown={e => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            className="cover-menu-item"
+            onClick={() => openBulkForAlbum(albumCtxMenu.album.folder)}
+          >
+            Editar ID3 em massa
+          </button>
+        </div>
       )}
     </section>
   );

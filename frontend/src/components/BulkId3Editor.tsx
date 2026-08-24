@@ -47,6 +47,7 @@ interface Row {
 interface Props {
   collectionFiles: string[];
   onTagsUpdated: (file: string, tags: Id3Tags) => void;
+  initialPath?: string;
 }
 
 function parentDir(p: string): string {
@@ -101,11 +102,12 @@ function parseFilename(name: string, compiled: CompiledPattern): Partial<Record<
   return out;
 }
 
-export default function BulkId3Editor({ collectionFiles, onTagsUpdated }: Props) {
+export default function BulkId3Editor({ collectionFiles, onTagsUpdated, initialPath }: Props) {
   const defaultFolder = useMemo(() => {
+    if (initialPath) return initialPath;
     const f0 = collectionFiles[0];
     return f0 ? parentDir(f0) : '';
-  }, [collectionFiles]);
+  }, [collectionFiles, initialPath]);
 
   const [folder, setFolder] = useState(defaultFolder);
   const [files, setFiles] = useState<string[]>([]);
