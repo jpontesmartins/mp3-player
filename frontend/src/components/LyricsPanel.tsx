@@ -1,6 +1,7 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 
 import { API } from '../config';
+import DictionaryModal, { type DictionaryResult } from './DictionaryModal';
 
 interface Props {
   currentFile: string | null;
@@ -28,6 +29,12 @@ export default function LyricsPanel({ currentFile }: Props) {
   const [fontSize, setFontSize] = useState(loadFontSize);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
+  const [dictResult, setDictResult] = useState<DictionaryResult | null>(null);
+  const [dictLoading, setDictLoading] = useState(false);
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number } | null>(null);
+  const [selectedWord, setSelectedWord] = useState('');
+  const lyricsRef = useRef<HTMLPreElement>(null);
+  const ctxMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     localStorage.setItem(FONT_SIZE_KEY, String(fontSize));
@@ -116,6 +123,68 @@ export default function LyricsPanel({ currentFile }: Props) {
     }
   }, [currentFile]);
 
+  const handleLyricsContextMenu = useCallback((e: React.MouseEvent<HTMLPreElement>) => {
+    const selection = window.getSelection()?.toString().trim();
+    if (!selection || selection.includes(' ')) return;
+    e.preventDefault();
+    setSelectedWord(selection);
+    let x = e.clientX + 4;
+    let y = e.clientY + 4;
+    const menu = ctxMenuRef.current;
+    if (menu) {
+      const r = menu.getBoundingClientRect();
+      if (x + r.width > window.innerWidth) x = e.clientX - r.width - 4;
+      if (y + r.height > window.innerHeight) y = e.clientY - r.height - 4;
+    }
+    setCtxMenu({ x: Math.max(4, x), y: Math.max(4, y) });
+  }, []);
+
+  useEffect(() => {
+    if (!ctxMenu) return undefined;
+    const close = () => setCtxMenu(null);
+    window.addEventListener('mousedown', close);
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+    return () => {
+      window.removeEventListener('mousedown', close);
+      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('resize', close);
+    };
+  }, [ctxMenu]);
+
+  const handleDictionaryLookup = useCallback(async (word: string, language: string) => {
+    setCtxMenu(null);
+    setDictLoading(true);
+    setDictResult(null);
+    try {
+      const res = await fetch(`${API}/dictionary/lookup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ word, language }),
+      });
+      if (res.ok) {
+        const result: DictionaryResult = await res.json();
+        setDictResult(result);
+      } else {
+        setDictResult({
+          word,
+          source: language,
+          language,
+          meanings: 'Nenhuma definição encontrada.',
+        });
+      }
+    } catch {
+      setDictResult({
+        word,
+        source: language,
+        language,
+        meanings: 'Erro ao conectar com o servidor.',
+      });
+    } finally {
+      setDictLoading(false);
+    }
+  }, []);
+
   const canFetch = !!currentFile;
 
   return (
@@ -160,8 +229,49 @@ export default function LyricsPanel({ currentFile }: Props) {
               spellCheck={false}
             />
           ) : (
-            <pre className="lyrics-text" style={{ fontSize: `${fontSize}rem` }}>{lyrics}</pre>
+            <pre
+              ref={lyricsRef}
+              className="lyrics-text"
+              style={{ fontSize: `${fontSize}rem` }}
+              onContextMenu={handleLyricsContextMenu}
+            >{lyrics}</pre>
           )}
+        </div>
+      )}
+
+      {ctxMenu && (
+        <div
+          ref={ctxMenuRef}
+          id="lyrics-context-menu"
+          style={{ left: ctxMenu.x, top: ctxMenu.y }}
+          onMouseDown={e => e.stopPropagation()}
+        >
+          <div className="lyrics-ctx-submenu">
+            <span className="lyrics-ctx-label">Procurar no dicionário...</span>
+            <div className="lyrics-ctx-submenu-items">
+              <button
+                type="button"
+                className="lyrics-ctx-item"
+                disabled={dictLoading}
+                onClick={() => handleDictionaryLookup(selectedWord, 'pt')}
+              >
+                Português
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {dictResult && (
+        <DictionaryModal result={dictResult} onClose={() => setDictResult(null)} />
+      )}
+
+      {dictLoading && (
+        <div className="dict-overlay">
+          <div className="dict-dialog dict-loading" onClick={e => e.stopPropagation()}>
+            <div className="dict-spinner" />
+            <p className="dict-loading-text">Buscando significado...</p>
+          </div>
         </div>
       )}
     </section>
