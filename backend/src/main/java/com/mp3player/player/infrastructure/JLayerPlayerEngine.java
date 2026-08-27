@@ -142,6 +142,11 @@ public class JLayerPlayerEngine implements PlayerEngine {
         }
     }
 
+    /**
+     * Analisa o arquivo MP3 para extrair a taxa de amostragem e o número total de frames.
+     *
+     * @param filePath caminho absoluto do arquivo MP3
+     */
     private void analyzeFile(String filePath) {
         sampleRate = 44100;
         totalFrames = -1;
@@ -222,6 +227,11 @@ public class JLayerPlayerEngine implements PlayerEngine {
         return id3Tags;
     }
 
+    /**
+     * Lê as tags ID3 do arquivo e armazena no mapa interno.
+     *
+     * @param filePath caminho absoluto do arquivo MP3
+     */
     private void readId3Tags(String filePath) {
         this.id3Tags = id3Codec.read(filePath).toTagMap();
         log.info("[Player] Tags ID3: {}", id3Tags);
@@ -234,6 +244,9 @@ public class JLayerPlayerEngine implements PlayerEngine {
         stopCurrent();
     }
 
+    /**
+     * Para a reprodução atual e reseta todos os estados associados.
+     */
     private void stopCurrent() {
         playing = false;
         paused = false;

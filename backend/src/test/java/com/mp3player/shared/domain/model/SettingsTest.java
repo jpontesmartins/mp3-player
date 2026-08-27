@@ -43,4 +43,45 @@ class SettingsTest {
         assertEquals(Settings.PlaybackMode.REPEAT, changed.getPlaybackMode());
         assertTrue(settings.isShowCover());
     }
+
+    @Test
+    void defaultsHasContinuousModeAndShowCoverTrue() {
+        Settings d = Settings.defaults();
+        assertEquals(Settings.PlaybackMode.CONTINUOUS, d.getPlaybackMode());
+        assertTrue(d.isShowCover());
+    }
+
+    @Test
+    void withPlaybackModeReturnsCopyWithNewMode() {
+        Settings original = Settings.defaults();
+        Settings shuffled = original.withPlaybackMode(Settings.PlaybackMode.SHUFFLE);
+
+        assertEquals(Settings.PlaybackMode.SHUFFLE, shuffled.getPlaybackMode());
+        assertEquals(Settings.PlaybackMode.CONTINUOUS, original.getPlaybackMode());
+    }
+
+    @Test
+    void withShowCoverReturnsCopyWithNewValue() {
+        Settings original = Settings.defaults();
+        Settings noCover = original.withShowCover(false);
+
+        assertFalse(noCover.isShowCover());
+        assertTrue(original.isShowCover());
+    }
+
+    @Test
+    void withPlaybackModeNullDefaultsToContinuous() {
+        Settings settings = new Settings(Settings.PlaybackMode.SHUFFLE, false);
+        Settings changed = settings.withPlaybackMode(null);
+
+        assertEquals(Settings.PlaybackMode.CONTINUOUS, changed.getPlaybackMode());
+    }
+
+    @Test
+    void allPlaybackModesAreUsable() {
+        for (Settings.PlaybackMode mode : Settings.PlaybackMode.values()) {
+            Settings settings = new Settings(mode, true);
+            assertEquals(mode, settings.getPlaybackMode());
+        }
+    }
 }

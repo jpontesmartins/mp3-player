@@ -108,4 +108,44 @@ class Id3ServiceTest {
         when(cache.location()).thenReturn("/tmp/id3cache");
         assertEquals("/tmp/id3cache", service.cacheLocation());
     }
+
+    @Test
+    void getForFileWithNullFieldsReturnsTagMap() {
+        when(id3Codec.read("nulls.mp3"))
+                .thenReturn(new Music("nulls.mp3", new Music.Metadata(null, null, null, null, null, null, null)));
+
+        Map<String, String> tags = service.getForFile("nulls.mp3");
+
+        assertNull(tags.get("title"));
+        assertNull(tags.get("artist"));
+        assertNull(tags.get("album"));
+    }
+
+    @Test
+    void bulkWithEmptyListReturnsEmptyMap() {
+        Map<String, Map<String, String>> bulk = service.getBulk(List.of(), false);
+        assertTrue(bulk.isEmpty());
+    }
+
+    @Test
+    void bulkWithRefreshTrueReadsAllFiles() {
+        when(id3Codec.read("a.mp3")).thenReturn(new Music("a.mp3", new Music.Metadata("A", null, null, null, null, null, null)));
+        when(id3Codec.read("b.mp3")).thenReturn(new Music("b.mp3", new Music.Metadata("B", null, null, null, null, null, null)));
+
+        Map<String, Map<String, String>> bulk = service.getBulk(List.of("a.mp3", "b.mp3"), true);
+
+        assertEquals(2, bulk.size());
+        verify(id3Codec).read("a.mp3");
+        verify(id3Codec).read("b.mp3");
+    }
+
+    @Test
+    void updateWithEmptyTagMapReturnsUpdatedTags() {
+        Music updated = new Music("a.mp3", new Music.Metadata("Title", "Artist", null, null, null, null, null));
+        when(id3Codec.update("a.mp3", Map.of())).thenReturn(updated);
+
+        Map<String, String> tags = service.update("a.mp3", Map.of());
+
+        assertEquals("Title", tags.get("title"));
+    }
 }

@@ -99,6 +99,11 @@ public class LetrasMusBrSource extends AbstractLyricsSource {
 
     /**
      * Busca na página do artista por link com título exato.
+     *
+     * @param artist nome do artista
+     * @param title título da música
+     * @return URL da página da letra, ou {@code null} se não encontrada
+     * @throws IOException se ocorrer erro de rede
      */
     private String findOnArtistPage(String artist, String title) throws IOException {
         String titleSlug = toSlug(title);
@@ -134,6 +139,10 @@ public class LetrasMusBrSource extends AbstractLyricsSource {
 
     /**
      * Tenta URL direta: /{artist-slug}/{title-slug}/
+     *
+     * @param artist nome do artista
+     * @param title título da música
+     * @return URL da página da letra, ou {@code null} se não encontrada
      */
     private String findDirectUrl(String artist, String title) {
         if (artist.isEmpty() || title.isEmpty()) return null;
@@ -149,6 +158,11 @@ public class LetrasMusBrSource extends AbstractLyricsSource {
 
     /**
      * Busca via Google Custom Search no site.
+     *
+     * @param artist nome do artista
+     * @param title título da música
+     * @return URL da página da letra, ou {@code null} se não encontrada
+     * @throws IOException se ocorrer erro de rede
      */
     private String findViaSearch(String artist, String title) throws IOException {
         String query = java.net.URLEncoder.encode(artist + " " + title, StandardCharsets.UTF_8);
@@ -162,7 +176,13 @@ public class LetrasMusBrSource extends AbstractLyricsSource {
         return resolveUrl(href);
     }
 
-    /** Tenta extrair um link relevante dos resultados de busca. */
+    /**
+     * Tenta extrair um link relevante dos resultados de busca.
+     *
+     * @param doc documento HTML dos resultados de busca
+     * @param title título da música para filtro adicional
+     * @return URL do resultado relevante, ou {@code null} se nenhum encontrado
+     */
     private String extractSearchResult(Document doc, String title) {
         // 1. a.gs-title (Google Custom Search)
         Element gsLink = doc.selectFirst("a.gs-title");

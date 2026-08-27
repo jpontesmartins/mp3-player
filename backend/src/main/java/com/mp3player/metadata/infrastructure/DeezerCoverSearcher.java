@@ -43,6 +43,12 @@ public class DeezerCoverSearcher extends AbstractCoverSearcher {
         return medium.find() ? unescape(medium.group(1)) : null;
     }
 
+    /**
+     * Remove escapes de barras presentes na resposta JSON do Deezer.
+     *
+     * @param s string com escapes
+     * @return string sem escapes de barra
+     */
     private static String unescape(String s) {
         return s.replace("\\/", "/");
     }

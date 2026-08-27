@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -89,5 +90,54 @@ class LyricsServiceTest {
         LyricsService service = new LyricsService(id3Codec, scraper, repository);
         service.delete("C:\\song.mp3");
         verify(repository).delete("C:\\song.mp3");
+    }
+
+    @Test
+    void getCachedReturnsNullWhenNotCached() {
+        when(repository.find("C:\\missing.mp3")).thenReturn(Optional.empty());
+
+        LyricsService service = new LyricsService(id3Codec, scraper, repository);
+        assertNull(service.getCached("C:\\missing.mp3"));
+    }
+
+    @Test
+    void getReturnsCachedLyricsWithoutCallingScraper() throws IOException {
+        String path = "C:\\A - B.mp3";
+        when(repository.find(path)).thenReturn(Optional.of(new Lyric(path, "cached lyric")));
+
+        LyricsService service = new LyricsService(id3Codec, scraper, repository);
+        assertEquals("cached lyric", service.get(path));
+
+        verify(scraper, never()).fetch(any(), any());
+        verify(id3Codec, never()).read(any());
+    }
+
+    @Test
+    void getReturnsFallbackMessageWhenScraperThrows() throws IOException {
+        String path = "C:\\Artist - Song.mp3";
+        Music music = new Music(path, new Music.Metadata("Song", "Artist", null, null, null, null, null));
+        when(repository.find(path)).thenReturn(Optional.empty());
+        when(id3Codec.read(path)).thenReturn(music);
+        when(scraper.fetch("Artist", "Song")).thenThrow(new RuntimeException("network error"));
+
+        LyricsService service = new LyricsService(id3Codec, scraper, repository);
+        String result = service.get(path);
+
+        assertEquals("Letra não encontrada para \"Song\" de Artist", result);
+    }
+
+    @Test
+    void saveReadsId3AndDelegatesToRepository() throws IOException {
+        String path = "C:\\Artist - Song.mp3";
+        Music music = new Music(path, new Music.Metadata("Song", "Artist", null, null, null, null, null));
+        when(id3Codec.read(path)).thenReturn(music);
+
+        LyricsService service = new LyricsService(id3Codec, scraper, repository);
+        service.save(path, "my lyrics");
+
+        ArgumentCaptor<Lyric> captor = ArgumentCaptor.forClass(Lyric.class);
+        verify(repository).save(captor.capture(), eq(music));
+        assertEquals("my lyrics", captor.getValue().getText());
+        assertEquals(path, captor.getValue().getMusicPath());
     }
 }

@@ -156,6 +156,12 @@ public class FilePlaylistRepository implements PlaylistRepository {
         return cleaned.isEmpty() ? "playlist" : cleaned;
     }
 
+    /**
+     * Resolve o caminho do arquivo TXT para a playlist com o nome informado.
+     *
+     * @param name nome da playlist
+     * @return caminho completo do arquivo TXT da playlist
+     */
     private Path fileFor(String name) {
         return baseDir.resolve(sanitize(name) + ".txt");
     }

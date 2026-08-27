@@ -19,26 +19,55 @@ public class PriberamSource extends AbstractDictionarySource {
     private static final String DEFINITION_CONTAINER = ".dp-definicao";
     private static final String DEFINITION_LINE = "py-4 dp-definicao-linha";
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return código da língua: "pt"
+     */
     @Override
     public String language() {
         return "pt";
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return nome da fonte: "Priberam"
+     */
     @Override
     public String sourceName() {
         return "Priberam";
     }
 
+    /**
+     * Constrói a URL de consulta no Priberam para a palavra informada.
+     *
+     * @param word palavra a ser consultada
+     * @return URL completa da página da palavra
+     */
     @Override
     protected String buildUrl(String word) {
         return BASE_URL + word;
     }
 
+    /**
+     * Retorna a palavra consultada, conforme extraída do documento.
+     *
+     * @param doc documento HTML da página da palavra
+     * @param word palavra original consultada
+     * @return palavra extraída
+     */
     @Override
     protected String extractWord(Document doc, String word) {
         return word;
     }
 
+    /**
+     * Extrai as definições da palavra a partir do documento HTML.
+     *
+     * @param doc documento HTML da página da palavra
+     * @return lista de definições encontradas
+     */
     @Override
     protected List<String> extractDefinitions(Document doc) {
         Element container = doc.selectFirst(DEFINITION_CONTAINER);

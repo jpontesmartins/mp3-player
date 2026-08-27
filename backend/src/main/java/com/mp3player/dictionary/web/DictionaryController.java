@@ -18,6 +18,11 @@ public class DictionaryController {
 
     private final DictionaryLookupService lookupService;
 
+    /**
+     * Construtor do controlador de dicionário.
+     *
+     * @param lookupService serviço de consulta a dicionários
+     */
     public DictionaryController(DictionaryLookupService lookupService) {
         this.lookupService = lookupService;
     }

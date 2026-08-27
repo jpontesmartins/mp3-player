@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
@@ -165,5 +166,58 @@ class PlayerServiceTest {
         Map<String, Object> status = new PlayerService(engine).status();
 
         assertEquals("paused", status.get("status"));
+    }
+
+    @Test
+    void stopAlwaysDelegatesEvenWhenNotPlaying() {
+        PlayerService service = new PlayerService(engine);
+
+        service.stop();
+
+        verify(engine).stop();
+    }
+
+    @Test
+    void seekToWithNegativePositionStillDelegates() {
+        when(engine.getCurrentFilePath()).thenReturn("a.mp3");
+        PlayerService service = new PlayerService(engine);
+
+        assertEquals("Seeked to -1000", service.seekTo(-1000));
+
+        verify(engine).seekTo(-1000);
+    }
+
+    @Test
+    void statusShowsFileButStoppedWhenFilePathSetButNotPlaying() {
+        when(engine.getCurrentFilePath()).thenReturn("a.mp3");
+        when(engine.isPlaying()).thenReturn(false);
+
+        Map<String, Object> status = new PlayerService(engine).status();
+
+        assertEquals("stopped", status.get("status"));
+        assertEquals("", status.get("file"));
+        assertNull(status.get("position"));
+        assertNull(status.get("duration"));
+        assertNull(status.get("id3"));
+    }
+
+    @Test
+    void playWithNullFilePath() throws IOException {
+        PlayerService service = new PlayerService(engine);
+
+        service.play(null);
+
+        verify(engine).play((String) null);
+    }
+
+    @Test
+    void pauseReturnsPausedAndEngineIsCalledExactlyOnce() {
+        when(engine.isPlaying()).thenReturn(true);
+        PlayerService service = new PlayerService(engine);
+
+        assertEquals("Paused", service.pause());
+        assertEquals("Paused", service.pause());
+
+        verify(engine, times(2)).pause();
     }
 }

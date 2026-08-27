@@ -23,6 +23,12 @@ public class CachedId3Codec implements Id3Codec {
     private final Id3Codec delegate;
     private final MetadataCacheRepository cache;
 
+    /**
+     * Construtor do codec com cache transparente.
+     *
+     * @param delegate codec envolvido para leitura e escrita de metadados
+     * @param cache repositório de cache de metadados
+     */
     public CachedId3Codec(Id3Codec delegate, MetadataCacheRepository cache) {
         this.delegate = delegate;
         this.cache = cache;

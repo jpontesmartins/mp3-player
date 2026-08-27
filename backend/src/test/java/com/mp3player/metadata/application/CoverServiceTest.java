@@ -139,6 +139,28 @@ class CoverServiceTest {
         assertExtension(null, "jpg");
     }
 
+    @Test
+    void downloadThrowsWhenId3CodecReadFails() {
+        String songPath = dir.resolve("bad.mp3").toString();
+        when(id3Codec.read(songPath)).thenThrow(new RuntimeException("arquivo corrompido"));
+        CoverService service = new CoverService(id3Codec, coverSearcher);
+
+        assertThrows(RuntimeException.class, () -> service.download(songPath));
+    }
+
+    @Test
+    void downloadWithBothArtistAndAlbumBlankUsesFilenameFallback() throws IOException {
+        String songPath = dir.resolve("Artist - Track.mp3").toString();
+        when(id3Codec.read(songPath)).thenReturn(new Music(songPath, Music.Metadata.empty()));
+        when(coverSearcher.findCover("Artist")).thenReturn(new CoverImage(new byte[] { 1 }, "image/jpeg"));
+        CoverService service = new CoverService(id3Codec, coverSearcher);
+
+        String saved = service.download(songPath);
+
+        assertEquals(dir.resolve("cover.jpg").toString(), saved);
+        verify(coverSearcher).findCover("Artist");
+    }
+
     private void assertExtension(String contentType, String extension) throws IOException {
         String songPath = dir.resolve("album-no-" + extension).resolve("song.mp3").toString();
         Files.createDirectories(Path.of(songPath).getParent());

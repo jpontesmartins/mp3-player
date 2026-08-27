@@ -61,6 +61,14 @@ public class LyricsService {
         return text;
     }
 
+    /**
+     * Busca a letra na web via scraper; em caso de falha, retorna mensagem de erro amigável.
+     *
+     * @param artist nome do artista
+     * @param title título da música
+     * @param musicPath caminho absoluto do arquivo de áudio (para fallback)
+     * @return texto da letra ou mensagem de erro
+     */
     private String fetchOrFallback(String artist, String title, String musicPath) {
         try {
             return lyricsScraper.fetch(artist, title);
@@ -88,6 +96,12 @@ public class LyricsService {
         lyricRepository.delete(musicPath);
     }
 
+    /**
+     * Lê os metadados ID3 do arquivo de música.
+     *
+     * @param musicPath caminho absoluto do arquivo de áudio
+     * @return agregado de música com os metadados lidos
+     */
     private Music musicFor(String musicPath) {
         return id3Codec.read(musicPath);
     }
@@ -116,6 +130,12 @@ public class LyricsService {
         return MusicFileNaming.titleFromFilename(music.getPath());
     }
 
+    /**
+     * Retorna a string informada ou string vazia se for nula, removendo espaços em branco.
+     *
+     * @param s string de entrada
+     * @return string não nula, sem espaços nas extremidades
+     */
     private static String blank(String s) {
         return s == null ? "" : s.trim();
     }

@@ -57,6 +57,14 @@ public class CompositeLyricsScraper implements LyricsScraper {
         return "Letra não encontrada para \"" + title + "\" de " + artist;
     }
 
+    /**
+     * Tenta buscar a letra em uma fonte específica.
+     *
+     * @param source fonte de letras a ser consultada
+     * @param artist nome do artista
+     * @param title título da música
+     * @return texto da letra encontrada, ou {@code null} se a fonte não possui a letra
+     */
     private String trySource(LyricsSource source, String artist, String title) {
         try {
             log.info("[Scraper] Tentando fonte: {}", source.getName());
@@ -89,6 +97,12 @@ public class CompositeLyricsScraper implements LyricsScraper {
         }
     }
 
+    /**
+     * Remove o sufixo de tradução de uma URL, se presente.
+     *
+     * @param href URL original
+     * @return URL sem o sufixo "traducao.html"
+     */
     private static String stripTranslation(String href) {
         if (href != null && href.endsWith("traducao.html")) {
             return href.substring(0, href.length() - "traducao.html".length());

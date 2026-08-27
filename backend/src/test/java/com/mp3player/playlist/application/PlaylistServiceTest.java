@@ -11,8 +11,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.io.IOException;
 import java.util.List;
 
+import java.util.Collections;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -68,5 +71,39 @@ class PlaylistServiceTest {
         service.rename("Rock", "Classic");
         verify(repository).delete("Rock");
         verify(repository).rename("Rock", "Classic");
+    }
+
+    @Test
+    void scanFolderReturnsEmptyWhenScannerFindsNothing() throws IOException {
+        when(scanner.scanFolder("C:\\empty")).thenReturn(Collections.emptyList());
+        PlaylistService service = new PlaylistService(repository, scanner);
+
+        assertTrue(service.scanFolder("C:\\empty").isEmpty());
+    }
+
+    @Test
+    void loadReturnsEmptyWhenPlaylistDoesNotExist() {
+        when(repository.load("NaoExiste")).thenReturn(Collections.emptyList());
+        PlaylistService service = new PlaylistService(repository, scanner);
+
+        assertTrue(service.load("NaoExiste").isEmpty());
+    }
+
+    @Test
+    void createOrUpdateWithEmptyList() {
+        PlaylistService service = new PlaylistService(repository, scanner);
+
+        service.createOrUpdate("Empty", List.of());
+
+        verify(repository).save(argThat(p -> "Empty".equals(p.getName())
+                && p.getSongPaths().isEmpty()));
+    }
+
+    @Test
+    void listReturnsEmptyWhenNoPlaylists() {
+        when(repository.list()).thenReturn(Collections.emptyList());
+        PlaylistService service = new PlaylistService(repository, scanner);
+
+        assertTrue(service.list().isEmpty());
     }
 }

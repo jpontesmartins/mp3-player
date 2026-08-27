@@ -137,6 +137,13 @@ public class FileLyricRepository implements LyricRepository {
         return fileNameFor(artist, title);
     }
 
+    /**
+     * Lê uma tag ID3 do arquivo de música.
+     *
+     * @param musicPath caminho absoluto do arquivo de áudio
+     * @param artist {@code true} para retornar o artista, {@code false} para o título
+     * @return valor da tag ID3, ou string vazia se não encontrada ou ocorrer erro
+     */
     private String id3Tag(String musicPath, boolean artist) {
         try {
             Music music = id3Codec.read(musicPath);
@@ -147,11 +154,24 @@ public class FileLyricRepository implements LyricRepository {
         }
     }
 
+    /**
+     * Gera o nome do arquivo TXT de letra a partir do artista e título.
+     *
+     * @param artist nome do artista (pode ser vazio ou nulo)
+     * @param title título da música
+     * @return nome do arquivo TXT sanitizado
+     */
     private static String fileNameFor(String artist, String title) {
         String prefix = artist == null || artist.isBlank() ? "" : artist.trim() + " - ";
         return sanitizeFileName(prefix + (title == null ? "" : title.trim())) + ".txt";
     }
 
+    /**
+     * Remove caracteres inválidos para nomes de arquivo.
+     *
+     * @param s string original
+     * @return string sanitizada, com caracteres inválidos substituídos por underscore
+     */
     private static String sanitizeFileName(String s) {
         return s.replaceAll("[\\\\/:*?\"<>|]", "_").trim();
     }

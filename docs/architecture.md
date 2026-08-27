@@ -22,58 +22,72 @@ flowchart TD
         PC["PlayerController"]
         PLC["PlaylistController"]
         MC["MetadataController<br/>(ID3 + cover)"]
+        IC["InfoController"]
         LC["LyricsController"]
+        DC["DictionaryController"]
     end
 
     subgraph Application["application (casos de uso)"]
         PS["PlayerService"]
-        PL["PlaylistAppService"]
-        LY["LyricsAppService"]
-        ID["Id3AppService"]
+        PL["PlaylistService"]
+        ID["Id3Service"]
+        CS["CoverService"]
+        LY["LyricsService"]
+        DLS["DictionaryLookupService"]
     end
 
     subgraph Domain["domain (núcleo — sem dependências)"]
-        PORTS["ports: PlayerEngine, Id3Codec,<br/>MusicScanner, LyricsScraper"]
-        REPOS["repositories: PlaylistRepository,<br/>LyricRepository"]
-        MODEL["model: Music, Playlist, Lyric,<br/>Artist, Album, Settings"]
+        PORTS["ports: PlayerEngine, Id3Codec,<br/>AlbumCoverSearcher, MusicScanner,<br/>LyricsScraper, LyricsSource,<br/>DictionarySource"]
+        REPOS["repositories: PlaylistRepository,<br/>LyricRepository, MetadataCacheRepository"]
+        MODEL["model: Music, Playlist, Lyric,<br/>Artist, Album, CoverImage,<br/>DictionaryLookupResult, Settings"]
     end
 
     subgraph Infra["infrastructure (implementações)"]
         ENGINE["JLayerPlayerEngine"]
-        CODEC["Id3MagicCodec (mp3agic)"]
+        CODEC["CachedId3Codec → Id3MagicCodec"]
         SCAN["FileMusicScanner"]
-        SCRAP["JsoupLyricsScraper"]
+        SCRAP["CompositeLyricsScraper<br/>→ LetrasMusBrSource"]
+        DICT["PriberamSource"]
         PREPO["FilePlaylistRepository"]
         LREPO["FileLyricRepository"]
+        CACHE["FileMetadataCacheRepository"]
+        COVER["CompositeCoverSearcher<br/>→ iTunes / Deezer"]
     end
 
     Request["HTTP request (frontend Tauri/React)"] --> PC
     Request --> PLC
     Request --> MC
+    Request --> IC
     Request --> LC
+    Request --> DC
     PC --> PS
     PLC --> PL
     MC --> ID
+    MC --> CS
     LC --> LY
+    DC --> DLS
     PS --> PORTS
     PL --> PORTS
-    LY --> PORTS
     ID --> PORTS
-    PL --> MODEL
-    ID --> MODEL
-    LY --> MODEL
+    CS --> PORTS
+    LY --> PORTS
+    DLS --> PORTS
     PL --> REPOS
     LY --> REPOS
+    ID --> REPOS
 
     ENGINE -. implementa .-> PORTS
     CODEC -. implementa .-> PORTS
     SCAN -. implementa .-> PORTS
     SCRAP -. implementa .-> PORTS
+    DICT -. implementa .-> PORTS
     PREPO -. implementa .-> REPOS
     LREPO -. implementa .-> REPOS
+    CACHE -. implementa .-> REPOS
+    COVER -. implementa .-> PORTS
 ```
 
-Alguns nós acima são ilustrativos (PL/PS etc. correspondem ao desenho da árvore de pacotes). O essencial: **as setas que cruzam camadas apontam do detalhe para o contrato**, nunca o contrário.
+Alguns nós acima são ilustrativos. O essencial: **as setas que cruzam camadas apontam do detalhe para o contrato**, nunca o contrário.
 
 ---
 
@@ -96,7 +110,7 @@ flowchart LR
     end
 
     subgraph Web["web"]
-        Ctrl["PlayerController / PlaylistController<br/>MetadataController / LyricsController"]
+        Ctrl["PlayerController / PlaylistController<br/>MetadataController / LyricsController<br/>InfoController / DictionaryController"]
     end
 
     Ctrl -->|depende de| Svc
@@ -148,7 +162,7 @@ sequenceDiagram
     autonumber
     participant FE as Frontend
     participant C as PlaylistController
-    participant S as PlaylistAppService (application)
+    participant S as PlaylistService (application)
     participant Scanner as MusicScanner (port)
     participant FS as FileMusicScanner (infra)
     participant R as PlaylistRepository (port)
@@ -184,19 +198,23 @@ sequenceDiagram
     autonumber
     participant FE as Frontend
     participant C as MetadataController
-    participant S as Id3AppService (application)
-    participant CO as Id3Codec (port)
+    participant S as Id3Service (application)
+    participant CACHED as CachedId3Codec (decorator)
     participant M as Id3MagicCodec (infra)
+    participant CACHE as MetadataCacheRepository
 
     FE->>C: POST /id3/update { path, tags }
     C->>S: update(path, tags)
-    S->>M: update(path, tags)  [Id3Codec]
-    M-->>S: Music (tags atualizadas)
+    S->>CACHED: update(path, tags)  [Id3Codec]
+    CACHED->>M: update(path, tags)
+    M-->>CACHED: Music (tags atualizadas)
+    CACHED->>CACHE: put(path, tags)
+    CACHED-->>S: Music
     S-->>C: Map (tags resultantes)
     C-->>FE: json
 ```
 
-Leitura (`GET /id3`) e bulk (`POST /id3/bulk`) usam `read(path)` / iteração do mesmo `Id3Codec`.
+Leitura (`GET /id3`) usa `read(path)` que verifica o cache antes de delegar. Bulk (`POST /id3/bulk`) itera com virtual threads.
 
 ---
 
@@ -207,43 +225,72 @@ sequenceDiagram
     autonumber
     participant FE as Frontend
     participant C as LyricsController
-    participant S as LyricsAppService (application)
+    participant S as LyricsService (application)
     participant R as LyricRepository (port)
     participant FR as FileLyricRepository (infra)
     participant CO as Id3Codec (port)
     participant I as Id3MagicCodec (infra)
     participant SCR as LyricsScraper (port)
-    participant J as JsoupLyricsScraper (infra)
+    participant CLS as CompositeLyricsScraper
+    participant LMB as LetrasMusBrSource
     participant WS as letras.mus.br
 
     FE->>C: GET /lyrics?path=<arquivo>
     C->>S: get(path)
-    S->>FR: exists(path)  [LyricRepository]
+    S->>FR: find(path)  [LyricRepository]
     alt cache hit
-        FR-->>S: true
-        S->>FR: find(path)
-        FR-->>S: Lyric
+        FR-->>S: Optional<Lyric>
         S-->>C: texto (letra)
         C-->>FE: 200
     else cache miss
-        FR-->>S: false
+        FR-->>S: Optional.empty()
         S->>I: read(path)  [Id3Codec]
         I-->>S: Music (artista/título)
-        S->>J: fetch(artista, título)  [LyricsScraper]
-        J->>WS: scraping letras.mus.br
-        WS-->>J: html
-        J-->>S: texto
+        S->>CLS: fetch(artista, título)  [LyricsScraper]
+        CLS->>LMB: trySource()
+        LMB->>WS: scraping letras.mus.br
+        WS-->>LMB: html
+        LMB-->>CLS: texto
+        CLS-->>S: texto
         S->>FR: save(Lyric, Music)  [cache em .txt]
         S-->>C: texto
         C-->>FE: 200
     end
 ```
 
-`GET /lyrics/cached` usa só o ramo "cache hit": `exists` → `find`, e devolve `404` se não houver letra salva.
+`GET /lyrics/cached` usa só o ramo "cache hit": `find`, e devolve `404` se não houver letra salva.
 
 ---
 
-## 7. Resumo: quem chama quem (suas por serviço infra)
+## 7. Caso: consultar dicionário (`POST /dictionary/lookup`)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant FE as Frontend
+    participant C as DictionaryController
+    participant S as DictionaryLookupService (application)
+    participant SRC as DictionarySource (port)
+    participant PRI as PriberamSource (infra)
+    participant WEB as dicionario.priberam.org
+
+    FE->>C: POST /dictionary/lookup { word, language }
+    C->>S: lookup(word, language)
+    S->>SRC: lookup(word)  [DictionarySource por língua]
+    SRC->>PRI: lookup(word)
+    PRI->>WEB: fetch página da palavra
+    WEB-->>PRI: HTML
+    PRI-->>SRC: DictionaryLookupResult
+    SRC-->>S: resultado
+    S-->>C: resultado
+    C-->>FE: 200 OK
+```
+
+`GET /dictionary/languages` retorna as línguas suportadas (atualmente apenas `"pt"`).
+
+---
+
+## 8. Resumo: quem chama quem (suas por serviço infra)
 
 ```mermaid
 flowchart LR
@@ -251,53 +298,89 @@ flowchart LR
         PC["PlayerController"]
         PLC["PlaylistController"]
         MC["MetadataController"]
+        IC["InfoController"]
         LC["LyricsController"]
+        DC["DictionaryController"]
     end
     subgraph App["application (casos de uso)"]
         PS["PlayerService"]
         PL["PlaylistService"]
-        LY["LyricsService"]
         ID["Id3Service"]
+        CS["CoverService"]
+        LY["LyricsService"]
+        DLS["DictionaryLookupService"]
     end
     subgraph Ports["domain/port + repository (contratos)"]
         dPE["PlayerEngine"]
         dIC["Id3Codec"]
+        dACS["AlbumCoverSearcher"]
         dMS["MusicScanner"]
         dLS["LyricsScraper"]
+        dDS["DictionarySource"]
         dPR["PlaylistRepository"]
         dLR["LyricRepository"]
+        dMCR["MetadataCacheRepository"]
     end
     subgraph Impl["infrastructure (detalhes)"]
         J["JLayerPlayerEngine"]
-        IC2["Id3MagicCodec"]
+        IC2["CachedId3Codec → Id3MagicCodec"]
+        CCS["CompositeCoverSearcher → iTunes/Deezer"]
         FS["FileMusicScanner"]
-        JS["JsoupLyricsScraper"]
+        CLS["CompositeLyricsScraper → LetrasMusBrSource"]
+        PS2["PriberamSource"]
         FPR["FilePlaylistRepository"]
         FLR["FileLyricRepository"]
+        FMCR["FileMetadataCacheRepository"]
     end
 
     PC --> PS
     PLC --> PL
     MC --> ID
+    MC --> CS
     LC --> LY
+    DC --> DLS
 
     PS --> dPE
     ID --> dIC
+    CS --> dIC
+    CS --> dACS
     LY --> dIC
-    PL --> dMS
     LY --> dLS
+    PL --> dMS
     PL --> dPR
     LY --> dLR
+    DLS --> dDS
+    ID --> dMCR
 
     dPE --> J
     dIC --> IC2
+    dACS --> CCS
     dMS --> FS
-    dLS --> JS
+    dLS --> CLS
+    dDS --> PS2
     dPR --> FPR
     dLR --> FLR
+    dMCR --> FMCR
 ```
 
 A seta `contrato --> detalhe` representa a **injeção de dependência** feita pelo Spring: o `application` depende da interface, mas recebe (em runtime) a implementação concreta.
+
+---
+
+## 9. Padrões de design
+
+```mermaid
+flowchart TD
+    subgraph Patterns["Padrões utilizados"]
+        direction TB
+        P1["Ports & Adapters<br/>domain/port/ define contratos"]
+        P2["Decorator<br/>CachedId3Codec envolve Id3MagicCodec"]
+        P3["Template Method<br/>AbstractCoverSearcher / AbstractLyricsSource<br/>AbstractDictionarySource"]
+        P4["Strategy / Composite<br/>CompositeCoverSearcher (iTunes → Deezer)<br/>CompositeLyricsScraper (letras.mus.br → ...)<br/>DictionaryLookupService (Priberam, ...)"]
+        P5["Repository<br/>PlaylistRepository, LyricRepository,<br/>MetadataCacheRepository"]
+        P6["Injeção de Dependência<br/>Spring injeta adapters nos services"]
+    end
+```
 
 ---
 

@@ -64,6 +64,14 @@ class FilePlaylistRepositoryTest {
     void SanitizesIllegalFilenameCharacters() {
         assertEquals("a_b", repository.sanitize("a/b"));
         assertEquals("rock", repository.sanitize("rock"));
+        assertEquals("a_b", repository.sanitize("a\\b"));
+        assertEquals("a_b", repository.sanitize("a:b"));
+        assertEquals("a_b", repository.sanitize("a*b"));
+        assertEquals("a_b", repository.sanitize("a?b"));
+        assertEquals("a_b", repository.sanitize("a\"b"));
+        assertEquals("a_b", repository.sanitize("a<b"));
+        assertEquals("a_b", repository.sanitize("a>b"));
+        assertEquals("a_b", repository.sanitize("a|b"));
     }
 
     @Test
@@ -91,5 +99,44 @@ class FilePlaylistRepositoryTest {
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
                 () -> repository.rename("NaoExiste", "Novo"));
         assertTrue(e.getMessage().contains("NaoExiste"));
+    }
+
+    @Test
+    void listReturnsSortedNames() {
+        repository.save(new Playlist("Zebra", List.of("z.mp3")));
+        repository.save(new Playlist("Alpha", List.of("a.mp3")));
+
+        List<String> names = repository.list();
+
+        assertEquals(2, names.size());
+        assertEquals("Alpha", names.get(0));
+        assertEquals("Zebra", names.get(1));
+    }
+
+    @Test
+    void saveThenLoadReturnsSamePaths() {
+        repository.save(new Playlist("MyPlaylist", List.of("a.mp3", "b.mp3", "c.mp3")));
+
+        assertEquals(List.of("a.mp3", "b.mp3", "c.mp3"), repository.load("MyPlaylist"));
+    }
+
+    @Test
+    void loadSkipsBlankLines() throws IOException {
+        Path file = dir.resolve("Mixed.txt");
+        Files.write(file, List.of("a.mp3", "", "  ", "b.mp3"), StandardCharsets.UTF_8);
+
+        assertEquals(List.of("a.mp3", "b.mp3"), repository.load("Mixed"));
+    }
+
+    @Test
+    void renameOverwritesTargetIfExists() {
+        repository.save(new Playlist("Source", List.of("source.mp3")));
+        repository.save(new Playlist("Target", List.of("target.mp3")));
+
+        repository.rename("Source", "Target");
+
+        assertTrue(repository.list().contains("Target"));
+        assertFalse(repository.list().contains("Source"));
+        assertEquals(List.of("source.mp3"), repository.load("Target"));
     }
 }
