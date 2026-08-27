@@ -381,7 +381,3 @@ flowchart TD
         P6["Injeção de Dependência<br/>Spring injeta adapters nos services"]
     end
 ```
-
----
-
-Para gerar estes diagramas localmente, use a extensão Mermaid do editor ou [mermaid.live](https://mermaid.live) copiando o bloco ` ```mermaid ` desejado. No GitHub eles renderizam automaticamente.
