@@ -7,7 +7,6 @@ import java.util.Map;
 
 /**
  * Raiz agregada representando um único arquivo de áudio e seus metadados ID3.
- * O caminho absoluto do arquivo atua como identidade única.
  */
 @Data
 public final class MusicFile {

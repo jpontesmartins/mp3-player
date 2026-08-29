@@ -14,8 +14,8 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
- * Implementação do port {@link PlayerEngine} baseada em JLayer. Responsável pela
- * decodificação e reprodução de MP3, executada em uma virtual thread.
+ * Implementação do port/contrato/interface {@link PlayerEngine} baseada em JLayer.
+ * Responsável pela decodificação e reprodução de MP3, executada em uma virtual thread.
  */
 @Component
 public class JLayerPlayerEngine implements PlayerEngine {
