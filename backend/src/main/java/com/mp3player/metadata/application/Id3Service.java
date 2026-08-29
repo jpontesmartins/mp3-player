@@ -1,6 +1,6 @@
 package com.mp3player.metadata.application;
 
-import com.mp3player.player.domain.model.Music;
+import com.mp3player.player.domain.model.MusicFile;
 import com.mp3player.metadata.domain.port.Id3Codec;
 import com.mp3player.metadata.domain.repository.MetadataCacheRepository;
 import org.slf4j.Logger;
@@ -124,7 +124,7 @@ public class Id3Service {
      * @return mapa de tags atualizadas
      */
     public Map<String, String> update(String filePath, Map<String, String> tags) {
-        Music updated = id3Codec.update(filePath, tags);
+        MusicFile updated = id3Codec.update(filePath, tags);
         return updated.toTagMap();
     }
 

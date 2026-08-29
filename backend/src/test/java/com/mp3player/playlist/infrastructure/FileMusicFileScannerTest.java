@@ -1,6 +1,6 @@
 package com.mp3player.playlist.infrastructure;
 
-import com.mp3player.player.domain.model.Music;
+import com.mp3player.player.domain.model.MusicFile;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Testes do {@link FileMusicScanner}: percorre uma pasta real temporária e
  * verifica quais arquivos MP3 são coletados, recursivamente e por extensão.
  */
-class FileMusicScannerTest {
+class FileMusicFileScannerTest {
 
     @TempDir
     Path dir;
@@ -28,12 +28,12 @@ class FileMusicScannerTest {
         Files.write(dir.resolve("notaudio.txt"), new byte[] { 1 });
         Files.write(sub.resolve("c.mp3"), new byte[] { 1 });
 
-        List<Music> musics = new FileMusicScanner().scanFolder(dir.toString());
+        List<MusicFile> musicFiles = new FileMusicScanner().scanFolder(dir.toString());
 
-        assertEquals(3, musics.size());
-        assertTrue(musics.stream().allMatch(m -> m.getPath().toLowerCase().endsWith(".mp3")));
-        assertTrue(musics.stream().allMatch(m -> Path.of(m.getPath()).isAbsolute()));
-        assertTrue(musics.stream().noneMatch(m -> m.getPath().toLowerCase().contains("notaudio")));
+        assertEquals(3, musicFiles.size());
+        assertTrue(musicFiles.stream().allMatch(m -> m.getPath().toLowerCase().endsWith(".mp3")));
+        assertTrue(musicFiles.stream().allMatch(m -> Path.of(m.getPath()).isAbsolute()));
+        assertTrue(musicFiles.stream().noneMatch(m -> m.getPath().toLowerCase().contains("notaudio")));
     }
 
     @Test

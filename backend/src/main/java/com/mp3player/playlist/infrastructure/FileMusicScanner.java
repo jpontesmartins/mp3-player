@@ -1,6 +1,6 @@
 package com.mp3player.playlist.infrastructure;
 
-import com.mp3player.player.domain.model.Music;
+import com.mp3player.player.domain.model.MusicFile;
 import com.mp3player.playlist.domain.port.MusicScanner;
 import org.springframework.stereotype.Component;
 
@@ -26,7 +26,7 @@ public class FileMusicScanner implements MusicScanner {
      * @throws IOException se a pasta não existir, não for um diretório ou não puder ser lida.
      */
     @Override
-    public List<Music> scanFolder(String folderPath) throws IOException {
+    public List<MusicFile> scanFolder(String folderPath) throws IOException {
         Path start = Paths.get(folderPath);
         if (!Files.exists(start) || !Files.isDirectory(start)) {
             throw new IOException("Directory not found: " + folderPath);
@@ -36,7 +36,7 @@ public class FileMusicScanner implements MusicScanner {
                     .filter(Files::isRegularFile)
                     .filter(p -> p.toString().toLowerCase().endsWith(".mp3"))
                     .map(Path::toAbsolutePath)
-                    .map(p -> new Music(p.toString(), Music.Metadata.empty()))
+                    .map(p -> new MusicFile(p.toString(), MusicFile.Metadata.empty()))
                     .toList();
         }
     }

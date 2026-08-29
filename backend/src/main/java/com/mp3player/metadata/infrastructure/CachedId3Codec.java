@@ -1,6 +1,6 @@
 package com.mp3player.metadata.infrastructure;
 
-import com.mp3player.player.domain.model.Music;
+import com.mp3player.player.domain.model.MusicFile;
 import com.mp3player.metadata.domain.port.Id3Codec;
 import com.mp3player.metadata.domain.repository.MetadataCacheRepository;
 import org.slf4j.Logger;
@@ -41,15 +41,15 @@ public class CachedId3Codec implements Id3Codec {
      * @return agregado de música com os metadados lidos
      */
     @Override
-    public Music read(String filePath) {
+    public MusicFile read(String filePath) {
         Map<String, String> cached = cache.get(filePath);
         if (cached != null && !isStale(filePath, cached)) {
             log.info("[ID3] Servido do cache: {}", filePath);
-            return new Music(filePath, Music.Metadata.fromTags(cached));
+            return new MusicFile(filePath, MusicFile.Metadata.fromTags(cached));
         }
-        Music music = delegate.read(filePath);
-        putWithTimestamp(filePath, music.toTagMap());
-        return music;
+        MusicFile musicFile = delegate.read(filePath);
+        putWithTimestamp(filePath, musicFile.toTagMap());
+        return musicFile;
     }
 
     /**
@@ -60,8 +60,8 @@ public class CachedId3Codec implements Id3Codec {
      * @return agregado de música com os metadados atualizados
      */
     @Override
-    public Music update(String filePath, Map<String, String> tags) {
-        Music updated = delegate.update(filePath, tags);
+    public MusicFile update(String filePath, Map<String, String> tags) {
+        MusicFile updated = delegate.update(filePath, tags);
         putWithTimestamp(filePath, updated.toTagMap());
         log.info("[ID3] Cache atualizado para: {}", filePath);
         return updated;

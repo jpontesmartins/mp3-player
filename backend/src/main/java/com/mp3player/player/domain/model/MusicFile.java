@@ -1,5 +1,7 @@
 package com.mp3player.player.domain.model;
 
+import lombok.Data;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -7,7 +9,8 @@ import java.util.Map;
  * Raiz agregada representando um único arquivo de áudio e seus metadados ID3.
  * O caminho absoluto do arquivo atua como identidade única.
  */
-public final class Music {
+@Data
+public final class MusicFile {
 
     private final String path;
     private final Metadata metadata;
@@ -18,50 +21,9 @@ public final class Music {
      * @param path     caminho absoluto do arquivo de áudio
      * @param metadata metadados ID3 (se {@code null}, será criado vazio)
      */
-    public Music(String path, Metadata metadata) {
+    public MusicFile(String path, Metadata metadata) {
         this.path = path;
         this.metadata = metadata == null ? Metadata.empty() : metadata;
-    }
-
-    /**
-     * Retorna o caminho absoluto do arquivo de áudio.
-     *
-     * @return caminho do arquivo
-     */
-    public String getPath() {
-        return path;
-    }
-
-    /**
-     * Retorna os metadados ID3 associados à música.
-     *
-     * @return metadados da música
-     */
-    public Metadata getMetadata() {
-        return metadata;
-    }
-
-    /**
-     * Duas músicas são iguais se possuírem o mesmo caminho absoluto.
-     *
-     * @param o objeto a ser comparado
-     * @return {@code true} se forem iguais
-     */
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Music other)) return false;
-        return path.equals(other.path);
-    }
-
-    /**
-     * Hash code baseado no caminho do arquivo.
-     *
-     * @return hash code
-     */
-    @Override
-    public int hashCode() {
-        return path.hashCode();
     }
 
     /**
@@ -71,18 +33,18 @@ public final class Music {
      */
     public Map<String, String> toTagMap() {
         Map<String, String> map = new LinkedHashMap<>();
-        metadata.putIfNotBlank(map, "title", metadata.getTitle());
-        metadata.putIfNotBlank(map, "artist", metadata.getArtist());
-        metadata.putIfNotBlank(map, "album", metadata.getAlbum());
-        metadata.putIfNotBlank(map, "year", metadata.getYear());
-        metadata.putIfNotBlank(map, "genre", metadata.getGenre());
-        metadata.putIfNotBlank(map, "track", metadata.getTrack());
-        metadata.putIfNotBlank(map, "disc", metadata.getDisc());
-        if (metadata.getDurationMs() != null) {
-            map.put("duration_ms", String.valueOf(metadata.getDurationMs()));
+        metadata.putIfNotBlank(map, "title", metadata.title());
+        metadata.putIfNotBlank(map, "artist", metadata.artist());
+        metadata.putIfNotBlank(map, "album", metadata.album());
+        metadata.putIfNotBlank(map, "year", metadata.year());
+        metadata.putIfNotBlank(map, "genre", metadata.genre());
+        metadata.putIfNotBlank(map, "track", metadata.track());
+        metadata.putIfNotBlank(map, "disc", metadata.disc());
+        if (metadata.durationMs() != null) {
+            map.put("duration_ms", String.valueOf(metadata.durationMs()));
         }
-        if (metadata.getBitrateKbps() != null) {
-            map.put("kbps", String.valueOf(metadata.getBitrateKbps()));
+        if (metadata.bitrateKbps() != null) {
+            map.put("kbps", String.valueOf(metadata.bitrateKbps()));
         }
         return map;
     }
@@ -90,32 +52,23 @@ public final class Music {
     /**
      * Value object com os campos ID3 editáveis além da duração.
      */
-    public static final class Metadata {
-        private final String title;
-        private final String artist;
-        private final String album;
-        private final String year;
-        private final String genre;
-        private final String track;
-        private final String disc;
-        private final Long durationMs;
-        private final Integer bitrateKbps;
+    public record Metadata(String title, String artist, String album, String year, String genre, String track,
+                               String disc, Long durationMs, Integer bitrateKbps) {
 
         /**
          * Construtor com campos essenciais (disc e bitrate como {@code null}).
          *
-         * @param title       título da música
-         * @param artist      artista
-         * @param album       álbum
-         * @param year        ano de lançamento
-         * @param genre       gênero
-         * @param track       número da faixa
-         * @param durationMs  duração em milissegundos
+         * @param title      título da música
+         * @param artist     artista
+         * @param album      álbum
+         * @param year       ano de lançamento
+         * @param genre      gênero
+         * @param track      número da faixa
+         * @param durationMs duração em milissegundos
          */
         public Metadata(String title, String artist, String album, String year, String genre, String track, Long durationMs) {
             this(title, artist, album, year, genre, track, null, durationMs, null);
         }
-
         /**
          * Construtor completo com todos os campos de metadados.
          *
@@ -129,17 +82,7 @@ public final class Music {
          * @param durationMs  duração em milissegundos
          * @param bitrateKbps bitrate em kbps
          */
-        public Metadata(String title, String artist, String album, String year, String genre, String track, String disc, Long durationMs, Integer bitrateKbps) {
-            this.title = title;
-            this.artist = artist;
-            this.album = album;
-            this.year = year;
-            this.genre = genre;
-            this.track = track;
-            this.disc = disc;
-            this.durationMs = durationMs;
-            this.bitrateKbps = bitrateKbps;
-        }
+        public Metadata { }
 
         /**
          * Cria instância de metadados vazios.
@@ -186,24 +129,77 @@ public final class Music {
             );
         }
 
-        /** @return título da música */
-        public String getTitle() { return title; }
-        /** @return artista */
-        public String getArtist() { return artist; }
-        /** @return álbum */
-        public String getAlbum() { return album; }
-        /** @return ano de lançamento */
-        public String getYear() { return year; }
-        /** @return gênero */
-        public String getGenre() { return genre; }
-        /** @return número da faixa */
-        public String getTrack() { return track; }
-        /** @return número do disco */
-        public String getDisc() { return disc; }
-        /** @return duração em milissegundos */
-        public Long getDurationMs() { return durationMs; }
-        /** @return bitrate em kbps */
-        public Integer getBitrateKbps() { return bitrateKbps; }
+        /**
+         * @return título da música
+         */
+        @Override
+        public String title() {
+            return title;
+        }
+
+        /**
+         * @return artista
+         */
+        @Override
+        public String artist() {
+            return artist;
+        }
+
+        /**
+         * @return álbum
+         */
+        @Override
+        public String album() {
+            return album;
+        }
+
+        /**
+         * @return ano de lançamento
+         */
+        @Override
+        public String year() {
+            return year;
+        }
+
+        /**
+         * @return gênero
+         */
+        @Override
+        public String genre() {
+            return genre;
+        }
+
+        /**
+         * @return número da faixa
+         */
+        @Override
+        public String track() {
+            return track;
+        }
+
+        /**
+         * @return número do disco
+         */
+        @Override
+        public String disc() {
+            return disc;
+        }
+
+        /**
+         * @return duração em milissegundos
+         */
+        @Override
+        public Long durationMs() {
+            return durationMs;
+        }
+
+        /**
+         * @return bitrate em kbps
+         */
+        @Override
+        public Integer bitrateKbps() {
+            return bitrateKbps;
+        }
 
         private void putIfNotBlank(Map<String, String> map, String key, String value) {
             if (value != null && !value.isBlank()) {

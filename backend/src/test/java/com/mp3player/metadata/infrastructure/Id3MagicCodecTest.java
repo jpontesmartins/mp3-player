@@ -1,6 +1,6 @@
 package com.mp3player.metadata.infrastructure;
 
-import com.mp3player.player.domain.model.Music;
+import com.mp3player.player.domain.model.MusicFile;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -44,22 +44,22 @@ class Id3MagicCodecTest {
         Path file = writeSilentMp3("track.mp3", 4);
         Id3MagicCodec codec = new Id3MagicCodec();
 
-        Music music = codec.read(file.toString());
+        MusicFile musicFile = codec.read(file.toString());
 
-        assertEquals(file.toString(), music.getPath());
-        assertNull(music.getMetadata().getTitle());
-        assertNotNull(music.getMetadata().getDurationMs());
-        assertNotNull(music.getMetadata().getBitrateKbps());
+        assertEquals(file.toString(), musicFile.getPath());
+        assertNull(musicFile.getMetadata().title());
+        assertNotNull(musicFile.getMetadata().durationMs());
+        assertNotNull(musicFile.getMetadata().bitrateKbps());
     }
 
     @Test
     void readReturnsEmptyMetadataForUnreadableFile() {
         Id3MagicCodec codec = new Id3MagicCodec();
 
-        Music music = codec.read(dir.resolve("missing.mp3").toString());
+        MusicFile musicFile = codec.read(dir.resolve("missing.mp3").toString());
 
-        assertEquals(dir.resolve("missing.mp3").toString(), music.getPath());
-        assertTrue(music.toTagMap().isEmpty());
+        assertEquals(dir.resolve("missing.mp3").toString(), musicFile.getPath());
+        assertTrue(musicFile.toTagMap().isEmpty());
     }
 
     @Test
@@ -75,16 +75,16 @@ class Id3MagicCodecTest {
                 "disc", "1",
                 "year", "2010");
 
-        Music updated = codec.update(file.toString(), tags);
-        Music readBack = codec.read(file.toString());
+        MusicFile updated = codec.update(file.toString(), tags);
+        MusicFile readBack = codec.read(file.toString());
 
-        assertEquals("Novo Titulo", updated.getMetadata().getTitle());
-        assertEquals("Novo Titulo", readBack.getMetadata().getTitle());
-        assertEquals("Novo Artista", readBack.getMetadata().getArtist());
-        assertEquals("Novo Album", readBack.getMetadata().getAlbum());
-        assertEquals("Rock", readBack.getMetadata().getGenre());
-        assertEquals("3", readBack.getMetadata().getTrack());
-        assertEquals("1", readBack.getMetadata().getDisc());
+        assertEquals("Novo Titulo", updated.getMetadata().title());
+        assertEquals("Novo Titulo", readBack.getMetadata().title());
+        assertEquals("Novo Artista", readBack.getMetadata().artist());
+        assertEquals("Novo Album", readBack.getMetadata().album());
+        assertEquals("Rock", readBack.getMetadata().genre());
+        assertEquals("3", readBack.getMetadata().track());
+        assertEquals("1", readBack.getMetadata().disc());
     }
 
     @Test

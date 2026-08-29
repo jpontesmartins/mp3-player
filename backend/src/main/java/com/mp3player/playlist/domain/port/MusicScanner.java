@@ -1,6 +1,6 @@
 package com.mp3player.playlist.domain.port;
 
-import com.mp3player.player.domain.model.Music;
+import com.mp3player.player.domain.model.MusicFile;
 
 import java.io.IOException;
 import java.util.List;
@@ -18,5 +18,5 @@ public interface MusicScanner {
      * @return lista de músicas encontradas.
      * @throws IOException se a pasta não existir ou não puder ser lida.
      */
-    List<Music> scanFolder(String folderPath) throws IOException;
+    List<MusicFile> scanFolder(String folderPath) throws IOException;
 }

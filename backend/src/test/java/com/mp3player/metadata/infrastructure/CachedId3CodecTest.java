@@ -1,6 +1,6 @@
 package com.mp3player.metadata.infrastructure;
 
-import com.mp3player.player.domain.model.Music;
+import com.mp3player.player.domain.model.MusicFile;
 import com.mp3player.metadata.domain.port.Id3Codec;
 import com.mp3player.metadata.domain.repository.MetadataCacheRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,10 +35,10 @@ class CachedId3CodecTest {
         Map<String, String> cachedTags = Map.of("title", "Cached", "artist", "Artist", "_lastModified", "0");
         when(cache.get("a.mp3")).thenReturn(cachedTags);
 
-        Music result = cached.read("a.mp3");
+        MusicFile result = cached.read("a.mp3");
 
-        assertEquals("Cached", result.getMetadata().getTitle());
-        assertEquals("Artist", result.getMetadata().getArtist());
+        assertEquals("Cached", result.getMetadata().title());
+        assertEquals("Artist", result.getMetadata().artist());
         verify(delegate, never()).read("a.mp3");
     }
 
@@ -47,12 +47,12 @@ class CachedId3CodecTest {
         Map<String, String> staleTags = Map.of("title", "Old", "_lastModified", "1000");
         when(cache.get("a.mp3")).thenReturn(staleTags);
 
-        Music fresh = new Music("a.mp3", new Music.Metadata("Fresh", "Artist", null, null, null, null, null));
+        MusicFile fresh = new MusicFile("a.mp3", new MusicFile.Metadata("Fresh", "Artist", null, null, null, null, null));
         when(delegate.read("a.mp3")).thenReturn(fresh);
 
-        Music result = cached.read("a.mp3");
+        MusicFile result = cached.read("a.mp3");
 
-        assertEquals("Fresh", result.getMetadata().getTitle());
+        assertEquals("Fresh", result.getMetadata().title());
         verify(delegate).read("a.mp3");
     }
 
@@ -61,36 +61,36 @@ class CachedId3CodecTest {
         Map<String, String> oldCache = Map.of("title", "Old");
         when(cache.get("a.mp3")).thenReturn(oldCache);
 
-        Music fresh = new Music("a.mp3", new Music.Metadata("Fresh", null, null, null, null, null, null));
+        MusicFile fresh = new MusicFile("a.mp3", new MusicFile.Metadata("Fresh", null, null, null, null, null, null));
         when(delegate.read("a.mp3")).thenReturn(fresh);
 
-        Music result = cached.read("a.mp3");
+        MusicFile result = cached.read("a.mp3");
 
-        assertEquals("Fresh", result.getMetadata().getTitle());
+        assertEquals("Fresh", result.getMetadata().title());
         verify(delegate).read("a.mp3");
     }
 
     @Test
     void readDelegatesAndCachesWhenMiss() {
         when(cache.get("a.mp3")).thenReturn(null);
-        Music music = new Music("a.mp3", new Music.Metadata("Fresh", "Artist", null, null, null, null, null));
-        when(delegate.read("a.mp3")).thenReturn(music);
+        MusicFile musicFile = new MusicFile("a.mp3", new MusicFile.Metadata("Fresh", "Artist", null, null, null, null, null));
+        when(delegate.read("a.mp3")).thenReturn(musicFile);
 
-        Music result = cached.read("a.mp3");
+        MusicFile result = cached.read("a.mp3");
 
-        assertEquals("Fresh", result.getMetadata().getTitle());
+        assertEquals("Fresh", result.getMetadata().title());
         verify(delegate).read("a.mp3");
         verify(cache).put(eq("a.mp3"), anyMap());
     }
 
     @Test
     void updateDelegatesAndCachesResult() {
-        Music updated = new Music("a.mp3", new Music.Metadata("Updated", "Artist", null, null, null, null, null));
+        MusicFile updated = new MusicFile("a.mp3", new MusicFile.Metadata("Updated", "Artist", null, null, null, null, null));
         when(delegate.update("a.mp3", Map.of("title", "Updated"))).thenReturn(updated);
 
-        Music result = cached.update("a.mp3", Map.of("title", "Updated"));
+        MusicFile result = cached.update("a.mp3", Map.of("title", "Updated"));
 
-        assertEquals("Updated", result.getMetadata().getTitle());
+        assertEquals("Updated", result.getMetadata().title());
         verify(cache).put(eq("a.mp3"), anyMap());
     }
 

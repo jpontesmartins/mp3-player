@@ -3,7 +3,7 @@ package com.mp3player.metadata.infrastructure;
 import com.mpatric.mp3agic.ID3v1Genres;
 import com.mpatric.mp3agic.ID3v24Tag;
 import com.mpatric.mp3agic.Mp3File;
-import com.mp3player.player.domain.model.Music;
+import com.mp3player.player.domain.model.MusicFile;
 import com.mp3player.metadata.domain.port.Id3Codec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,13 +24,13 @@ public class Id3MagicCodec implements Id3Codec {
     private static final Logger log = LoggerFactory.getLogger(Id3MagicCodec.class);
 
     /**
-     * Lê as tags ID3 do arquivo no caminho informado e monta um agregado {@link Music}.
+     * Lê as tags ID3 do arquivo no caminho informado e monta um agregado {@link MusicFile}.
      *
      * @param filePath caminho absoluto do arquivo MP3
      * @return agregado de música com os metadados lidos
      */
     @Override
-    public Music read(String filePath) {
+    public MusicFile read(String filePath) {
         try {
             Mp3File mp3file = new Mp3File(filePath);
             String title = null, artist = null, album = null, year = null, genre = null, track = null, disc = null;
@@ -58,24 +58,24 @@ public class Id3MagicCodec implements Id3Codec {
             int bitrate = mp3file.getBitrate();
             Integer bitrateKbps = bitrate > 0 ? bitrate : null;
 
-            Music.Metadata metadata = new Music.Metadata(
+            MusicFile.Metadata metadata = new MusicFile.Metadata(
                     title, artist, album, year, genre, track, disc,
                     durationMs > 0 ? durationMs : null, bitrateKbps);
 
-            Music music = new Music(filePath, metadata);
-            if (music.toTagMap().isEmpty()) {
-                return new Music(filePath, new Music.Metadata(fileName(filePath), null, null, null, null, null, null,
+            MusicFile musicFile = new MusicFile(filePath, metadata);
+            if (musicFile.toTagMap().isEmpty()) {
+                return new MusicFile(filePath, new MusicFile.Metadata(fileName(filePath), null, null, null, null, null, null,
                         durationMs > 0 ? durationMs : null, bitrateKbps));
             }
-            return music;
+            return musicFile;
         } catch (Exception e) {
             log.warn("[Metadata] Não foi possível ler ID3 de {}", filePath, e);
-            return new Music(filePath, Music.Metadata.empty());
+            return new MusicFile(filePath, MusicFile.Metadata.empty());
         }
     }
 
     /**
-     * Atualiza as tags editáveis do arquivo e retorna o {@link Music} resultante.
+     * Atualiza as tags editáveis do arquivo e retorna o {@link MusicFile} resultante.
      *
      * @param filePath caminho absoluto do arquivo MP3
      * @param tags mapa de tags a serem atualizadas
@@ -83,7 +83,7 @@ public class Id3MagicCodec implements Id3Codec {
      * @throws IllegalStateException se ocorrer erro ao salvar o arquivo
      */
     @Override
-    public Music update(String filePath, Map<String, String> tags) {
+    public MusicFile update(String filePath, Map<String, String> tags) {
         try {
             Mp3File mp3file = new Mp3File(filePath);
             ID3v24Tag tag = new ID3v24Tag();

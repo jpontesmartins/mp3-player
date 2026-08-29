@@ -1,7 +1,7 @@
 package com.mp3player.lyrics.application;
 
 import com.mp3player.lyrics.domain.model.Lyric;
-import com.mp3player.player.domain.model.Music;
+import com.mp3player.player.domain.model.MusicFile;
 import com.mp3player.metadata.domain.port.Id3Codec;
 import com.mp3player.lyrics.domain.port.LyricsScraper;
 import com.mp3player.lyrics.domain.repository.LyricRepository;
@@ -52,12 +52,12 @@ public class LyricsService {
         String cached = getCached(musicPath);
         if (cached != null) return cached;
 
-        Music music = musicFor(musicPath);
-        String artist = artistOrFilename(music);
-        String title = titleOrFilename(music);
+        MusicFile musicFile = musicFor(musicPath);
+        String artist = artistOrFilename(musicFile);
+        String title = titleOrFilename(musicFile);
 
         String text = fetchOrFallback(artist, title, musicPath);
-        lyricRepository.save(new Lyric(musicPath, text), music);
+        lyricRepository.save(new Lyric(musicPath, text), musicFile);
         return text;
     }
 
@@ -102,32 +102,32 @@ public class LyricsService {
      * @param musicPath caminho absoluto do arquivo de áudio
      * @return agregado de música com os metadados lidos
      */
-    private Music musicFor(String musicPath) {
+    private MusicFile musicFor(String musicPath) {
         return id3Codec.read(musicPath);
     }
 
     /**
      * Retorna o artista a partir das tags ID3, ou infere do nome do arquivo.
      *
-     * @param music música com metadados
+     * @param musicFile música com metadados
      * @return nome do artista
      */
-    static String artistOrFilename(Music music) {
-        String artist = blank(music.getMetadata().getArtist());
+    static String artistOrFilename(MusicFile musicFile) {
+        String artist = blank(musicFile.getMetadata().artist());
         if (!artist.isEmpty()) return artist;
-        return MusicFileNaming.artistFromFilename(music.getPath());
+        return MusicFileNaming.artistFromFilename(musicFile.getPath());
     }
 
     /**
      * Retorna o título a partir das tags ID3, ou infere do nome do arquivo.
      *
-     * @param music música com metadados
+     * @param musicFile música com metadados
      * @return título da música
      */
-    static String titleOrFilename(Music music) {
-        String title = blank(music.getMetadata().getTitle());
+    static String titleOrFilename(MusicFile musicFile) {
+        String title = blank(musicFile.getMetadata().title());
         if (!title.isEmpty()) return title;
-        return MusicFileNaming.titleFromFilename(music.getPath());
+        return MusicFileNaming.titleFromFilename(musicFile.getPath());
     }
 
     /**

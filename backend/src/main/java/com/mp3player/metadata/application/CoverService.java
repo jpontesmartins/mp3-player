@@ -1,7 +1,7 @@
 package com.mp3player.metadata.application;
 
 import com.mp3player.metadata.domain.model.CoverImage;
-import com.mp3player.player.domain.model.Music;
+import com.mp3player.player.domain.model.MusicFile;
 import com.mp3player.metadata.domain.port.AlbumCoverSearcher;
 import com.mp3player.metadata.domain.port.Id3Codec;
 import org.slf4j.Logger;
@@ -46,8 +46,8 @@ public class CoverService {
      * @throws IOException se a pasta não for encontrada ou nenhuma imagem for encontrada
      */
     public String download(String musicPath) throws IOException {
-        Music music = id3Codec.read(musicPath);
-        String query = buildQueryArtistAlbum(music);
+        MusicFile musicFile = id3Codec.read(musicPath);
+        String query = buildQueryArtistAlbum(musicFile);
 
         CoverImage image = coverSearcher.findCover(query);
         if (image == null || image.isEmpty()) {
@@ -67,14 +67,14 @@ public class CoverService {
     /**
      * Monta o termo de busca "artista + álbum" a partir dos metadados ID3.
      *
-     * @param music agregado de música com os metadados
+     * @param musicFile agregado de música com os metadados
      * @return termo de busca para a API de capas
      */
-    private static String buildQueryArtistAlbum(Music music) {
-        String artist = blank(music.getMetadata().getArtist());
-        String album = blank(music.getMetadata().getAlbum());
+    private static String buildQueryArtistAlbum(MusicFile musicFile) {
+        String artist = blank(musicFile.getMetadata().artist());
+        String album = blank(musicFile.getMetadata().album());
         if (artist.isEmpty() && album.isEmpty()) {
-            artist = MusicFileNaming.artistFromFilename(music.getPath());
+            artist = MusicFileNaming.artistFromFilename(musicFile.getPath());
         }
         if (album.isEmpty() || album.equalsIgnoreCase(artist)) {
             return artist;

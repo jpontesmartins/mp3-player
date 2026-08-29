@@ -1,7 +1,7 @@
 package com.mp3player.metadata.application;
 
 import com.mp3player.metadata.domain.model.CoverImage;
-import com.mp3player.player.domain.model.Music;
+import com.mp3player.player.domain.model.MusicFile;
 import com.mp3player.metadata.domain.port.AlbumCoverSearcher;
 import com.mp3player.metadata.domain.port.Id3Codec;
 import org.junit.jupiter.api.Test;
@@ -37,8 +37,8 @@ class CoverServiceTest {
     @TempDir
     Path dir;
 
-    private Music musicWith(String path, String artist, String album) {
-        return new Music(path, new Music.Metadata("Titulo", artist, album, null, null, null, null));
+    private MusicFile musicWith(String path, String artist, String album) {
+        return new MusicFile(path, new MusicFile.Metadata("Titulo", artist, album, null, null, null, null));
     }
 
     @Test
@@ -72,7 +72,7 @@ class CoverServiceTest {
     @Test
     void downloadFallsBackToArtistFromFilenameWhenNoId3() throws IOException {
         String songPath = dir.resolve("Artist - Song.mp3").toString();
-        when(id3Codec.read(songPath)).thenReturn(new Music(songPath, Music.Metadata.empty()));
+        when(id3Codec.read(songPath)).thenReturn(new MusicFile(songPath, MusicFile.Metadata.empty()));
         when(coverSearcher.findCover("Artist")).thenReturn(new CoverImage(new byte[] { 1 }, "image/jpeg"));
         CoverService service = new CoverService(id3Codec, coverSearcher);
 
@@ -151,7 +151,7 @@ class CoverServiceTest {
     @Test
     void downloadWithBothArtistAndAlbumBlankUsesFilenameFallback() throws IOException {
         String songPath = dir.resolve("Artist - Track.mp3").toString();
-        when(id3Codec.read(songPath)).thenReturn(new Music(songPath, Music.Metadata.empty()));
+        when(id3Codec.read(songPath)).thenReturn(new MusicFile(songPath, MusicFile.Metadata.empty()));
         when(coverSearcher.findCover("Artist")).thenReturn(new CoverImage(new byte[] { 1 }, "image/jpeg"));
         CoverService service = new CoverService(id3Codec, coverSearcher);
 

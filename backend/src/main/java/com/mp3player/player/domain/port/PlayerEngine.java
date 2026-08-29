@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
+ * Interface dos controles do tocador.
  * Port (contrato) para o motor de reprodução de áudio. A implementação é
  * responsável pela decodificação e pelas threads de baixo nível (atualmente JLayer).
  */

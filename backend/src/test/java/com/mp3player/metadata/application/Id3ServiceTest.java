@@ -1,6 +1,6 @@
 package com.mp3player.metadata.application;
 
-import com.mp3player.player.domain.model.Music;
+import com.mp3player.player.domain.model.MusicFile;
 import com.mp3player.metadata.domain.port.Id3Codec;
 import com.mp3player.metadata.domain.repository.MetadataCacheRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,7 +34,7 @@ class Id3ServiceTest {
     @Test
     void getForFileReturnsTagMap() {
         when(id3Codec.read("a.mp3"))
-                .thenReturn(new Music("a.mp3", new Music.Metadata("Titulo", "Artista", "Album", "2020", "Rock", "3", 180000L)));
+                .thenReturn(new MusicFile("a.mp3", new MusicFile.Metadata("Titulo", "Artista", "Album", "2020", "Rock", "3", 180000L)));
 
         Map<String, String> tags = service.getForFile("a.mp3");
         assertEquals("Titulo", tags.get("title"));
@@ -52,8 +52,8 @@ class Id3ServiceTest {
     void bulkReturnsEntryPerPath() {
         when(cache.get("a.mp3")).thenReturn(null);
         when(cache.get("b.mp3")).thenReturn(null);
-        when(id3Codec.read("a.mp3")).thenReturn(new Music("a.mp3", new Music.Metadata("A", null, null, null, null, null, null)));
-        when(id3Codec.read("b.mp3")).thenReturn(new Music("b.mp3", new Music.Metadata("B", null, null, null, null, null, null)));
+        when(id3Codec.read("a.mp3")).thenReturn(new MusicFile("a.mp3", new MusicFile.Metadata("A", null, null, null, null, null, null)));
+        when(id3Codec.read("b.mp3")).thenReturn(new MusicFile("b.mp3", new MusicFile.Metadata("B", null, null, null, null, null, null)));
 
         Map<String, Map<String, String>> bulk = service.getBulk(List.of("a.mp3", "b.mp3"), false);
         assertEquals(2, bulk.size());
@@ -65,7 +65,7 @@ class Id3ServiceTest {
     void bulkServesCachedPathsWithoutReading() {
         when(cache.get("a.mp3")).thenReturn(Map.of("title", "Cached"));
         when(cache.get("b.mp3")).thenReturn(null);
-        when(id3Codec.read("b.mp3")).thenReturn(new Music("b.mp3", new Music.Metadata("B", null, null, null, null, null, null)));
+        when(id3Codec.read("b.mp3")).thenReturn(new MusicFile("b.mp3", new MusicFile.Metadata("B", null, null, null, null, null, null)));
 
         Map<String, Map<String, String>> bulk = service.getBulk(List.of("a.mp3", "b.mp3"), false);
         assertEquals("Cached", bulk.get("a.mp3").get("title"));
@@ -75,8 +75,8 @@ class Id3ServiceTest {
 
     @Test
     void bulkRefreshesAllWhenRequested() {
-        when(id3Codec.read("a.mp3")).thenReturn(new Music("a.mp3", new Music.Metadata("Fresh", null, null, null, null, null, null)));
-        when(id3Codec.read("b.mp3")).thenReturn(new Music("b.mp3", new Music.Metadata("B", null, null, null, null, null, null)));
+        when(id3Codec.read("a.mp3")).thenReturn(new MusicFile("a.mp3", new MusicFile.Metadata("Fresh", null, null, null, null, null, null)));
+        when(id3Codec.read("b.mp3")).thenReturn(new MusicFile("b.mp3", new MusicFile.Metadata("B", null, null, null, null, null, null)));
 
         Map<String, Map<String, String>> bulk = service.getBulk(List.of("a.mp3", "b.mp3"), true);
         assertEquals("Fresh", bulk.get("a.mp3").get("title"));
@@ -87,7 +87,7 @@ class Id3ServiceTest {
 
     @Test
     void updateReturnsUpdatedTags() {
-        Music updated = new Music("a.mp3", new Music.Metadata("Novo", "Artista", null, null, null, null, 180000L));
+        MusicFile updated = new MusicFile("a.mp3", new MusicFile.Metadata("Novo", "Artista", null, null, null, null, 180000L));
         when(id3Codec.update("a.mp3", Map.of("title", "Novo"))).thenReturn(updated);
 
         Map<String, String> tags = service.update("a.mp3", Map.of("title", "Novo"));
@@ -112,7 +112,7 @@ class Id3ServiceTest {
     @Test
     void getForFileWithNullFieldsReturnsTagMap() {
         when(id3Codec.read("nulls.mp3"))
-                .thenReturn(new Music("nulls.mp3", new Music.Metadata(null, null, null, null, null, null, null)));
+                .thenReturn(new MusicFile("nulls.mp3", new MusicFile.Metadata(null, null, null, null, null, null, null)));
 
         Map<String, String> tags = service.getForFile("nulls.mp3");
 
@@ -129,8 +129,8 @@ class Id3ServiceTest {
 
     @Test
     void bulkWithRefreshTrueReadsAllFiles() {
-        when(id3Codec.read("a.mp3")).thenReturn(new Music("a.mp3", new Music.Metadata("A", null, null, null, null, null, null)));
-        when(id3Codec.read("b.mp3")).thenReturn(new Music("b.mp3", new Music.Metadata("B", null, null, null, null, null, null)));
+        when(id3Codec.read("a.mp3")).thenReturn(new MusicFile("a.mp3", new MusicFile.Metadata("A", null, null, null, null, null, null)));
+        when(id3Codec.read("b.mp3")).thenReturn(new MusicFile("b.mp3", new MusicFile.Metadata("B", null, null, null, null, null, null)));
 
         Map<String, Map<String, String>> bulk = service.getBulk(List.of("a.mp3", "b.mp3"), true);
 
@@ -141,7 +141,7 @@ class Id3ServiceTest {
 
     @Test
     void updateWithEmptyTagMapReturnsUpdatedTags() {
-        Music updated = new Music("a.mp3", new Music.Metadata("Title", "Artist", null, null, null, null, null));
+        MusicFile updated = new MusicFile("a.mp3", new MusicFile.Metadata("Title", "Artist", null, null, null, null, null));
         when(id3Codec.update("a.mp3", Map.of())).thenReturn(updated);
 
         Map<String, String> tags = service.update("a.mp3", Map.of());

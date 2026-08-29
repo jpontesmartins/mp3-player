@@ -1,7 +1,7 @@
 package com.mp3player.lyrics.domain.repository;
 
 import com.mp3player.lyrics.domain.model.Lyric;
-import com.mp3player.player.domain.model.Music;
+import com.mp3player.player.domain.model.MusicFile;
 
 import java.util.Optional;
 
@@ -25,9 +25,9 @@ public interface LyricRepository {
      * escolher a localização e o nome do arquivo de armazenamento.
      *
      * @param lyric letra a ser persistida
-     * @param music música com metadados para determinar o caminho de armazenamento
+     * @param musicFile música com metadados para determinar o caminho de armazenamento
      */
-    void save(Lyric lyric, Music music);
+    void save(Lyric lyric, MusicFile musicFile);
 
     /**
      * Indica se já existe uma letra em cache para a música.

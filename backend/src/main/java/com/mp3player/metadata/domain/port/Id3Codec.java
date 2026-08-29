@@ -1,6 +1,6 @@
 package com.mp3player.metadata.domain.port;
 
-import com.mp3player.player.domain.model.Music;
+import com.mp3player.player.domain.model.MusicFile;
 
 import java.util.Map;
 
@@ -11,19 +11,19 @@ import java.util.Map;
 public interface Id3Codec {
 
     /**
-     * Lê os metadados do arquivo no caminho informado e retorna um agregado {@link Music}.
+     * Lê os metadados do arquivo no caminho informado e retorna um agregado {@link MusicFile}.
      *
      * @param filePath caminho absoluto do arquivo MP3
      * @return agregado de música com os metadados lidos
      */
-    Music read(String filePath);
+    MusicFile read(String filePath);
 
     /**
-     * Atualiza os campos editáveis do arquivo e retorna o {@link Music} atualizado.
+     * Atualiza os campos editáveis do arquivo e retorna o {@link MusicFile} atualizado.
      *
      * @param filePath caminho absoluto do arquivo MP3
      * @param tags mapa de tags a serem atualizadas (chave → valor)
      * @return agregado de música com os metadados atualizados
      */
-    Music update(String filePath, Map<String, String> tags);
+    MusicFile update(String filePath, Map<String, String> tags);
 }
