@@ -1,7 +1,7 @@
 package com.mp3player.player.infrastructure;
 
 import com.mp3player.player.domain.model.MusicFile;
-import com.mp3player.metadata.domain.port.Id3Codec;
+import com.mp3player.music.domain.port.Id3Codec;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;

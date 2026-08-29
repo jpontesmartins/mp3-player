@@ -2,7 +2,7 @@ package com.mp3player.lyrics.application;
 
 import com.mp3player.lyrics.domain.model.Lyric;
 import com.mp3player.player.domain.model.MusicFile;
-import com.mp3player.metadata.domain.port.Id3Codec;
+import com.mp3player.music.domain.port.Id3Codec;
 import com.mp3player.lyrics.domain.port.LyricsScraper;
 import com.mp3player.lyrics.domain.repository.LyricRepository;
 import com.mp3player.shared.domain.util.MusicFileNaming;

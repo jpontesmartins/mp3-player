@@ -2,7 +2,7 @@ package com.mp3player.lyrics.infrastructure;
 
 import com.mp3player.lyrics.domain.model.Lyric;
 import com.mp3player.player.domain.model.MusicFile;
-import com.mp3player.metadata.domain.port.Id3Codec;
+import com.mp3player.music.domain.port.Id3Codec;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
