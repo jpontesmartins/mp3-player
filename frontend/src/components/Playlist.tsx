@@ -2,6 +2,9 @@ import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 import SearchIcon from '@mui/icons-material/Search';
 import SaveIcon from '@mui/icons-material/Save';
+import FolderOpenIcon from '@mui/icons-material/FolderOpen';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { revealItemInDir } from '@tauri-apps/plugin-opener';
 import type { Id3Tags } from '../App';
 import { filterPlaylist } from '../searchParser';
 
@@ -27,6 +30,16 @@ interface Props {
 
 function fileName(path: string): string {
   return path.split('\\').pop()!.split('/').pop()!;
+}
+
+function CtxMenuItem({ icon, label, shortcut, onClick }: { icon: React.ReactNode; label: string; shortcut?: string; onClick: () => void }) {
+  return (
+    <button type="button" className="ctx-menu-item" onClick={onClick}>
+      <span className="ctx-menu-icon">{icon}</span>
+      <span className="ctx-menu-label">{label}</span>
+      {shortcut && <span className="ctx-menu-shortcut">{shortcut}</span>}
+    </button>
+  );
 }
 
 function displayName(tags: Id3Tags | undefined, file: string): string {
@@ -81,6 +94,8 @@ export default function Playlist({ files, currentFile, id3Cache, loading = false
   const textareaRef = useRef<HTMLInputElement>(null);
   const saveInputRef = useRef<HTMLInputElement>(null);
   const saveMsgTimer = useRef<number | null>(null);
+  const [songCtxMenu, setSongCtxMenu] = useState<{ x: number; y: number; file: string } | null>(null);
+  const songCtxMenuRef = useRef<HTMLDivElement>(null);
 
   const filteredFiles = useMemo(
     () => filterPlaylist(files, query, id3Cache),
@@ -173,6 +188,19 @@ export default function Playlist({ files, currentFile, id3Cache, loading = false
     };
   }, []);
 
+  useEffect(() => {
+    if (!songCtxMenu) return undefined;
+    const close = () => setSongCtxMenu(null);
+    window.addEventListener('mousedown', close);
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+    return () => {
+      window.removeEventListener('mousedown', close);
+      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('resize', close);
+    };
+  }, [songCtxMenu]);
+
   const handleSaveConfirm = useCallback(async () => {
     const name = saveName.trim();
     if (!name || !onSaveFiltered || filteredFiles.length === 0) return;
@@ -194,6 +222,30 @@ export default function Playlist({ files, currentFile, id3Cache, loading = false
       saveMsgTimer.current = window.setTimeout(() => setSaveMsg(''), 4000);
     }
   }, [saveName, onSaveFiltered, filteredFiles]);
+
+  const handleSongContextMenu = useCallback((e: React.MouseEvent<HTMLLIElement>, file: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    let x = e.clientX + 4;
+    let y = e.clientY + 4;
+    const menu = songCtxMenuRef.current;
+    if (menu) {
+      const r = menu.getBoundingClientRect();
+      if (x + r.width > window.innerWidth) x = e.clientX - r.width - 4;
+      if (y + r.height > window.innerHeight) y = e.clientY - r.height - 4;
+    }
+    setSongCtxMenu({ x: Math.max(4, x), y: Math.max(4, y), file });
+  }, []);
+
+  const openFolderForSong = useCallback(async (file: string) => {
+    setSongCtxMenu(null);
+    try { await revealItemInDir(file); } catch { /* noop */ }
+  }, []);
+
+  const copySongPath = useCallback((file: string) => {
+    setSongCtxMenu(null);
+    navigator.clipboard.writeText(file).catch(() => {});
+  }, []);
 
   const searchExpanded = searchFocused || query.trim().length > 0;
 
@@ -291,6 +343,7 @@ export default function Playlist({ files, currentFile, id3Cache, loading = false
                 className={active ? 'active' : ''}
                 style={gridStyle}
                 onClick={() => onSelect(file)}
+                onContextMenu={e => handleSongContextMenu(e, file)}
                 onMouseEnter={handleEnter(file)}
                 onMouseLeave={handleLeave}
               >
@@ -391,6 +444,25 @@ export default function Playlist({ files, currentFile, id3Cache, loading = false
 
       {saveMsg && <div className="playlist-save-msg">{saveMsg}</div>}
 
+      {songCtxMenu && (
+        <div
+          ref={songCtxMenuRef}
+          id="song-context-menu"
+          style={{ left: songCtxMenu.x, top: songCtxMenu.y }}
+          onMouseDown={e => e.stopPropagation()}
+        >
+          <CtxMenuItem
+            icon={<FolderOpenIcon />}
+            label="Abrir pasta no explorer"
+            onClick={() => openFolderForSong(songCtxMenu.file)}
+          />
+          <CtxMenuItem
+            icon={<ContentCopyIcon />}
+            label="Copiar caminho"
+            onClick={() => copySongPath(songCtxMenu.file)}
+          />
+        </div>
+      )}
     </>
   );
 }
