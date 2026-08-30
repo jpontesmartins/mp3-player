@@ -1452,6 +1452,99 @@ table.collection-grid td.col-disc {
   font-size: 0.85rem;
 }
 
+body.is-dragging,
+body.is-dragging * {
+  user-select: none !important;
+  cursor: grabbing !important;
+}
+
+.pmanager-song.draggable {
+  cursor: grab;
+}
+
+.pmanager-song.draggable:active {
+  cursor: grabbing;
+}
+
+.pmanager-songs::-webkit-scrollbar {
+  width: 6px;
+}
+
+.pmanager-songs::-webkit-scrollbar-track {
+  background: var(--c-13);
+}
+
+.pmanager-songs::-webkit-scrollbar-thumb {
+  background: var(--c-51);
+  border-radius: 3px;
+}
+
+.pmanager-pane-drop {
+  border-color: var(--c-85);
+  background: var(--c-20);
+}
+
+.pmanager-drag-ghost {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  background: var(--c-22);
+  border: 1px solid var(--c-85);
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  color: var(--c-238);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pmanager-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 4px 8px;
+  background: var(--c-10);
+  border: 1px solid var(--c-34);
+  border-radius: 6px;
+  flex-shrink: 0;
+  transition: border-color 0.2s;
+}
+
+.pmanager-search-bar:focus-within {
+  border-color: var(--c-85);
+}
+
+.pmanager-search-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  color: var(--c-238);
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 0.82rem;
+  outline: none;
+  padding: 2px 0;
+  height: 22px;
+}
+
+.pmanager-search-input::placeholder {
+  color: var(--c-85);
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 0.78rem;
+}
+
+.pmanager-search-count {
+  flex-shrink: 0;
+  color: var(--c-102);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 /* -------- Edição de ID3 em massa -------- */
 .collection-actions-row {
   display: flex;
@@ -1797,4 +1890,41 @@ table.bulk-table td {
 .dict-loading-text {
   font-size: 0.85rem;
   color: var(--c-153);
+}
+
+/* ── Confirm modal ── */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.confirm-dialog {
+  background: var(--c-17);
+  border: 1px solid var(--c-51);
+  border-radius: 10px;
+  padding: 20px 24px;
+  min-width: 280px;
+  max-width: 360px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.confirm-text {
+  font-size: 0.9rem;
+  color: var(--c-221);
+  margin-bottom: 16px;
+}
+
+.confirm-text strong {
+  color: var(--c-255);
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }

@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import SearchIcon from '@mui/icons-material/Search';
 import type { Id3Tags } from '../App';
+import { filterPlaylist } from '../searchParser';
 
 import { API } from '../config';
 
@@ -40,14 +42,59 @@ export default function PlaylistManager({
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [listMsg, setListMsg] = useState('');
+  const [query, setQuery] = useState('');
+  const [dragFile, setDragFile] = useState<string | null>(null);
+  const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const dragOffset = useRef({ x: 0, y: 0 });
+  const rightPaneRef = useRef<HTMLDivElement>(null);
+  const dragFileRef = useRef<string | null>(null);
 
   const left = collectionFiles;
+
+  const filteredLeft = useMemo(
+    () => filterPlaylist(left, query, id3Cache),
+    [left, query, id3Cache],
+  );
+
+  const rightSet = useMemo(() => new Set(right), [right]);
+
+  useEffect(() => {
+    if (!dragFile) return undefined;
+    document.body.classList.add('is-dragging');
+    dragFileRef.current = dragFile;
+    const onMove = (e: MouseEvent) => {
+      setDragPos({ x: e.clientX - dragOffset.current.x, y: e.clientY - dragOffset.current.y });
+    };
+    const onUp = (e: MouseEvent) => {
+      setDragFile(null);
+      setDragPos(null);
+      document.body.classList.remove('is-dragging');
+      const pane = rightPaneRef.current;
+      if (pane) {
+        const r = pane.getBoundingClientRect();
+        if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) {
+          const file = dragFileRef.current;
+          if (file) addToRight(file);
+        }
+      }
+      dragFileRef.current = null;
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      document.body.classList.remove('is-dragging');
+    };
+  }, [dragFile]);
 
   const startNew = () => {
     setName(newName.trim());
     setRight([]);
     setError('');
     setMessage('');
+    setQuery('');
     setEditing(true);
   };
 
@@ -77,13 +124,22 @@ export default function PlaylistManager({
     setMessage('');
   };
 
-  const addToRight = (file: string) => {
+  const addToRight = useCallback((file: string) => {
     setRight(prev => (prev.includes(file) ? prev : [...prev, file]));
-  };
+  }, []);
 
   const removeFromRight = (file: string) => {
     setRight(prev => prev.filter(f => f !== file));
   };
+
+  const handleSongMouseDown = useCallback((e: React.MouseEvent, file: string) => {
+    if (e.button !== 0) return;
+    const target = e.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    dragOffset.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    setDragFile(file);
+    setDragPos({ x: e.clientX - dragOffset.current.x, y: e.clientY - dragOffset.current.y });
+  }, []);
 
   const removePlaylist = async (playlist: string) => {
     try {
@@ -161,7 +217,7 @@ export default function PlaylistManager({
                     <div className="pmanager-item-actions">
                       <button className="pmanager-btn" onClick={() => onLoadPlaylist(playlist)}>Carregar</button>
                       <button className="pmanager-btn" onClick={() => openPlaylist(playlist)}>Editar</button>
-                      <button className="pmanager-btn danger" onClick={() => removePlaylist(playlist)}>Excluir</button>
+                      <button className="pmanager-btn danger" onClick={() => setConfirmDelete(playlist)}>Excluir</button>
                     </div>
                   </li>
                 ))}
@@ -197,12 +253,30 @@ export default function PlaylistManager({
 
           <div className="pmanager-panes">
             <div className="pmanager-pane">
-              <h4 className="pmanager-pane-title">Todas as músicas ({left.length})</h4>
+              <h4 className="pmanager-pane-title">Todas as músicas ({filteredLeft.length})</h4>
+              <div className="pmanager-search-bar">
+                <span className="search-icon"><SearchIcon /></span>
+                <input
+                  className="pmanager-search-input"
+                  placeholder='<genre> == rock && <year> > 2000'
+                  type="text"
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Escape') setQuery(''); }}
+                />
+                {query.trim() && (
+                  <span className="pmanager-search-count">{filteredLeft.length} / {left.length}</span>
+                )}
+              </div>
               <ul className="pmanager-songs">
-                {left.map(file => {
-                  const inRight = right.includes(file);
+                {filteredLeft.map(file => {
+                  const inRight = rightSet.has(file);
                   return (
-                    <li key={file} className="pmanager-song">
+                    <li
+                      key={file}
+                      className={`pmanager-song${!inRight ? ' draggable' : ''}`}
+                      onMouseDown={!inRight ? e => handleSongMouseDown(e, file) : undefined}
+                    >
                       <span className="collection-item-name">{displayName(id3Cache.get(file), file)}</span>
                       <button
                         className="pmanager-btn"
@@ -215,10 +289,16 @@ export default function PlaylistManager({
                     </li>
                   );
                 })}
+                {filteredLeft.length === 0 && query.trim() && (
+                  <li className="collection-empty">Nenhum resultado</li>
+                )}
               </ul>
             </div>
 
-            <div className="pmanager-pane">
+            <div
+              ref={rightPaneRef}
+              className={`pmanager-pane${dragFile ? ' pmanager-pane-drop' : ''}`}
+            >
               <h4 className="pmanager-pane-title">Na playlist ({right.length})</h4>
               <ul className="pmanager-songs">
                 {right.map(file => (
@@ -227,8 +307,29 @@ export default function PlaylistManager({
                     <button className="pmanager-btn danger" onClick={() => removeFromRight(file)}>Remover</button>
                   </li>
                 ))}
-                {right.length === 0 && <li className="collection-empty">Nenhuma música adicionada</li>}
+                {right.length === 0 && <li className="collection-empty">{dragFile ? 'Solte aqui para adicionar' : 'Arraste músicas ou clique em "Adicionar"'}</li>}
               </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {dragFile && dragPos && (
+        <div
+          className="pmanager-drag-ghost"
+          style={{ left: dragPos.x + 12, top: dragPos.y + 8 }}
+        >
+          {displayName(id3Cache.get(dragFile), dragFile)}
+        </div>
+      )}
+
+      {confirmDelete && (
+        <div className="confirm-overlay" onClick={() => setConfirmDelete(null)}>
+          <div className="confirm-dialog" onMouseDown={e => e.stopPropagation()}>
+            <p className="confirm-text">Excluir playlist <strong>{confirmDelete}</strong>?</p>
+            <div className="confirm-actions">
+              <button className="pmanager-btn" onClick={() => setConfirmDelete(null)}>Cancelar</button>
+              <button className="pmanager-btn danger" onClick={() => { removePlaylist(confirmDelete); setConfirmDelete(null); }}>Excluir</button>
             </div>
           </div>
         </div>
