@@ -60,13 +60,15 @@ mp3-player/
 │       ├── main/java/com/mp3player/
 │       │   ├── Mp3PlayerApplication.java
 │       │   ├── config/                 # Wiring de beans (CoverSearcherConfig, Id3CodecConfig)
-│       │   ├── shared/                 # Compartilhado (CorsConfig, Settings, MusicFileNaming)
+│       │   ├── shared/                 # Compartilhado
+│       │   │   ├── config/             #   CorsConfig
+│       │   │   └── domain/             #   Settings (model), MusicFileNaming (util)
 │       │   ├── player/                 # Bounded Context: Reprodução
-│       │   │   ├── domain/             #   model (Music), port (PlayerEngine)
+│       │   │   ├── domain/             #   model (MusicFile), port (PlayerEngine)
 │       │   │   ├── application/        #   PlayerService
 │       │   │   ├── infrastructure/     #   JLayerPlayerEngine
 │       │   │   └── web/                #   PlayerController
-│       │   ├── metadata/               # Bounded Context: Tags ID3 + Capas
+│       │   ├── music/                  # Bounded Context: Tags ID3 + Capas
 │       │   │   ├── domain/             #   model (Album, Artist, CoverImage), ports, repository
 │       │   │   ├── application/        #   Id3Service, CoverService
 │       │   │   ├── infrastructure/     #   Id3MagicCodec, CachedId3Codec, cover searchers
@@ -79,7 +81,7 @@ mp3-player/
 │       │   ├── lyrics/                 # Bounded Context: Letras
 │       │   │   ├── domain/             #   model (Lyric), ports, repository
 │       │   │   ├── application/        #   LyricsService
-│       │   │   ├── infrastructure/     #   CompositeLyricsScraper, FileLyricRepository
+│       │   │   ├── infrastructure/     #   CompositeLyricsScraper, LetrasMusBrSource, FileLyricRepository
 │       │   │   └── web/                #   LyricsController
 │       │   └── dictionary/             # Bounded Context: Dicionário
 │       │       ├── domain/             #   model (DictionaryLookupResult), port
@@ -92,25 +94,35 @@ mp3-player/
 ├── frontend/                           # App desktop com Tauri v2 + React 18
 │   ├── package.json
 │   ├── README.md
+│   ├── index.html
+│   ├── vite.config.js
+│   ├── tsconfig.json
 │   ├── src/
 │   │   ├── main.tsx
 │   │   ├── App.tsx                     # Componente raiz (estado global, polling, auto-play)
 │   │   ├── App.css                     # Estilos globais + CSS custom properties (temas)
-│   │   ├── config.ts
-│   │   ├── searchParser.ts
+│   │   ├── config.ts                   # URL base da API
+│   │   ├── searchParser.ts             # Parser de busca avançada
+│   │   ├── vite-env.d.ts
 │   │   └── components/
 │   │       ├── Player.tsx              # Capa, controles de mídia, barra de progresso
-│   │       ├── Playlist.tsx            # Lista de músicas com tooltip ID3
+│   │       ├── Playlist.tsx            # Lista de músicas com busca avançada e tooltip ID3
 │   │       ├── FolderSelector.tsx      # Input de caminho de pasta
 │   │       ├── LyricsPanel.tsx         # Exibição/edição de letras
 │   │       ├── CollectionManager.tsx   # Lista de álbuns/artistas com edição em grade
 │   │       ├── BulkId3Editor.tsx       # Edição em lote de tags
 │   │       ├── InfoModal.tsx           # Dialog "Sobre"
 │   │       ├── SettingsPanel.tsx       # Modo de reprodução, tema, capa
-│   │       ├── PlaylistManager.tsx     # CRUD de playlists virtuais
+│   │       ├── PlaylistManager.tsx     # CRUD de playlists virtuais (drag and drop)
 │   │       ├── Toolbar.tsx             # Navegação
 │   │       └── DictionaryModal.tsx     # Consulta ao dicionário
 │   └── src-tauri/                      # Shell Tauri (Rust)
+│       ├── Cargo.toml
+│       ├── tauri.conf.json
+│       ├── capabilities/               # Permissões (opener plugin)
+│       ├── src/
+│       │   └── lib.rs                  # Entry point + gerenciamento do backend Java
+│       └── resources/                  # JRE mínimo + backend.jar (build)
 ├── scripts/
 │   └── build-release.ps1              # Script automatizado de release
 ├── docs/
