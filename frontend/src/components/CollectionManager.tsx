@@ -2,6 +2,10 @@ import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import type { Id3Tags } from '../App';
 import PlaylistManager from './PlaylistManager';
 import BulkId3Editor from './BulkId3Editor';
+import { revealItemInDir } from '@tauri-apps/plugin-opener';
+import FolderOpenIcon from '@mui/icons-material/FolderOpen';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
 
 import { API } from '../config';
 
@@ -79,6 +83,16 @@ function fromTags(tags: Id3Tags | undefined): Record<EditableField, string> {
 
 function isDirty(row: Record<EditableField, string>, tags: Id3Tags | undefined): boolean {
   return EDITABLE_FIELDS.some(k => row[k] !== (tags?.[k] ?? ''));
+}
+
+function CtxMenuItem({ icon, label, shortcut, onClick }: { icon: React.ReactNode; label: string; shortcut?: string; onClick: () => void }) {
+  return (
+    <button type="button" className="ctx-menu-item" onClick={onClick}>
+      <span className="ctx-menu-icon">{icon}</span>
+      <span className="ctx-menu-label">{label}</span>
+      {shortcut && <span className="ctx-menu-shortcut">{shortcut}</span>}
+    </button>
+  );
 }
 
 export default function CollectionManager({ libraryFiles, id3Cache, onTagsUpdated, playlists, onRefreshPlaylists, onLoadPlaylist, onLoadAll }: Props) {
@@ -179,6 +193,16 @@ export default function CollectionManager({ libraryFiles, id3Cache, onTagsUpdate
     setAlbumCtxMenu(null);
     setBulkInitialPath(folder);
     setBulkView(true);
+  }, []);
+
+  const openFolderInExplorer = useCallback(async (path: string) => {
+    setAlbumCtxMenu(null);
+    try { await revealItemInDir(path); } catch { /* noop */ }
+  }, []);
+
+  const copyPath = useCallback((path: string) => {
+    setAlbumCtxMenu(null);
+    navigator.clipboard.writeText(path).catch(() => {});
   }, []);
 
   const handleFieldChange = useCallback((file: string, field: EditableField, value: string) => {
@@ -381,13 +405,22 @@ export default function CollectionManager({ libraryFiles, id3Cache, onTagsUpdate
           style={{ left: albumCtxMenu.x, top: albumCtxMenu.y }}
           onMouseDown={e => e.stopPropagation()}
         >
-          <button
-            type="button"
-            className="cover-menu-item"
+          <CtxMenuItem
+            icon={<FolderOpenIcon />}
+            label="Abrir pasta no explorer"
+            onClick={() => openFolderInExplorer(albumCtxMenu.album.folder)}
+          />
+          <CtxMenuItem
+            icon={<ContentCopyIcon />}
+            label="Copiar caminho"
+            onClick={() => copyPath(albumCtxMenu.album.folder)}
+          />
+          <div className="ctx-menu-separator" />
+          <CtxMenuItem
+            icon={<DriveFileRenameOutlineIcon />}
+            label="Editar ID3 em massa"
             onClick={() => openBulkForAlbum(albumCtxMenu.album.folder)}
-          >
-            Editar ID3 em massa
-          </button>
+          />
         </div>
       )}
     </section>

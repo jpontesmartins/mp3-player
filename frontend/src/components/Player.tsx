@@ -4,9 +4,19 @@ import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
 import PauseIcon from '@mui/icons-material/Pause';
 import StopIcon from '@mui/icons-material/Stop';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import type { Id3Tags } from '../App';
 
 import { API } from '../config';
+
+function CtxMenuItem({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
+  return (
+    <button type="button" className="ctx-menu-item" onClick={onClick}>
+      <span className="ctx-menu-icon">{icon}</span>
+      <span className="ctx-menu-label">{label}</span>
+    </button>
+  );
+}
 
 function formatTime(ms: number): string {
   if (!ms || ms <= 0) return '00:00:00';
@@ -150,13 +160,11 @@ export default function Player({ status, position, duration, currentFile, curren
           style={{ left: menuPos.x, top: menuPos.y }}
           onMouseDown={e => e.stopPropagation()}
         >
-          <button
-            type="button"
-            className="cover-menu-item"
+          <CtxMenuItem
+            icon={<CloudDownloadIcon />}
+            label="Baixar capa do álbum"
             onClick={() => { setMenuPos(null); downloadCover(); }}
-          >
-            Baixar capa do álbum
-          </button>
+          />
         </div>
       )}
 
