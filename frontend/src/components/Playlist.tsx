@@ -268,7 +268,7 @@ export default function Playlist({ files, currentFile, id3Cache, loading = false
           <input
             ref={textareaRef}
             className="playlist-search-input"
-            placeholder='Buscar: Nirvana || Pearl Jam | <genre> == grunge | <year> == 1991'
+            placeholder=""
             type="text"
             value={query}
             onChange={e => setQuery(e.target.value)}
@@ -298,7 +298,7 @@ export default function Playlist({ files, currentFile, id3Cache, loading = false
           <span className="search-icon"><SearchIcon /></span>
           <input
             className="playlist-search-input"
-            placeholder='Buscar: Nirvana || Pearl Jam | <genre> == grunge | <year> == 1991'
+            placeholder=""
             type="text"
             disabled
           />
@@ -388,7 +388,7 @@ export default function Playlist({ files, currentFile, id3Cache, loading = false
           <input
             ref={textareaRef}
             className="playlist-search-input"
-            placeholder='Buscar: Nirvana || Pearl Jam | <genre> == grunge | <year> == 1991'
+            placeholder=""
             type="text"
             value={query}
             onChange={e => setQuery(e.target.value)}
