@@ -57,27 +57,27 @@ mp3-player/
 │   ├── pom.xml
 │   ├── README.md
 │   └── src/
-│       ├── main/java/com/mp3player/
+│       ├── main/java/com/ovelha/fy/
 │       │   ├── Mp3PlayerApplication.java
-│       │   ├── config/                 # Wiring de beans (CoverSearcherConfig, Id3CodecConfig)
-│       │   ├── shared/                 # Compartilhado
-│       │   │   ├── config/             #   CorsConfig
+│       │   ├── shared/                 # Compartilhado entre todos os módulos
+│       │   │   ├── config/             #   CorsConfig, Id3CodecConfig, CoverSearcherConfig
 │       │   │   └── domain/             #   Settings (model), MusicFileNaming (util)
-│       │   ├── player/                 # Bounded Context: Reprodução
-│       │   │   ├── domain/             #   model (MusicFile), port (PlayerEngine)
-│       │   │   ├── application/        #   PlayerService
-│       │   │   ├── infrastructure/     #   JLayerPlayerEngine
-│       │   │   └── web/                #   PlayerController
-│       │   ├── music/                  # Bounded Context: Tags ID3 + Capas
-│       │   │   ├── domain/             #   model (Album, Artist, CoverImage), ports, repository
-│       │   │   ├── application/        #   Id3Service, CoverService
-│       │   │   ├── infrastructure/     #   Id3MagicCodec, CachedId3Codec, cover searchers
-│       │   │   └── web/                #   MetadataController, InfoController
-│       │   ├── playlist/               # Bounded Context: Playlists
-│       │   │   ├── domain/             #   model (Playlist), port (MusicScanner), repository
-│       │   │   ├── application/        #   PlaylistService
-│       │   │   ├── infrastructure/     #   FilePlaylistRepository, FileMusicScanner
-│       │   │   └── web/                #   PlaylistController
+│       │   ├── player/                 # Core: lógica de músicas
+│       │   │   ├── domain/             #   model (MusicFile, Metadata), port (PlayerEngine)
+│       │   │   ├── controls/           #   Subdomínio: Reprodução de áudio
+│       │   │   │   ├── application/    #     PlayerService
+│       │   │   │   ├── infrastructure/ #     JLayerPlayerEngine
+│       │   │   │   └── web/            #     PlayerController
+│       │   │   ├── music/              #   Subdomínio: Tags ID3 + Capas
+│       │   │   │   ├── domain/         #     model (Album, Artist, CoverImage), ports, repository
+│       │   │   │   ├── application/    #     Id3Service, CoverService
+│       │   │   │   ├── infrastructure/ #     Id3MagicCodec, CachedId3Codec, cover searchers
+│       │   │   │   └── web/            #     MetadataController, InfoController
+│       │   │   └── playlist/           #   Subdomínio: Playlists
+│       │   │       ├── domain/         #     model (Playlist), port (MusicScanner), repository
+│       │   │       ├── application/    #     PlaylistService
+│       │   │       ├── infrastructure/ #     FilePlaylistRepository, FileMusicScanner
+│       │   │       └── web/            #     PlaylistController
 │       │   ├── lyrics/                 # Bounded Context: Letras
 │       │   │   ├── domain/             #   model (Lyric), ports, repository
 │       │   │   ├── application/        #   LyricsService
@@ -90,7 +90,7 @@ mp3-player/
 │       │       └── web/                #   DictionaryController
 │       ├── main/resources/
 │       │   └── application.properties
-│       └── test/java/com/mp3player/   # Testes unitários
+│       └── test/java/com/ovelha/fy/   # Testes unitários
 ├── frontend/                           # App desktop com Tauri v2 + React 18
 │   ├── package.json
 │   ├── README.md
