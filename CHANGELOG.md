@@ -9,6 +9,29 @@ versões seguem [Semântic Versioning](https://semver.org/lang/pt-BR/).
 
 
 
+
+## [1.4.0] — 2026-08-30
+
+### Adicionado
+- Merge pull request #9 from jpontesmartins/feature/omp-02
+- Merge pull request #8 from jpontesmartins/feature/omp-01
+
+### Alterado
+- readme atualizado
+- adição de menu de contexto em 'Playlist' e 'Coleção > Albums' com icone
+- Merge pull request #7 from jpontesmartins/refactor/music-file
+- de metadata para music o modulo
+- mudei de Music para MusicFile, para explicitar que se remete ao arquivo físico
+- architecture.md
+- atualização javadocs, readmes, architecture.md
+- adicionada a funcionalidade de ao clciar no album na coleção ter a opção de edição de id3 em massa
+- adicionada funcionalidade de busca em dicionário
+
+### Corrigido
+- adicionado drag n drop na criação de playlist; ajuste nos scrolls; adição campo busca avançada
+- ajustes comentarios
+- bugfix download capa de album deezer
+
 ## [1.3.1] — 2026-08-23
 
 ### Alterado

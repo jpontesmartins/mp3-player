@@ -481,7 +481,7 @@ export default function App() {
           />
         </div>
       </div>
-      <footer id="statusbar">v1.3.1</footer>
+      <footer id="statusbar">v1.4.0</footer>
       {showInfo && <InfoModal onClose={handleCloseInfo} />}
     </div>
   );
