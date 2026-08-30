@@ -1,11 +1,11 @@
 package com.mp3player;
 
 import com.mp3player.lyrics.application.LyricsService;
-import com.mp3player.metadata.application.Id3Service;
+import com.mp3player.music.application.Id3Service;
 import com.mp3player.playlist.application.PlaylistService;
 import com.mp3player.player.application.PlayerService;
 import com.mp3player.lyrics.web.LyricsController;
-import com.mp3player.metadata.web.MetadataController;
+import com.mp3player.music.web.MetadataController;
 import com.mp3player.player.web.PlayerController;
 import com.mp3player.playlist.web.PlaylistController;
 import org.junit.jupiter.api.Test;

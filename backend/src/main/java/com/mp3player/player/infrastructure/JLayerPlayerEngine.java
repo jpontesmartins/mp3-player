@@ -1,6 +1,6 @@
 package com.mp3player.player.infrastructure;
 
-import com.mp3player.metadata.domain.port.Id3Codec;
+import com.mp3player.music.domain.port.Id3Codec;
 import com.mp3player.player.domain.port.PlayerEngine;
 import javazoom.jl.decoder.Bitstream;
 import javazoom.jl.decoder.Header;
@@ -10,13 +10,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Map;
 
 /**
- * Implementação do port {@link PlayerEngine} baseada em JLayer. Responsável pela
- * decodificação e reprodução de MP3, executada em uma virtual thread.
+ * Implementação do port/contrato/interface {@link PlayerEngine} baseada em JLayer.
+ * Responsável pela decodificação e reprodução de MP3, executada em uma virtual thread.
  */
 @Component
 public class JLayerPlayerEngine implements PlayerEngine {

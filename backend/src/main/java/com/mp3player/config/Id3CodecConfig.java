@@ -1,9 +1,9 @@
 package com.mp3player.config;
 
-import com.mp3player.metadata.domain.port.Id3Codec;
-import com.mp3player.metadata.domain.repository.MetadataCacheRepository;
-import com.mp3player.metadata.infrastructure.CachedId3Codec;
-import com.mp3player.metadata.infrastructure.Id3MagicCodec;
+import com.mp3player.music.domain.port.Id3Codec;
+import com.mp3player.music.domain.repository.MetadataCacheRepository;
+import com.mp3player.music.infrastructure.CachedId3Codec;
+import com.mp3player.music.infrastructure.Id3MagicCodec;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

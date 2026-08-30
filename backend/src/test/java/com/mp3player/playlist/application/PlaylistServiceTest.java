@@ -1,6 +1,6 @@
 package com.mp3player.playlist.application;
 
-import com.mp3player.player.domain.model.Music;
+import com.mp3player.player.domain.model.MusicFile;
 import com.mp3player.playlist.domain.port.MusicScanner;
 import com.mp3player.playlist.domain.repository.PlaylistRepository;
 import org.junit.jupiter.api.Test;
@@ -36,8 +36,8 @@ class PlaylistServiceTest {
     @Test
     void scanFolderMapsMusicsToPaths() throws IOException {
         when(scanner.scanFolder("C:\\musica"))
-                .thenReturn(List.of(new Music("C:\\musica\\a.mp3", Music.Metadata.empty()),
-                        new Music("C:\\musica\\b.mp3", Music.Metadata.empty())));
+                .thenReturn(List.of(new MusicFile("C:\\musica\\a.mp3", MusicFile.Metadata.empty()),
+                        new MusicFile("C:\\musica\\b.mp3", MusicFile.Metadata.empty())));
         PlaylistService service = new PlaylistService(repository, scanner);
         assertEquals(List.of("C:\\musica\\a.mp3", "C:\\musica\\b.mp3"), service.scanFolder("C:\\musica"));
     }

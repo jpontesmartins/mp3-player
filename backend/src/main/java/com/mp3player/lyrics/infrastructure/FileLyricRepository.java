@@ -1,8 +1,8 @@
 package com.mp3player.lyrics.infrastructure;
 
 import com.mp3player.lyrics.domain.model.Lyric;
-import com.mp3player.player.domain.model.Music;
-import com.mp3player.metadata.domain.port.Id3Codec;
+import com.mp3player.player.domain.model.MusicFile;
+import com.mp3player.music.domain.port.Id3Codec;
 import com.mp3player.lyrics.domain.repository.LyricRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,10 +74,10 @@ public class FileLyricRepository implements LyricRepository {
      * Salva a letra em um arquivo TXT na pasta do álbum da música.
      *
      * @param lyric letra a ser persistida
-     * @param music música com metadados para determinar o nome do arquivo
+     * @param musicFile música com metadados para determinar o nome do arquivo
      */
     @Override
-    public void save(Lyric lyric, Music music) {
+    public void save(Lyric lyric, MusicFile musicFile) {
         Path file = resolveTxtFile(lyric.getMusicPath());
         if (file == null) return;
         try {
@@ -146,8 +146,8 @@ public class FileLyricRepository implements LyricRepository {
      */
     private String id3Tag(String musicPath, boolean artist) {
         try {
-            Music music = id3Codec.read(musicPath);
-            String value = artist ? music.getMetadata().getArtist() : music.getMetadata().getTitle();
+            MusicFile musicFile = id3Codec.read(musicPath);
+            String value = artist ? musicFile.getMetadata().artist() : musicFile.getMetadata().title();
             return value == null ? "" : value.trim();
         } catch (Exception e) {
             return "";

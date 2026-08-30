@@ -1,8 +1,8 @@
 package com.mp3player.lyrics.infrastructure;
 
 import com.mp3player.lyrics.domain.model.Lyric;
-import com.mp3player.player.domain.model.Music;
-import com.mp3player.metadata.domain.port.Id3Codec;
+import com.mp3player.player.domain.model.MusicFile;
+import com.mp3player.music.domain.port.Id3Codec;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -27,8 +27,8 @@ class FileLyricRepositoryTest {
         repository = new FileLyricRepository(id3Codec);
     }
 
-    private Music music(String path, String artist, String title) {
-        return new Music(path, new Music.Metadata(title, artist, "Album", null, null, null, null));
+    private MusicFile music(String path, String artist, String title) {
+        return new MusicFile(path, new MusicFile.Metadata(title, artist, "Album", null, null, null, null));
     }
 
     @Test

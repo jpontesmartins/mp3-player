@@ -1,6 +1,6 @@
 package com.mp3player;
 
-import com.mp3player.metadata.infrastructure.CoverProperties;
+import com.mp3player.music.infrastructure.CoverProperties;
 import com.mp3player.lyrics.infrastructure.LyricsProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -1,7 +1,7 @@
 package com.mp3player.player.infrastructure;
 
-import com.mp3player.player.domain.model.Music;
-import com.mp3player.metadata.domain.port.Id3Codec;
+import com.mp3player.player.domain.model.MusicFile;
+import com.mp3player.music.domain.port.Id3Codec;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
@@ -61,8 +60,8 @@ class JLayerPlayerEngineTest {
     /**
      * Tags ID3 falsas retornadas pelo mock do codec, sempre associadas ao caminho tocado.
      */
-    private Music musicTagsFor(String path, String title) {
-        return new Music(path, new Music.Metadata(title, "Artista", "Álbum", null, null, null, null, 200_000L, null));
+    private MusicFile musicTagsFor(String path, String title) {
+        return new MusicFile(path, new MusicFile.Metadata(title, "Artista", "Álbum", null, null, null, null, 200_000L, null));
     }
 
     /**
