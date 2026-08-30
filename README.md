@@ -29,23 +29,23 @@ Gerenciador e organizador de coleção de músicas local com tocador de mp3. Org
 
 ## Funcionalidades
 
-| Funcionalidade | Descrição |
-|---|---|
-| Reprodução MP3 | Play, pausa, stop, resume e seek em arquivos MP3 locais |
-| Navegação entre faixas | Anterior / próxima com três modos: Contínua, Aleatória e Repetição |
-| Auto-play | Reproduz automaticamente a próxima faixa ao término da atual |
-| Tags ID3 | Leitura e edição de artista, título, álbum, ano, gênero, faixa, disco, bitrate e duração |
-| Edição em lote (bulk) | Edição de tags ID3 de múltiplos arquivos a partir de padrões de nome |
-| Capa do álbum | Exibição automática de arquivos de capa (jpg/png/webp/gif) |
-| Download de capa | Busca automática via APIs do iTunes (fallback: Deezer) |
-| Letras (lyrics) | Busca via web scraping em letras.mus.br com cache local e edição |
-| Playlists físicas | Escaneamento de pastas para arquivos MP3 |
-| Playlists virtuais | Criação, edição (duas colunas), renomeação, exclusão e carregamento |
-| Gerenciador de coleção | Lista de álbuns e artistas com edição de tags ID3 em grade |
-| Busca avançada | Filtros com operadores lógicos (`&&`, `||`) e filtros por tag |
-| Temas | Suporte a tema escuro e claro com CSS custom properties |
-| Cache de metadados | Cache em disco usando Decorator Pattern |
-| Dicionário | Consulta de palavras em dicionário online (Priberam para português) |
+| Funcionalidade | Domínio | Descrição |
+|---|---|---|
+| Reprodução MP3 | `player/controls` | Play, pausa, stop, resume e seek em arquivos MP3 locais |
+| Navegação entre faixas | `player/controls` | Anterior / próxima com três modos: Contínua, Aleatória e Repetição |
+| Auto-play | `player/controls` | Reproduz automaticamente a próxima faixa ao término da atual |
+| Tags ID3 | `player/music` | Leitura e edição de artista, título, álbum, ano, gênero, faixa, disco, bitrate e duração |
+| Edição em lote (bulk) | `player/music` | Edição de tags ID3 de múltiplos arquivos a partir de padrões de nome |
+| Capa do álbum | `player/music` | Exibição automática de arquivos de capa (jpg/png/webp/gif) |
+| Download de capa | `player/music` | Busca automática via APIs do iTunes (fallback: Deezer) |
+| Gerenciador de coleção | `player/music` | Lista de álbuns e artistas com edição de tags ID3 em grade |
+| Busca avançada | `player/music` | Filtros com operadores lógicos (`&&`, `||`) e filtros por tag |
+| Playlists físicas | `player/playlist` | Escaneamento de pastas para arquivos MP3 |
+| Playlists virtuais | `player/playlist` | Criação, edição (duas colunas), renomeação, exclusão e carregamento |
+| Cache de metadados | `player/domain` | Cache em disco usando Decorator Pattern |
+| Letras (lyrics) | `lyrics` | Busca via web scraping em letras.mus.br com cache local e edição |
+| Dicionário | `dictionary` | Consulta de palavras em dicionário online (Priberam para português) |
+| Temas | `shared` | Suporte a tema escuro e claro com CSS custom properties |
 
 ---
 
