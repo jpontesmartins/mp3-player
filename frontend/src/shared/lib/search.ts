@@ -1,4 +1,4 @@
-import type { Id3Tags } from './App';
+import type { Id3Tags } from '../types';
 
 const TAG_MAP: Record<string, keyof Id3Tags> = {
   '<artist>': 'artist',
