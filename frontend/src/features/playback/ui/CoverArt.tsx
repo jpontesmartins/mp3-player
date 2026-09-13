@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import { getCoverUrl, downloadCover } from '../../../shared/api/cover';
-import { CtxMenuItem, getContextMenuPosition, useContextMenuClose } from '../../../shared/ui/ContextMenu';
+import { ContextMenuItem, getContextMenuPosition, useContextMenuClose } from '../../../shared/ui/ContextMenu';
 
 interface CoverArtProps {
   currentFile: string | null;
@@ -10,37 +10,37 @@ interface CoverArtProps {
 
 export default function CoverArt({ currentFile, showCover }: CoverArtProps) {
   const [coverBusy, setCoverBusy] = useState(false);
-  const [coverMsg, setCoverMsg] = useState<string | null>(null);
+  const [coverMessage, setCoverMessage] = useState<string | null>(null);
   const [coverVersion, setCoverVersion] = useState(0);
-  const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
-  const coverMsgTimer = useRef<number | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
+  const coverMessageTimer = useRef<number | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const coverUrl = currentFile ? getCoverUrl(currentFile) : null;
 
-  const showCoverMsg = (msg: string) => {
-    setCoverMsg(msg);
-    if (coverMsgTimer.current !== null) window.clearTimeout(coverMsgTimer.current);
-    coverMsgTimer.current = window.setTimeout(() => setCoverMsg(null), 4000);
+  const showCoverMessage = (message: string) => {
+    setCoverMessage(message);
+    if (coverMessageTimer.current !== null) window.clearTimeout(coverMessageTimer.current);
+    coverMessageTimer.current = window.setTimeout(() => setCoverMessage(null), 4000);
   };
 
   const handleDownloadCover = useCallback(async () => {
     if (!currentFile || coverBusy) return;
     setCoverBusy(true);
-    showCoverMsg('Baixando capa...');
+    showCoverMessage('Baixando capa...');
     const result = await downloadCover(currentFile);
-    showCoverMsg(result.ok ? 'Capa baixada.' : `Erro: ${result.text}`);
-    if (result.ok) setCoverVersion(v => v + 1);
+    showCoverMessage(result.ok ? 'Capa baixada.' : `Erro: ${result.text}`);
+    if (result.ok) setCoverVersion(previousVersion => previousVersion + 1);
     setCoverBusy(false);
   }, [currentFile, coverBusy]);
 
   const handleCoverContextMenu = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     if (!currentFile) return;
-    setMenuPos(getContextMenuPosition(e, menuRef.current));
+    setMenuPosition(getContextMenuPosition(e, menuRef.current));
   }, [currentFile]);
 
-  useContextMenuClose(!!menuPos, () => setMenuPos(null));
+  useContextMenuClose(!!menuPosition, () => setMenuPosition(null));
 
   if (!showCover || !currentFile) return null;
 
@@ -55,12 +55,12 @@ export default function CoverArt({ currentFile, showCover }: CoverArtProps) {
           onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
         />
         <span id="cover-placeholder">🎵</span>
-        {coverMsg && <span id="cover-status">{coverMsg}</span>}
+        {coverMessage && <span id="cover-status">{coverMessage}</span>}
       </div>
 
-      {menuPos && (
-        <div ref={menuRef} id="cover-context-menu" style={{ left: menuPos.x, top: menuPos.y }} onMouseDown={e => e.stopPropagation()}>
-          <CtxMenuItem icon={<CloudDownloadIcon />} label="Baixar capa do álbum" onClick={() => { setMenuPos(null); handleDownloadCover(); }} />
+      {menuPosition && (
+        <div ref={menuRef} id="cover-context-menu" style={{ left: menuPosition.x, top: menuPosition.y }} onMouseDown={e => e.stopPropagation()}>
+          <ContextMenuItem icon={<CloudDownloadIcon />} label="Baixar capa do álbum" onClick={() => { setMenuPosition(null); handleDownloadCover(); }} />
         </div>
       )}
     </>

@@ -8,8 +8,8 @@ export function usePlaybackPolling() {
   const player = usePlayer();
   const library = useLibrary();
   const lastLoggedFile = useRef<string | null>(null);
-  const prevStatusRef = useRef(player.status);
-  prevStatusRef.current = player.status;
+  const previousStatusRef = useRef(player.status);
+  previousStatusRef.current = player.status;
 
   useEffect(() => {
     let cancelled = false;
@@ -25,12 +25,12 @@ export function usePlaybackPolling() {
             player.setDuration(0);
             lastLoggedFile.current = null;
 
-            if ((prevStatusRef.current === 'playing' || prevStatusRef.current === 'paused') && !player.intentionalStop) {
-              const next = getNextFile(player.currentFileRef.current, library.playlistFiles, player.modeRef.current);
-              if (next) {
-                const ok = await playbackApi.play(next);
-                if (ok) {
-                  player.setCurrentFile(next);
+            if ((previousStatusRef.current === 'playing' || previousStatusRef.current === 'paused') && !player.intentionalStop) {
+              const nextTrack = getNextFile(player.currentFileRef.current, library.playlistFiles, player.modeRef.current);
+              if (nextTrack) {
+                const success = await playbackApi.play(nextTrack);
+                if (success) {
+                  player.setCurrentFile(nextTrack);
                   player.setStatus('playing');
                 }
               }
@@ -47,8 +47,8 @@ export function usePlaybackPolling() {
             if (tags && data.file !== lastLoggedFile.current) {
               lastLoggedFile.current = data.file;
               console.log('--- ID3 Tags ---');
-              for (const [k, v] of Object.entries(tags)) {
-                console.log(`${k}: ${v}`);
+              for (const [fieldKey, fieldValue] of Object.entries(tags)) {
+                console.log(`${fieldKey}: ${fieldValue}`);
               }
               console.log('-----------------');
             }
@@ -61,6 +61,6 @@ export function usePlaybackPolling() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 }
 
-function delay(ms: number) {
-  return new Promise(r => setTimeout(r, ms));
+function delay(milliseconds: number) {
+  return new Promise(resolve => setTimeout(resolve, milliseconds));
 }

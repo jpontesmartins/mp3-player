@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useLibrary } from '../../../app/providers/LibraryContext';
-import { parentDir } from '../../../shared/lib/format';
+import { parentDirectory } from '../../../shared/lib/format';
 
 export interface Album {
   folder: string;
@@ -8,9 +8,9 @@ export interface Album {
   files: string[];
 }
 
-function folderName(p: string): string {
-  const idx = Math.max(p.lastIndexOf('\\'), p.lastIndexOf('/'));
-  return idx < 0 ? p : p.substring(idx + 1);
+function folderName(path: string): string {
+  const index = Math.max(path.lastIndexOf('\\'), path.lastIndexOf('/'));
+  return index < 0 ? path : path.substring(index + 1);
 }
 
 export function useAlbums() {
@@ -18,11 +18,11 @@ export function useAlbums() {
 
   const albums = useMemo<Album[]>(() => {
     const map = new Map<string, { folder: string; files: string[]; albumNames: string[] }>();
-    for (const f of library.libraryFiles) {
-      const folder = parentDir(f);
+    for (const file of library.libraryFiles) {
+      const folder = parentDirectory(file);
       const entry = map.get(folder) ?? { folder, files: [], albumNames: [] };
-      entry.files.push(f);
-      const album = library.id3Cache.get(f)?.album?.trim();
+      entry.files.push(file);
+      const album = library.id3Cache.get(file)?.album?.trim();
       if (album) entry.albumNames.push(album);
       map.set(folder, entry);
     }
@@ -42,8 +42,8 @@ export function useAlbums() {
 
   const artists = useMemo(() => {
     const counts = new Map<string, number>();
-    for (const f of library.libraryFiles) {
-      const artist = library.id3Cache.get(f)?.artist?.trim();
+    for (const file of library.libraryFiles) {
+      const artist = library.id3Cache.get(file)?.artist?.trim();
       if (artist) counts.set(artist, (counts.get(artist) ?? 0) + 1);
     }
     return Array.from(counts.entries())

@@ -22,7 +22,7 @@ function renderSearchBar(overrides = {}) {
     saveName: '',
     setSaveName: vi.fn(),
     saving: false,
-    saveMsg: '',
+    saveMessage: '',
     saveInputRef: { current: null },
     handleSaveConfirm: vi.fn(),
     disabled: false,
@@ -95,12 +95,12 @@ describe('SearchBar', () => {
   });
 
   it('shows save message when present', () => {
-    renderSearchBar({ saveMsg: 'Playlist salva!' });
+    renderSearchBar({ saveMessage: 'Playlist salva!' });
     expect(screen.getByText('Playlist salva!')).toBeInTheDocument();
   });
 
   it('does not show save message when empty', () => {
-    renderSearchBar({ saveMsg: '' });
+    renderSearchBar({ saveMessage: '' });
     expect(document.querySelector('.playlist-save-msg')).toBeNull();
   });
 });

@@ -61,9 +61,9 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
           const batch = files.slice(i, i + ID3_BATCH_SIZE);
           const tagsMap = await id3Api.bulkId3(batch, forceRefresh);
           if (tagsMap) {
-            setId3Cache(prev => {
-              const next = new Map(prev);
-              for (const [k, v] of Object.entries(tagsMap)) next.set(k, v);
+            setId3Cache(previous => {
+              const next = new Map(previous);
+              for (const [key, value] of Object.entries(tagsMap)) next.set(key, value);
               return next;
             });
             setId3Loaded(i + batch.length);
@@ -86,18 +86,18 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       setId3Total(files.length);
       try {
         const allFiles = [...new Set([...libraryFiles, ...files])];
-        const missing = allFiles.filter(f => !id3Cache.has(f));
+        const missing = allFiles.filter(file => !id3Cache.has(file));
         if (missing.length > 0) {
           for (let i = 0; i < missing.length; i += ID3_BATCH_SIZE) {
             const batch = missing.slice(i, i + ID3_BATCH_SIZE);
             const tagsMap = await id3Api.bulkId3(batch);
             if (tagsMap) {
-              setId3Cache(prev => {
-                const next = new Map(prev);
-                for (const [k, v] of Object.entries(tagsMap)) next.set(k, v);
+              setId3Cache(previous => {
+                const next = new Map(previous);
+                for (const [key, value] of Object.entries(tagsMap)) next.set(key, value);
                 return next;
               });
-              setId3Loaded(prev => prev + batch.length);
+              setId3Loaded(previous => previous + batch.length);
             }
           }
         }
@@ -109,8 +109,8 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
   }, [libraryFiles, id3Cache]);
 
   const updateId3Cache = useCallback((file: string, tags: Id3Tags) => {
-    setId3Cache(prev => {
-      const next = new Map(prev);
+    setId3Cache(previous => {
+      const next = new Map(previous);
       next.set(file, tags);
       return next;
     });

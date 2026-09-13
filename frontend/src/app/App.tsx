@@ -28,8 +28,8 @@ export default function App() {
     if (!saved) return;
     let attempts = 0;
     const attempt = () => {
-      restoreLastFolder().then(ok => {
-        if (!cancelled && !ok && attempts < 15) {
+      restoreLastFolder().then(success => {
+        if (!cancelled && !success && attempts < 15) {
           attempts++;
           setTimeout(attempt, 1000);
         }

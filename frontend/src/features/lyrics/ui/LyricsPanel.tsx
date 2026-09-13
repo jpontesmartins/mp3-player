@@ -10,10 +10,10 @@ export default function LyricsPanel() {
     lyrics, loading, saving, fontSize, editing, draft, dictResult, dictLoading,
     setFontSize, setDraft, fetchCached, fetchLyrics, saveLyrics, deleteLyrics, startEdit, cancelEdit, lookupDictionary,
   } = useLyrics(player.currentFile);
-  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [selectedWord, setSelectedWord] = useState('');
   const lyricsRef = useRef<HTMLPreElement>(null);
-  const ctxMenuRef = useRef<HTMLDivElement>(null);
+  const contextMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { fetchCached(); }, [player.currentFile]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -22,10 +22,10 @@ export default function LyricsPanel() {
     if (!selection || selection.includes(' ')) return;
     e.preventDefault();
     setSelectedWord(selection);
-    setCtxMenu(getContextMenuPosition(e, ctxMenuRef.current));
+    setContextMenu(getContextMenuPosition(e, contextMenuRef.current));
   }, []);
 
-  useContextMenuClose(!!ctxMenu, () => setCtxMenu(null));
+  useContextMenuClose(!!contextMenu, () => setContextMenu(null));
 
   const canFetch = !!player.currentFile;
 
@@ -66,12 +66,12 @@ export default function LyricsPanel() {
         </div>
       )}
 
-      {ctxMenu && (
-        <div ref={ctxMenuRef} id="lyrics-context-menu" style={{ left: ctxMenu.x, top: ctxMenu.y }} onMouseDown={e => e.stopPropagation()}>
+      {contextMenu && (
+        <div ref={contextMenuRef} id="lyrics-context-menu" style={{ left: contextMenu.x, top: contextMenu.y }} onMouseDown={e => e.stopPropagation()}>
           <div className="lyrics-ctx-submenu">
             <span className="lyrics-ctx-label">Procurar no dicionário...</span>
             <div className="lyrics-ctx-submenu-items">
-              <button type="button" className="lyrics-ctx-item" disabled={dictLoading} onClick={() => { setCtxMenu(null); lookupDictionary(selectedWord, 'pt'); }}>Português</button>
+              <button type="button" className="lyrics-ctx-item" disabled={dictLoading} onClick={() => { setContextMenu(null); lookupDictionary(selectedWord, 'pt'); }}>Português</button>
             </div>
           </div>
         </div>

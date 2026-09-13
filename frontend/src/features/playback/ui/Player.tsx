@@ -13,11 +13,11 @@ import CoverArt from './CoverArt';
 export default function Player() {
   const player = usePlayer();
   const library = useLibrary();
-  const { togglePlayPause, stop, prev, next, seek, scrollToCurrent } = usePlayback();
+  const { togglePlayPause, stop, previous, next, seek, scrollToCurrent } = usePlayback();
 
   const barRef = useRef<HTMLDivElement>(null);
 
-  const pct = player.duration > 0 ? Math.min((player.position / player.duration) * 100, 100) : 0;
+  const progressPercentage = player.duration > 0 ? Math.min((player.position / player.duration) * 100, 100) : 0;
   const currentId3 = player.currentFile ? library.id3Cache.get(player.currentFile) : undefined;
   const name = displayName(currentId3, '');
   const isPlaying = player.status === 'playing';
@@ -41,7 +41,7 @@ export default function Player() {
       <CoverArt currentFile={player.currentFile} showCover={player.showCover} />
 
       <div id="player-controls">
-        <button id="prev-btn" onClick={prev} disabled={!canSkip}><SkipPreviousIcon /></button>
+        <button id="prev-btn" onClick={previous} disabled={!canSkip}><SkipPreviousIcon /></button>
         <button id="play-pause-btn" onClick={togglePlayPause} disabled={!canToggle}>
           {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
         </button>
@@ -51,7 +51,7 @@ export default function Player() {
 
       <div id="progress-section">
         <div id="progress-bar" ref={barRef} onClick={handleBarClick}>
-          <div id="progress-fill" style={{ width: `${pct}%` }} />
+          <div id="progress-fill" style={{ width: `${progressPercentage}%` }} />
         </div>
         <span id="time-display">
           {formatTime(player.position)} / {player.duration > 0 ? formatTime(player.duration) : '--:--:--'}

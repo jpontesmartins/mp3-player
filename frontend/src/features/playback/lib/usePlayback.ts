@@ -2,34 +2,34 @@ import { useCallback } from 'react';
 import { usePlayer } from '../../../app/providers/PlayerContext';
 import { useLibrary } from '../../../app/providers/LibraryContext';
 import * as playbackApi from '../../../shared/api/playback';
-import { getNextFile, getPrevFile } from './navigation';
+import { getNextFile, getPreviousFile } from './navigation';
 
 export function usePlayback() {
   const player = usePlayer();
   const library = useLibrary();
 
   const playFile = useCallback(async (file: string) => {
-    const ok = await playbackApi.play(file);
-    if (ok) {
+    const success = await playbackApi.play(file);
+    if (success) {
       player.setCurrentFile(file);
       player.setStatus('playing');
     }
   }, [player]);
 
   const pause = useCallback(async () => {
-    const ok = await playbackApi.pause();
-    if (ok) player.setStatus('paused');
+    const success = await playbackApi.pause();
+    if (success) player.setStatus('paused');
   }, [player]);
 
   const resume = useCallback(async () => {
-    const ok = await playbackApi.resume();
-    if (ok) player.setStatus('playing');
+    const success = await playbackApi.resume();
+    if (success) player.setStatus('playing');
   }, [player]);
 
   const stop = useCallback(async () => {
     player.setIntentionalStop(true);
-    const ok = await playbackApi.stop();
-    if (ok) {
+    const success = await playbackApi.stop();
+    if (success) {
       player.setCurrentFile(null);
       player.setStatus('stopped');
       player.setPosition(0);
@@ -37,9 +37,9 @@ export function usePlayback() {
     }
   }, [player]);
 
-  const seek = useCallback(async (positionMs: number) => {
-    const ok = await playbackApi.seek(positionMs);
-    if (ok) player.setPosition(positionMs);
+  const seek = useCallback(async (positionMilliseconds: number) => {
+    const success = await playbackApi.seek(positionMilliseconds);
+    if (success) player.setPosition(positionMilliseconds);
   }, [player]);
 
   const togglePlayPause = useCallback(async () => {
@@ -52,8 +52,8 @@ export function usePlayback() {
     }
   }, [player.status, player.currentFile, playFile, resume, pause]);
 
-  const prev = useCallback(() => {
-    const target = getPrevFile(player.currentFile, library.playlistFiles, player.playbackMode);
+  const previous = useCallback(() => {
+    const target = getPreviousFile(player.currentFile, library.playlistFiles, player.playbackMode);
     if (target) playFile(target);
   }, [player.currentFile, library.playlistFiles, player.playbackMode, playFile]);
 
@@ -67,5 +67,5 @@ export function usePlayback() {
     if (active) active.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, []);
 
-  return { playFile, pause, resume, stop, seek, togglePlayPause, prev, next, scrollToCurrent };
+  return { playFile, pause, resume, stop, seek, togglePlayPause, previous, next, scrollToCurrent };
 }

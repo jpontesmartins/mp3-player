@@ -1,4 +1,4 @@
-export function CtxMenuItem({ icon, label, shortcut, onClick }: {
+export function ContextMenuItem({ icon, label, shortcut, onClick }: {
   icon: React.ReactNode;
   label: string;
   shortcut?: string;
@@ -32,14 +32,14 @@ export function useContextMenuClose(
 
 export function getContextMenuPosition(
   e: { clientX: number; clientY: number },
-  menuEl: HTMLElement | null,
+  menuElement: HTMLElement | null,
 ): { x: number; y: number } {
   let x = e.clientX + 4;
   let y = e.clientY + 4;
-  if (menuEl) {
-    const r = menuEl.getBoundingClientRect();
-    if (x + r.width > window.innerWidth) x = e.clientX - r.width - 4;
-    if (y + r.height > window.innerHeight) y = e.clientY - r.height - 4;
+  if (menuElement) {
+    const boundingRect = menuElement.getBoundingClientRect();
+    if (x + boundingRect.width > window.innerWidth) x = e.clientX - boundingRect.width - 4;
+    if (y + boundingRect.height > window.innerHeight) y = e.clientY - boundingRect.height - 4;
   }
   return { x: Math.max(4, x), y: Math.max(4, y) };
 }

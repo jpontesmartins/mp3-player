@@ -28,18 +28,18 @@ export function usePlaylistTooltip() {
 
   useEffect(() => {
     if (!tooltip) { setTooltipStyle(null); return undefined; }
-    let raf = 0;
-    raf = requestAnimationFrame(() => {
-      const el = tooltipRef.current;
-      if (!el) return;
-      const r = el.getBoundingClientRect();
+    let animationFrameId = 0;
+    animationFrameId = requestAnimationFrame(() => {
+      const tooltipElement = tooltipRef.current;
+      if (!tooltipElement) return;
+      const boundingRect = tooltipElement.getBoundingClientRect();
       let left = tooltip.x + 14;
       let top = tooltip.y + 14;
-      if (left + r.width > window.innerWidth) left = tooltip.x - r.width - 14;
-      if (top + r.height > window.innerHeight) top = tooltip.y - r.height - 14;
+      if (left + boundingRect.width > window.innerWidth) left = tooltip.x - boundingRect.width - 14;
+      if (top + boundingRect.height > window.innerHeight) top = tooltip.y - boundingRect.height - 14;
       setTooltipStyle({ left: Math.max(6, left), top: Math.max(6, top) });
     });
-    return () => cancelAnimationFrame(raf);
+    return () => cancelAnimationFrame(animationFrameId);
   }, [tooltip]);
 
   return { tooltip, tooltipStyle, tooltipRef, handleEnter, handleLeave };

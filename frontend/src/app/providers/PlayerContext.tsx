@@ -15,11 +15,11 @@ interface PlayerState {
 interface PlayerActions {
   setCurrentFile: (file: string | null) => void;
   setStatus: (status: PlayerState['status']) => void;
-  setPosition: (pos: number) => void;
-  setDuration: (dur: number) => void;
+  setPosition: (position: number) => void;
+  setDuration: (duration: number) => void;
   setPlaybackMode: (mode: PlaybackMode) => void;
   setShowCover: (show: boolean) => void;
-  setIntentionalStop: (v: boolean) => void;
+  setIntentionalStop: (value: boolean) => void;
   currentFileRef: React.MutableRefObject<string | null>;
   playlistRef: React.MutableRefObject<string[]>;
   modeRef: React.MutableRefObject<PlaybackMode>;

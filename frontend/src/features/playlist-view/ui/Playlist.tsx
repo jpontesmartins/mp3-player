@@ -7,7 +7,7 @@ import { usePlayer } from '../../../app/providers/PlayerContext';
 import { useLibrary } from '../../../app/providers/LibraryContext';
 import { usePlayback } from '../../playback/lib/usePlayback';
 import { formatTime, fileName } from '../../../shared/lib/format';
-import { CtxMenuItem, getContextMenuPosition, useContextMenuClose } from '../../../shared/ui/ContextMenu';
+import { ContextMenuItem, getContextMenuPosition, useContextMenuClose } from '../../../shared/ui/ContextMenu';
 import type { Id3Tags } from '../../../shared/types';
 import { useColumnResize } from '../lib/useColumnResize';
 import { usePlaylistTooltip } from '../lib/usePlaylistTooltip';
@@ -18,9 +18,9 @@ import SearchBar from './SearchBar';
 
 function totalDuration(files: string[], cache: Map<string, Id3Tags>): number {
   let total = 0;
-  for (const f of files) {
-    const d = cache.get(f)?.duration_ms;
-    if (d) total += Number(d);
+  for (const file of files) {
+    const durationMilliseconds = cache.get(file)?.duration_ms;
+    if (durationMilliseconds) total += Number(durationMilliseconds);
   }
   return total;
 }
@@ -34,21 +34,21 @@ export default function Playlist() {
   const tooltipHook = usePlaylistTooltip();
   const search = usePlaylistSearch();
 
-  const [songCtxMenu, setSongCtxMenu] = useState<{ x: number; y: number; file: string } | null>(null);
-  const songCtxMenuRef = useRef<HTMLDivElement>(null);
+  const [songContextMenu, setSongContextMenu] = useState<{ x: number; y: number; file: string } | null>(null);
+  const songContextMenuRef = useRef<HTMLDivElement>(null);
 
   const tooltipTags = tooltipHook.tooltip ? library.id3Cache.get(tooltipHook.tooltip.file) : undefined;
 
-  useContextMenuClose(!!songCtxMenu, () => setSongCtxMenu(null));
+  useContextMenuClose(!!songContextMenu, () => setSongContextMenu(null));
 
   const handleSongContextMenu = useCallback((e: React.MouseEvent<HTMLLIElement>, file: string) => {
     e.preventDefault();
     e.stopPropagation();
-    setSongCtxMenu({ ...getContextMenuPosition(e, songCtxMenuRef.current), file });
+    setSongContextMenu({ ...getContextMenuPosition(e, songContextMenuRef.current), file });
   }, []);
 
-  const openFolderForSong = useCallback(async (file: string) => { setSongCtxMenu(null); try { await revealItemInDir(file); } catch { /* noop */ } }, []);
-  const copySongPath = useCallback((file: string) => { setSongCtxMenu(null); navigator.clipboard.writeText(file).catch(() => {}); }, []);
+  const openFolderForSong = useCallback(async (file: string) => { setSongContextMenu(null); try { await revealItemInDir(file); } catch { /* noop */ } }, []);
+  const copySongPath = useCallback((file: string) => { setSongContextMenu(null); navigator.clipboard.writeText(file).catch(() => {}); }, []);
 
   const displayFiles = search.filteredFiles;
   const total = totalDuration(displayFiles, library.id3Cache);
@@ -88,13 +88,13 @@ export default function Playlist() {
             const tags = library.id3Cache.get(file);
             const artist = tags?.artist || '';
             const title = tags?.title || fileName(file);
-            const dur = tags?.duration_ms ? Number(tags.duration_ms) : 0;
+            const durationMilliseconds = tags?.duration_ms ? Number(tags.duration_ms) : 0;
             const active = file === player.currentFile;
             return (
               <li key={file} className={active ? 'active' : ''} style={resize.gridStyle} onClick={() => playFile(file)} onContextMenu={e => handleSongContextMenu(e, file)} onMouseEnter={tooltipHook.handleEnter(file)} onMouseLeave={tooltipHook.handleLeave}>
                 <span className="pl-artist">{artist}</span>
                 <span className="pl-title">{title}</span>
-                <span className="pl-duration">{dur > 0 ? formatTime(dur) : ''}</span>
+                <span className="pl-duration">{durationMilliseconds > 0 ? formatTime(durationMilliseconds) : ''}</span>
               </li>
             );
           })}
@@ -118,10 +118,10 @@ export default function Playlist() {
 
       <SearchBar {...search} filteredCount={displayFiles.length} totalCount={library.playlistFiles.length} />
 
-      {songCtxMenu && (
-        <div ref={songCtxMenuRef} id="song-context-menu" style={{ left: songCtxMenu.x, top: songCtxMenu.y }} onMouseDown={e => e.stopPropagation()}>
-          <CtxMenuItem icon={<FolderOpenIcon />} label="Abrir pasta no explorer" onClick={() => openFolderForSong(songCtxMenu.file)} />
-          <CtxMenuItem icon={<ContentCopyIcon />} label="Copiar caminho" onClick={() => copySongPath(songCtxMenu.file)} />
+      {songContextMenu && (
+        <div ref={songContextMenuRef} id="song-context-menu" style={{ left: songContextMenu.x, top: songContextMenu.y }} onMouseDown={e => e.stopPropagation()}>
+          <ContextMenuItem icon={<FolderOpenIcon />} label="Abrir pasta no explorer" onClick={() => openFolderForSong(songContextMenu.file)} />
+          <ContextMenuItem icon={<ContentCopyIcon />} label="Copiar caminho" onClick={() => copySongPath(songContextMenu.file)} />
         </div>
       )}
     </>

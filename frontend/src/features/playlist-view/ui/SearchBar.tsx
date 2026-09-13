@@ -3,20 +3,20 @@ import SaveIcon from '@mui/icons-material/Save';
 
 interface SearchBarProps {
   query: string;
-  setQuery: (v: string) => void;
+  setQuery: (value: string) => void;
   searchFocused: boolean;
-  setSearchFocused: (v: boolean) => void;
+  setSearchFocused: (value: boolean) => void;
   searchExpanded: boolean;
   isFiltered: boolean;
   filteredCount: number;
   totalCount: number;
   textareaRef: React.RefObject<HTMLInputElement | null>;
   saveOpen: boolean;
-  setSaveOpen: (v: boolean) => void;
+  setSaveOpen: (value: boolean) => void;
   saveName: string;
-  setSaveName: (v: string) => void;
+  setSaveName: (value: string) => void;
   saving: boolean;
-  saveMsg: string;
+  saveMessage: string;
   saveInputRef: React.RefObject<HTMLInputElement | null>;
   handleSaveConfirm: () => void;
   disabled?: boolean;
@@ -25,7 +25,7 @@ interface SearchBarProps {
 export default function SearchBar({
   query, setQuery, setSearchFocused, searchExpanded,
   isFiltered, filteredCount, totalCount, textareaRef,
-  saveOpen, setSaveOpen, saveName, setSaveName, saving, saveMsg, saveInputRef, handleSaveConfirm, disabled,
+  saveOpen, setSaveOpen, saveName, setSaveName, saving, saveMessage, saveInputRef, handleSaveConfirm, disabled,
 }: SearchBarProps) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
@@ -62,7 +62,7 @@ export default function SearchBar({
         </div>
       )}
 
-      {saveMsg && <div className="playlist-save-msg">{saveMsg}</div>}
+      {saveMessage && <div className="playlist-save-msg">{saveMessage}</div>}
     </>
   );
 }

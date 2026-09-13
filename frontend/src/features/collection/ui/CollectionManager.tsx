@@ -7,15 +7,15 @@ import { revealItemInDir } from '@tauri-apps/plugin-opener';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
-import { CtxMenuItem, getContextMenuPosition, useContextMenuClose } from '../../../shared/ui/ContextMenu';
+import { ContextMenuItem, getContextMenuPosition, useContextMenuClose } from '../../../shared/ui/ContextMenu';
 import PlaylistManager from './PlaylistManager';
 import BulkId3Editor from './BulkId3Editor';
 
 interface Selection { type: 'album' | 'artist'; key: string; name: string; files: string[] | null; }
 type Edits = Map<string, Record<EditableField, string>>;
 
-function colClass(f: EditableField): string {
-  return f === 'year' ? 'col-year' : f === 'track' ? 'col-track' : f === 'disc' ? 'col-disc' : '';
+function colClass(field: EditableField): string {
+  return field === 'year' ? 'col-year' : field === 'track' ? 'col-track' : field === 'disc' ? 'col-disc' : '';
 }
 
 export default function CollectionManager() {
@@ -35,12 +35,12 @@ export default function CollectionManager() {
   const gridFiles = useMemo<string[]>(() => {
     if (!selected) return [];
     if (selected.type === 'album') return selected.files ?? [];
-    return library.libraryFiles.filter(f => (library.id3Cache.get(f)?.artist?.trim() ?? '') === selected.key);
+    return library.libraryFiles.filter(file => (library.id3Cache.get(file)?.artist?.trim() ?? '') === selected.key);
   }, [selected, library.libraryFiles, library.id3Cache]);
 
   useEffect(() => {
     const next = new Map<string, Record<EditableField, string>>();
-    for (const f of gridFiles) next.set(f, fromTags(library.id3Cache.get(f)));
+    for (const file of gridFiles) next.set(file, fromTags(library.id3Cache.get(file)));
     setEdits(next);
     setMessage('');
   }, [selected?.key]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -66,7 +66,7 @@ export default function CollectionManager() {
   const copyPath = useCallback((path: string) => { setAlbumCtxMenu(null); navigator.clipboard.writeText(path).catch(() => {}); }, []);
 
   const handleFieldChange = useCallback((file: string, field: EditableField, value: string) => {
-    setEdits(prev => { const next = new Map(prev); const row = next.get(file) ?? emptyRow(); next.set(file, { ...row, [field]: value }); return next; });
+    setEdits(previous => { const next = new Map(previous); const row = next.get(file) ?? emptyRow(); next.set(file, { ...row, [field]: value }); return next; });
   }, []);
 
   const handleSave = useCallback(async () => {
@@ -77,8 +77,8 @@ export default function CollectionManager() {
     if (changed.length === 0) { setMessage('Nenhuma alteração'); return; }
     setSaving(true);
     setMessage('');
-    const { ok, fail } = await updateTags(changed);
-    setMessage(fail === 0 ? `${ok} salvo(s)` : `${ok} salvo(s), ${fail} com erro`);
+    const { successCount, failureCount } = await updateTags(changed);
+    setMessage(failureCount === 0 ? `${successCount} salvo(s)` : `${successCount} salvo(s), ${failureCount} com erro`);
     setSaving(false);
   }, [edits, library.id3Cache, updateTags]);
 
@@ -158,7 +158,7 @@ export default function CollectionManager() {
             <table className="collection-grid">
               <thead>
                 <tr>
-                  {EDITABLE_FIELDS.map(f => <th key={f} className={colClass(f)}>{FIELD_LABELS[f]}</th>)}
+                  {EDITABLE_FIELDS.map(field => <th key={field} className={colClass(field)}>{FIELD_LABELS[field]}</th>)}
                   <th>Arquivo</th>
                 </tr>
               </thead>
@@ -169,9 +169,9 @@ export default function CollectionManager() {
                   const dirty = isDirty(row, tags);
                   return (
                     <tr key={file} className={dirty ? 'dirty' : ''}>
-                      {EDITABLE_FIELDS.map(f => (
-                        <td key={f} className={colClass(f)}>
-                          <input className={`collection-cell-input cell-${f}`} value={row[f]} onChange={e => handleFieldChange(file, f, e.target.value)} />
+                      {EDITABLE_FIELDS.map(field => (
+                        <td key={field} className={colClass(field)}>
+                          <input className={`collection-cell-input cell-${field}`} value={row[field]} onChange={e => handleFieldChange(file, field, e.target.value)} />
                         </td>
                       ))}
                       <td className="collection-file">{fileName(file)}</td>
@@ -188,10 +188,10 @@ export default function CollectionManager() {
 
       {albumCtxMenu && (
         <div ref={albumCtxMenuRef} id="album-context-menu" style={{ left: albumCtxMenu.x, top: albumCtxMenu.y }} onMouseDown={e => e.stopPropagation()}>
-          <CtxMenuItem icon={<FolderOpenIcon />} label="Abrir pasta no explorer" onClick={() => openFolderInExplorer(albumCtxMenu.album.folder)} />
-          <CtxMenuItem icon={<ContentCopyIcon />} label="Copiar caminho" onClick={() => copyPath(albumCtxMenu.album.folder)} />
+          <ContextMenuItem icon={<FolderOpenIcon />} label="Abrir pasta no explorer" onClick={() => openFolderInExplorer(albumCtxMenu.album.folder)} />
+          <ContextMenuItem icon={<ContentCopyIcon />} label="Copiar caminho" onClick={() => copyPath(albumCtxMenu.album.folder)} />
           <div className="ctx-menu-separator" />
-          <CtxMenuItem icon={<DriveFileRenameOutlineIcon />} label="Editar ID3 em massa" onClick={() => openBulkForAlbum(albumCtxMenu.album.folder)} />
+          <ContextMenuItem icon={<DriveFileRenameOutlineIcon />} label="Editar ID3 em massa" onClick={() => openBulkForAlbum(albumCtxMenu.album.folder)} />
         </div>
       )}
     </section>

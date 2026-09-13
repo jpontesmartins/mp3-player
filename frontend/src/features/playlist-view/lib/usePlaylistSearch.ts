@@ -10,10 +10,10 @@ export function usePlaylistSearch() {
   const [saveName, setSaveName] = useState('');
   const [saveOpen, setSaveOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [saveMsg, setSaveMsg] = useState('');
+  const [saveMessage, setSaveMessage] = useState('');
   const textareaRef = useRef<HTMLInputElement>(null);
   const saveInputRef = useRef<HTMLInputElement>(null);
-  const saveMsgTimer = useRef<number | null>(null);
+  const saveMessageTimer = useRef<number | null>(null);
 
   const filteredFiles = useMemo(
     () => filterPlaylist(library.playlistFiles, query, library.id3Cache),
@@ -23,24 +23,24 @@ export function usePlaylistSearch() {
   const searchExpanded = searchFocused || query.trim().length > 0;
 
   useEffect(() => { if (saveOpen && saveInputRef.current) saveInputRef.current.focus(); }, [saveOpen]);
-  useEffect(() => () => { if (saveMsgTimer.current !== null) window.clearTimeout(saveMsgTimer.current); }, []);
+  useEffect(() => () => { if (saveMessageTimer.current !== null) window.clearTimeout(saveMessageTimer.current); }, []);
 
   const handleSaveConfirm = useCallback(async () => {
     const name = saveName.trim();
     if (!name || filteredFiles.length === 0) return;
     setSaving(true);
-    const ok = await playlistApi.savePlaylist(name, filteredFiles);
-    if (ok) {
-      setSaveMsg(`Playlist "${name}" salva (${filteredFiles.length} músicas)`);
+    const success = await playlistApi.savePlaylist(name, filteredFiles);
+    if (success) {
+      setSaveMessage(`Playlist "${name}" salva (${filteredFiles.length} músicas)`);
       setSaveOpen(false);
       setSaveName('');
       await library.refreshPlaylists();
     } else {
-      setSaveMsg('Erro ao salvar playlist');
+      setSaveMessage('Erro ao salvar playlist');
     }
     setSaving(false);
-    if (saveMsgTimer.current !== null) window.clearTimeout(saveMsgTimer.current);
-    saveMsgTimer.current = window.setTimeout(() => setSaveMsg(''), 4000);
+    if (saveMessageTimer.current !== null) window.clearTimeout(saveMessageTimer.current);
+    saveMessageTimer.current = window.setTimeout(() => setSaveMessage(''), 4000);
   }, [saveName, filteredFiles, library]);
 
   return {
@@ -49,7 +49,7 @@ export function usePlaylistSearch() {
     filteredFiles, isFiltered, searchExpanded,
     saveName, setSaveName,
     saveOpen, setSaveOpen,
-    saving, saveMsg,
+    saving, saveMessage,
     textareaRef, saveInputRef,
     handleSaveConfirm,
   };

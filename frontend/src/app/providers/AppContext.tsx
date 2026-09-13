@@ -27,8 +27,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [showInfo, setShowInfo] = useState(false);
   const [theme, setThemeState] = useState<AppTheme>(loadTheme);
 
-  const setTheme = useCallback((t: AppTheme) => {
-    setThemeState(t);
+  const setTheme = useCallback((newTheme: AppTheme) => {
+    setThemeState(newTheme);
   }, []);
 
   useEffect(() => {

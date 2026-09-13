@@ -10,8 +10,8 @@ const FONT_SIZE_KEY = 'lyrics_font_size';
 function loadFontSize(): number {
   const saved = localStorage.getItem(FONT_SIZE_KEY);
   if (saved) {
-    const n = parseFloat(saved);
-    if (!isNaN(n) && n >= MIN_SIZE && n <= MAX_SIZE) return n;
+    const parsedSize = parseFloat(saved);
+    if (!isNaN(parsedSize) && parsedSize >= MIN_SIZE && parsedSize <= MAX_SIZE) return parsedSize;
   }
   return 0.9;
 }
@@ -46,8 +46,8 @@ export function useLyrics(currentFile: string | null) {
   const saveLyrics = useCallback(async () => {
     if (!currentFile) return;
     setSaving(true);
-    const ok = await lyricsApi.save(currentFile, draft);
-    if (ok) {
+    const success = await lyricsApi.save(currentFile, draft);
+    if (success) {
       setLyrics(draft);
       setEditing(false);
     }

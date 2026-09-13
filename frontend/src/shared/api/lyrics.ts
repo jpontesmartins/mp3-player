@@ -8,12 +8,12 @@ export const get = (path: string) =>
 
 export async function save(path: string, text: string): Promise<boolean> {
   try {
-    const res = await fetch(`${API}/lyrics`, {
+    const response = await fetch(`${API}/lyrics`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ path, text }),
     });
-    return res.ok;
+    return response.ok;
   } catch {
     return false;
   }

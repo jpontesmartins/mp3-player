@@ -14,7 +14,7 @@ export default function PlaylistManager() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [listMsg, setListMsg] = useState('');
+  const [listMessage, setListMessage] = useState('');
   const [query, setQuery] = useState('');
   const [dragFile, setDragFile] = useState<string | null>(null);
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
@@ -36,10 +36,10 @@ export default function PlaylistManager() {
       setDragFile(null); setDragPos(null); document.body.classList.remove('is-dragging');
       const pane = rightPaneRef.current;
       if (pane) {
-        const r = pane.getBoundingClientRect();
-        if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) {
+        const rect = pane.getBoundingClientRect();
+        if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
           const file = dragFileRef.current;
-          if (file) setRight(prev => (prev.includes(file) ? prev : [...prev, file]));
+          if (file) setRight(previous => (previous.includes(file) ? previous : [...previous, file]));
         }
       }
       dragFileRef.current = null;
@@ -54,7 +54,7 @@ export default function PlaylistManager() {
   const openPlaylist = async (playlist: string) => {
     const paths = await playlistApi.loadVirtual(playlist);
     if (paths) { setName(playlist); setRight(paths); setError(''); setMessage(''); setEditing(true); }
-    else setListMsg('Erro ao carregar playlist');
+    else setListMessage('Erro ao carregar playlist');
   };
 
   const close = () => { setEditing(false); setName(''); setRight([]); setError(''); setMessage(''); };
@@ -69,9 +69,9 @@ export default function PlaylistManager() {
   }, []);
 
   const removePlaylist = async (playlist: string) => {
-    const ok = await playlistApi.deletePlaylist(playlist);
-    if (ok) { setListMsg(`Playlist "${playlist}" excluída`); await library.refreshPlaylists(); }
-    else setListMsg('Erro ao excluir');
+    const success = await playlistApi.deletePlaylist(playlist);
+    if (success) { setListMessage(`Playlist "${playlist}" excluída`); await library.refreshPlaylists(); }
+    else setListMessage('Erro ao excluir');
   };
 
   const save = async () => {
@@ -79,8 +79,8 @@ export default function PlaylistManager() {
     if (!trimmed) { setError('Informe um nome para a playlist'); return; }
     if (right.length === 0) { setError('Adicione pelo menos uma música'); return; }
     setSaving(true); setError(''); setMessage('');
-    const ok = await playlistApi.savePlaylist(trimmed, right);
-    if (ok) { setName(trimmed); setMessage(`Playlist "${trimmed}" salva (${right.length} músicas)`); await library.refreshPlaylists(); }
+    const success = await playlistApi.savePlaylist(trimmed, right);
+    if (success) { setName(trimmed); setMessage(`Playlist "${trimmed}" salva (${right.length} músicas)`); await library.refreshPlaylists(); }
     else setError('Erro ao salvar');
     setSaving(false);
   };
@@ -93,7 +93,7 @@ export default function PlaylistManager() {
             <input className="pmanager-newinput" placeholder="Nome da nova playlist" value={newName} onChange={e => setNewName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') startNew(); }} />
             <button className="pmanager-btn primary" onClick={startNew}>Nova playlist</button>
           </div>
-          {listMsg && <div className="pmanager-msg">{listMsg}</div>}
+          {listMessage && <div className="pmanager-msg">{listMessage}</div>}
           {library.playlists.length === 0 ? <div className="collection-empty">Nenhuma playlist salva</div> : (
             <ul className="collection-items">
               {library.playlists.map(playlist => (
@@ -136,7 +136,7 @@ export default function PlaylistManager() {
                   return (
                     <li key={file} className={`pmanager-song${!inRight ? ' draggable' : ''}`} onMouseDown={!inRight ? e => handleSongMouseDown(e, file) : undefined}>
                       <span className="collection-item-name">{displayName(library.id3Cache.get(file), file)}</span>
-                      <button className="pmanager-btn" disabled={inRight} title={inRight ? 'Já adicionada' : 'Adicionar à playlist'} onClick={() => setRight(prev => (prev.includes(file) ? prev : [...prev, file]))}>
+                      <button className="pmanager-btn" disabled={inRight} title={inRight ? 'Já adicionada' : 'Adicionar à playlist'} onClick={() => setRight(previous => (previous.includes(file) ? previous : [...previous, file]))}>
                         {inRight ? 'Na lista' : 'Adicionar'}
                       </button>
                     </li>
@@ -151,7 +151,7 @@ export default function PlaylistManager() {
                 {right.map(file => (
                   <li key={file} className="pmanager-song">
                     <span className="collection-item-name">{displayName(library.id3Cache.get(file), file)}</span>
-                    <button className="pmanager-btn danger" onClick={() => setRight(prev => prev.filter(f => f !== file))}>Remover</button>
+                    <button className="pmanager-btn danger" onClick={() => setRight(previous => previous.filter(item => item !== file))}>Remover</button>
                   </li>
                 ))}
                 {right.length === 0 && <li className="collection-empty">{dragFile ? 'Solte aqui para adicionar' : 'Arraste músicas ou clique em "Adicionar"'}</li>}

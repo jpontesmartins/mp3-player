@@ -9,8 +9,8 @@ export function useLoadFolder() {
   const loadFolderWithRetry = useCallback(async (folder: string, forceRefresh = false): Promise<boolean> => {
     library.setPlaylistFiles([]);
     library.setLibraryFiles([]);
-    const ok = await library.loadFolder(folder, forceRefresh);
-    return ok;
+    const success = await library.loadFolder(folder, forceRefresh);
+    return success;
   }, [library]);
 
   const restoreLastFolder = useCallback(async (): Promise<boolean> => {

@@ -2,28 +2,28 @@ import { useState, useRef, useEffect } from 'react';
 
 type ResizeType = 'artist' | 'time';
 
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
+function clamp(value: number, minimum: number, maximum: number): number {
+  return Math.min(maximum, Math.max(minimum, value));
 }
 
-export function useColumnResize(initialArtistPct = 30, initialTimePx = 62) {
-  const [artistPct, setArtistPct] = useState(initialArtistPct);
-  const [timePx, setTimePx] = useState(initialTimePx);
+export function useColumnResize(initialArtistPercentage = 30, initialTimePixels = 62) {
+  const [artistPercentage, setArtistPercentage] = useState(initialArtistPercentage);
+  const [timePixels, setTimePixels] = useState(initialTimePixels);
   const [dragType, setDragType] = useState<ResizeType | null>(null);
   const headerRef = useRef<HTMLDivElement>(null);
-  const dragInfo = useRef<{ type: ResizeType; startX: number; startArtist: number; startTime: number } | null>(null);
+  const dragInformation = useRef<{ type: ResizeType; startX: number; startArtist: number; startTime: number } | null>(null);
 
   useEffect(() => {
     if (!dragType) return undefined;
     const onMove = (e: MouseEvent) => {
-      const info = dragInfo.current;
-      if (!info || !headerRef.current) return;
+      const information = dragInformation.current;
+      if (!information || !headerRef.current) return;
       const width = headerRef.current.clientWidth || 1;
-      const dx = e.clientX - info.startX;
-      if (info.type === 'artist') setArtistPct(clamp(info.startArtist + (dx / width) * 100, 15, 55));
-      else setTimePx(clamp(info.startTime + dx, 40, 160));
+      const deltaX = e.clientX - information.startX;
+      if (information.type === 'artist') setArtistPercentage(clamp(information.startArtist + (deltaX / width) * 100, 15, 55));
+      else setTimePixels(clamp(information.startTime + deltaX, 40, 160));
     };
-    const onUp = () => { dragInfo.current = null; setDragType(null); };
+    const onUp = () => { dragInformation.current = null; setDragType(null); };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
     return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
@@ -31,11 +31,11 @@ export function useColumnResize(initialArtistPct = 30, initialTimePx = 62) {
 
   const startResize = (type: ResizeType) => (e: React.MouseEvent) => {
     e.preventDefault();
-    dragInfo.current = { type, startX: e.clientX, startArtist: artistPct, startTime: timePx };
+    dragInformation.current = { type, startX: e.clientX, startArtist: artistPercentage, startTime: timePixels };
     setDragType(type);
   };
 
-  const gridStyle = { gridTemplateColumns: `${artistPct}% 1fr ${timePx}px` };
+  const gridStyle = { gridTemplateColumns: `${artistPercentage}% 1fr ${timePixels}px` };
 
-  return { artistPct, timePx, dragType, headerRef, startResize, gridStyle };
+  return { artistPercentage, timePixels, dragType, headerRef, startResize, gridStyle };
 }

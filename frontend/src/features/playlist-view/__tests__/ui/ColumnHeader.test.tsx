@@ -8,8 +8,8 @@ function renderHeader(overrides = {}) {
     headerRef: { current: null },
     startResize: () => () => {},
     dragType: null as 'artist' | 'time' | null,
-    artistPct: 30,
-    timePx: 62,
+    artistPercentage: 30,
+    timePixels: 62,
     ...overrides,
   };
 

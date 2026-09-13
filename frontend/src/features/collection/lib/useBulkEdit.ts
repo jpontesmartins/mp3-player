@@ -23,7 +23,7 @@ export function fromTags(tags: Id3Tags | undefined): Record<EditableField, strin
 }
 
 export function isDirty(row: Record<EditableField, string>, tags: Id3Tags | undefined): boolean {
-  return EDITABLE_FIELDS.some(k => row[k] !== (tags?.[k] ?? ''));
+  return EDITABLE_FIELDS.some(field => row[field] !== (tags?.[field] ?? ''));
 }
 
 export { EDITABLE_FIELDS };
@@ -31,19 +31,19 @@ export { EDITABLE_FIELDS };
 export function useBulkEdit() {
   const library = useLibrary();
 
-  const updateTags = useCallback(async (changed: Array<{ file: string; tags: Record<string, string> }>): Promise<{ ok: number; fail: number }> => {
-    let ok = 0;
-    let fail = 0;
-    for (const c of changed) {
-      const updated = await id3Api.updateId3(c.file, c.tags);
+  const updateTags = useCallback(async (changed: Array<{ file: string; tags: Record<string, string> }>): Promise<{ successCount: number; failureCount: number }> => {
+    let successCount = 0;
+    let failureCount = 0;
+    for (const change of changed) {
+      const updated = await id3Api.updateId3(change.file, change.tags);
       if (updated) {
-        library.updateId3Cache(c.file, updated);
-        ok++;
+        library.updateId3Cache(change.file, updated);
+        successCount++;
       } else {
-        fail++;
+        failureCount++;
       }
     }
-    return { ok, fail };
+    return { successCount, failureCount };
   }, [library]);
 
   return { updateTags };

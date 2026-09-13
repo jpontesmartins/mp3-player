@@ -6,8 +6,8 @@ describe('useColumnResize', () => {
   it('returns default values', () => {
     const { result } = renderHook(() => useColumnResize());
 
-    expect(result.current.artistPct).toBe(30);
-    expect(result.current.timePx).toBe(62);
+    expect(result.current.artistPercentage).toBe(30);
+    expect(result.current.timePixels).toBe(62);
     expect(result.current.dragType).toBeNull();
     expect(result.current.gridStyle.gridTemplateColumns).toBe('30% 1fr 62px');
   });
@@ -15,8 +15,8 @@ describe('useColumnResize', () => {
   it('accepts custom initial values', () => {
     const { result } = renderHook(() => useColumnResize(40, 80));
 
-    expect(result.current.artistPct).toBe(40);
-    expect(result.current.timePx).toBe(80);
+    expect(result.current.artistPercentage).toBe(40);
+    expect(result.current.timePixels).toBe(80);
     expect(result.current.gridStyle.gridTemplateColumns).toBe('40% 1fr 80px');
   });
 

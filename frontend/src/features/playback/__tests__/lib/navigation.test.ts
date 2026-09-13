@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getNextFile, getPrevFile } from '../../lib/navigation';
+import { getNextFile, getPreviousFile } from '../../lib/navigation';
 
 const files = ['a.mp3', 'b.mp3', 'c.mp3', 'd.mp3'];
 
@@ -35,34 +35,34 @@ describe('getNextFile', () => {
   });
 });
 
-describe('getPrevFile', () => {
+describe('getPreviousFile', () => {
   it('returns null for empty list', () => {
-    expect(getPrevFile(null, [], 'continuous')).toBeNull();
+    expect(getPreviousFile(null, [], 'continuous')).toBeNull();
   });
 
   it('returns current in repeat mode', () => {
-    expect(getPrevFile('b.mp3', files, 'repeat')).toBe('b.mp3');
+    expect(getPreviousFile('b.mp3', files, 'repeat')).toBe('b.mp3');
   });
 
   it('returns a file from the list in shuffle mode', () => {
-    const result = getPrevFile('a.mp3', files, 'shuffle');
+    const result = getPreviousFile('a.mp3', files, 'shuffle');
     expect(files).toContain(result);
   });
 
   it('returns last file when current is null', () => {
-    expect(getPrevFile(null, files, 'continuous')).toBe('d.mp3');
+    expect(getPreviousFile(null, files, 'continuous')).toBe('d.mp3');
   });
 
   it('returns previous file in sequence', () => {
-    expect(getPrevFile('c.mp3', files, 'continuous')).toBe('b.mp3');
-    expect(getPrevFile('b.mp3', files, 'continuous')).toBe('a.mp3');
+    expect(getPreviousFile('c.mp3', files, 'continuous')).toBe('b.mp3');
+    expect(getPreviousFile('b.mp3', files, 'continuous')).toBe('a.mp3');
   });
 
   it('wraps to last file before first', () => {
-    expect(getPrevFile('a.mp3', files, 'continuous')).toBe('d.mp3');
+    expect(getPreviousFile('a.mp3', files, 'continuous')).toBe('d.mp3');
   });
 
   it('wraps to last file when current not found', () => {
-    expect(getPrevFile('z.mp3', files, 'continuous')).toBe('d.mp3');
+    expect(getPreviousFile('z.mp3', files, 'continuous')).toBe('d.mp3');
   });
 });
