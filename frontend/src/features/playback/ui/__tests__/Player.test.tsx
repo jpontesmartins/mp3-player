@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import Player from '../Player';
 import { PlayerProvider } from '../../../../app/providers/PlayerContext';
 import { LibraryProvider } from '../../../../app/providers/LibraryContext';
@@ -17,8 +16,6 @@ vi.mock('../../../../shared/api/cover', () => ({
   getCoverUrl: vi.fn(() => 'http://localhost:8111/cover?path=test'),
   downloadCover: vi.fn(),
 }));
-
-import * as playbackApi from '../../../../shared/api/playback';
 
 function renderPlayer() {
   return render(
