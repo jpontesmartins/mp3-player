@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getNextFile, getPrevFile } from '../navigation';
+import { getNextFile, getPrevFile } from '../../lib/navigation';
 
 const files = ['a.mp3', 'b.mp3', 'c.mp3', 'd.mp3'];
 

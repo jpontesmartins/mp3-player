@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { render } from '@testing-library/react';
-import PlaylistTooltip from '../PlaylistTooltip';
+import { render, screen } from '@testing-library/react';
+import PlaylistTooltip from '../../ui/PlaylistTooltip';
 import type { Id3Tags } from '../../../../shared/types';
 
 const tags: Id3Tags = {
@@ -66,5 +66,3 @@ describe('PlaylistTooltip', () => {
     expect(tooltip.style.top).toBe('-9999px');
   });
 });
-
-import { screen } from '@testing-library/react';

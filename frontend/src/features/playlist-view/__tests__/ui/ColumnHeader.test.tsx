@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
-import ColumnHeader from '../ColumnHeader';
+import ColumnHeader from '../../ui/ColumnHeader';
 
 function renderHeader(overrides = {}) {
   const defaultProps = {

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import Player from '../Player';
+import Player from '../../ui/Player';
 import { PlayerProvider } from '../../../../app/providers/PlayerContext';
 import { LibraryProvider } from '../../../../app/providers/LibraryContext';
 

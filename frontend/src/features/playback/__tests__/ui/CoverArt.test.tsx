@@ -1,13 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, act } from '@testing-library/react';
-import CoverArt from '../CoverArt';
+import CoverArt from '../../ui/CoverArt';
 
 vi.mock('../../../../shared/api/cover', () => ({
   getCoverUrl: vi.fn((path: string) => `http://localhost:8111/cover?path=${path}`),
   downloadCover: vi.fn(),
 }));
-
-
 
 beforeEach(() => {
   vi.clearAllMocks();
