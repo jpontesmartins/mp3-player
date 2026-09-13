@@ -34,6 +34,7 @@ export default function Playlist() {
   const player = usePlayer();
   const library = useLibrary();
   const { playFile } = usePlayback();
+  
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
   const [tooltipStyle, setTooltipStyle] = useState<{ left: number; top: number } | null>(null);
   const [artistPct, setArtistPct] = useState(30);

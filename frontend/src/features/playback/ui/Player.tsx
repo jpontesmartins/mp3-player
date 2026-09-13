@@ -17,6 +17,7 @@ export default function Player() {
   const player = usePlayer();
   const library = useLibrary();
   const { togglePlayPause, stop, prev, next, seek, scrollToCurrent } = usePlayback();
+  
   const barRef = useRef<HTMLDivElement>(null);
   const [coverBusy, setCoverBusy] = useState(false);
   const [coverMsg, setCoverMsg] = useState<string | null>(null);
