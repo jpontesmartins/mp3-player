@@ -1,21 +1,20 @@
-import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
-import SearchIcon from '@mui/icons-material/Search';
-import SaveIcon from '@mui/icons-material/Save';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { revealItemInDir } from '@tauri-apps/plugin-opener';
 import { usePlayer } from '../../../app/providers/PlayerContext';
 import { useLibrary } from '../../../app/providers/LibraryContext';
 import { usePlayback } from '../../playback/lib/usePlayback';
-import { formatTime, fileName, displayName } from '../../../shared/lib/format';
-import { filterPlaylist } from '../../../shared/lib/search';
+import { formatTime, fileName } from '../../../shared/lib/format';
 import { CtxMenuItem, getContextMenuPosition, useContextMenuClose } from '../../../shared/ui/ContextMenu';
-import * as playlistApi from '../../../shared/api/playlist';
 import type { Id3Tags } from '../../../shared/types';
-
-interface TooltipState { file: string; x: number; y: number; }
-type ResizeType = 'artist' | 'time';
+import { useColumnResize } from '../lib/useColumnResize';
+import { usePlaylistTooltip } from '../lib/usePlaylistTooltip';
+import { usePlaylistSearch } from '../lib/usePlaylistSearch';
+import ColumnHeader from './ColumnHeader';
+import PlaylistTooltip from './PlaylistTooltip';
+import SearchBar from './SearchBar';
 
 function totalDuration(files: string[], cache: Map<string, Id3Tags>): number {
   let total = 0;
@@ -26,109 +25,21 @@ function totalDuration(files: string[], cache: Map<string, Id3Tags>): number {
   return total;
 }
 
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
-}
-
 export default function Playlist() {
   const player = usePlayer();
   const library = useLibrary();
   const { playFile } = usePlayback();
-  
-  const [tooltip, setTooltip] = useState<TooltipState | null>(null);
-  const [tooltipStyle, setTooltipStyle] = useState<{ left: number; top: number } | null>(null);
-  const [artistPct, setArtistPct] = useState(30);
-  const [timePx, setTimePx] = useState(62);
-  const [dragType, setDragType] = useState<ResizeType | null>(null);
-  const [query, setQuery] = useState('');
-  const [searchFocused, setSearchFocused] = useState(false);
-  const [saveName, setSaveName] = useState('');
-  const [saveOpen, setSaveOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [saveMsg, setSaveMsg] = useState('');
-  const hoverTimer = useRef<number | null>(null);
-  const tooltipRef = useRef<HTMLDivElement>(null);
-  const headerRef = useRef<HTMLDivElement>(null);
-  const dragInfo = useRef<{ type: ResizeType; startX: number; startArtist: number; startTime: number } | null>(null);
-  const textareaRef = useRef<HTMLInputElement>(null);
-  const saveInputRef = useRef<HTMLInputElement>(null);
-  const saveMsgTimer = useRef<number | null>(null);
+
+  const resize = useColumnResize();
+  const tooltipHook = usePlaylistTooltip();
+  const search = usePlaylistSearch();
+
   const [songCtxMenu, setSongCtxMenu] = useState<{ x: number; y: number; file: string } | null>(null);
   const songCtxMenuRef = useRef<HTMLDivElement>(null);
 
-  const filteredFiles = useMemo(() => filterPlaylist(library.playlistFiles, query, library.id3Cache), [library.playlistFiles, query, library.id3Cache]);
-  const displayFiles = filteredFiles;
-  const isFiltered = query.trim().length > 0 && filteredFiles.length < library.playlistFiles.length;
+  const tooltipTags = tooltipHook.tooltip ? library.id3Cache.get(tooltipHook.tooltip.file) : undefined;
 
-  useEffect(() => {
-    if (!dragType) return undefined;
-    const onMove = (e: MouseEvent) => {
-      const info = dragInfo.current;
-      if (!info || !headerRef.current) return;
-      const width = headerRef.current.clientWidth || 1;
-      const dx = e.clientX - info.startX;
-      if (info.type === 'artist') setArtistPct(clamp(info.startArtist + (dx / width) * 100, 15, 55));
-      else setTimePx(clamp(info.startTime + dx, 40, 160));
-    };
-    const onUp = () => { dragInfo.current = null; setDragType(null); };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
-    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
-  }, [dragType]);
-
-  const startResize = (type: ResizeType) => (e: React.MouseEvent) => {
-    e.preventDefault();
-    dragInfo.current = { type, startX: e.clientX, startArtist: artistPct, startTime: timePx };
-    setDragType(type);
-  };
-
-  const gridStyle = { gridTemplateColumns: `${artistPct}% 1fr ${timePx}px` };
-  const clearTimer = () => { if (hoverTimer.current !== null) { window.clearTimeout(hoverTimer.current); hoverTimer.current = null; } };
-
-  const handleEnter = (file: string) => (e: React.MouseEvent<HTMLLIElement>) => {
-    clearTimer();
-    hoverTimer.current = window.setTimeout(() => setTooltip({ file, x: e.clientX, y: e.clientY }), 1000);
-  };
-
-  const handleLeave = () => { clearTimer(); setTooltip(null); setTooltipStyle(null); };
-
-  useEffect(() => {
-    if (!tooltip) { setTooltipStyle(null); return undefined; }
-    let raf = 0;
-    raf = requestAnimationFrame(() => {
-      const el = tooltipRef.current;
-      if (!el) return;
-      const r = el.getBoundingClientRect();
-      let left = tooltip.x + 14;
-      let top = tooltip.y + 14;
-      if (left + r.width > window.innerWidth) left = tooltip.x - r.width - 14;
-      if (top + r.height > window.innerHeight) top = tooltip.y - r.height - 14;
-      setTooltipStyle({ left: Math.max(6, left), top: Math.max(6, top) });
-    });
-    return () => cancelAnimationFrame(raf);
-  }, [tooltip]);
-
-  useEffect(() => { if (saveOpen && saveInputRef.current) saveInputRef.current.focus(); }, [saveOpen]);
-  useEffect(() => () => { if (saveMsgTimer.current !== null) window.clearTimeout(saveMsgTimer.current); }, []);
   useContextMenuClose(!!songCtxMenu, () => setSongCtxMenu(null));
-
-  const handleSaveConfirm = useCallback(async () => {
-    const name = saveName.trim();
-    if (!name || filteredFiles.length === 0) return;
-    setSaving(true);
-    const ok = await playlistApi.savePlaylist(name, filteredFiles);
-    if (ok) {
-      setSaveMsg(`Playlist "${name}" salva (${filteredFiles.length} músicas)`);
-      setSaveOpen(false);
-      setSaveName('');
-      await library.refreshPlaylists();
-    } else {
-      setSaveMsg('Erro ao salvar playlist');
-    }
-    setSaving(false);
-    if (saveMsgTimer.current !== null) window.clearTimeout(saveMsgTimer.current);
-    saveMsgTimer.current = window.setTimeout(() => setSaveMsg(''), 4000);
-  }, [saveName, filteredFiles, library]);
 
   const handleSongContextMenu = useCallback((e: React.MouseEvent<HTMLLIElement>, file: string) => {
     e.preventDefault();
@@ -139,26 +50,20 @@ export default function Playlist() {
   const openFolderForSong = useCallback(async (file: string) => { setSongCtxMenu(null); try { await revealItemInDir(file); } catch { /* noop */ } }, []);
   const copySongPath = useCallback((file: string) => { setSongCtxMenu(null); navigator.clipboard.writeText(file).catch(() => {}); }, []);
 
-  const searchExpanded = searchFocused || query.trim().length > 0;
+  const displayFiles = search.filteredFiles;
+  const total = totalDuration(displayFiles, library.id3Cache);
 
   if (library.id3Loading) {
     return (
       <>
         <section id="playlist-section">
-          <div id="playlist-header" style={gridStyle}>
-            <span className="pl-header-artist">Artista</span>
-            <span className="pl-header-title">Música</span>
-            <span className="pl-header-time">Tempo</span>
-          </div>
+          <ColumnHeader {...resize} />
           <div className="playlist-loading">
             <AutorenewIcon className="playlist-spinner" />
             <span>Carregando dados... {library.id3Total > 0 ? `${library.id3Loaded}/${library.id3Total}` : ''}</span>
           </div>
         </section>
-        <div id="playlist-search-bar" className={searchExpanded ? 'expanded' : ''}>
-          <span className="search-icon"><SearchIcon /></span>
-          <input ref={textareaRef} className="playlist-search-input" placeholder="" type="text" value={query} onChange={e => setQuery(e.target.value)} onFocus={() => setSearchFocused(true)} onBlur={() => setSearchFocused(false)} onKeyDown={e => { if (e.key === 'Escape') { setQuery(''); textareaRef.current?.blur(); } }} />
-        </div>
+        <SearchBar {...search} filteredCount={displayFiles.length} totalCount={library.playlistFiles.length} />
       </>
     );
   }
@@ -169,27 +74,15 @@ export default function Playlist() {
         <section id="playlist-section">
           <ul id="playlist"><li style={{ color: '#666' }}>Nenhum arquivo .mp3 encontrado</li></ul>
         </section>
-        <div id="playlist-search-bar">
-          <span className="search-icon"><SearchIcon /></span>
-          <input className="playlist-search-input" placeholder="" type="text" disabled />
-        </div>
+        <SearchBar {...search} filteredCount={0} totalCount={0} disabled />
       </>
     );
   }
 
-  const total = totalDuration(displayFiles, library.id3Cache);
-  const tooltipTags = tooltip ? library.id3Cache.get(tooltip.file) : undefined;
-
   return (
     <>
       <section id="playlist-section">
-        <div id="playlist-header" ref={headerRef} style={gridStyle}>
-          <span className="pl-header-artist">Artista</span>
-          <span className="pl-header-title">Música</span>
-          <span className="pl-header-time">Tempo</span>
-          <span className={`pl-resizer ${dragType === 'artist' ? 'dragging' : ''}`} style={{ left: `calc(${artistPct}% - 4px)` }} title="Redimensionar coluna" onMouseDown={startResize('artist')} />
-          <span className={`pl-resizer ${dragType === 'time' ? 'dragging' : ''}`} style={{ left: `calc(100% - ${timePx}px - 5px)` }} title="Redimensionar coluna" onMouseDown={startResize('time')} />
-        </div>
+        <ColumnHeader {...resize} />
         <ul id="playlist">
           {displayFiles.map((file) => {
             const tags = library.id3Cache.get(file);
@@ -198,7 +91,7 @@ export default function Playlist() {
             const dur = tags?.duration_ms ? Number(tags.duration_ms) : 0;
             const active = file === player.currentFile;
             return (
-              <li key={file} className={active ? 'active' : ''} style={gridStyle} onClick={() => playFile(file)} onContextMenu={e => handleSongContextMenu(e, file)} onMouseEnter={handleEnter(file)} onMouseLeave={handleLeave}>
+              <li key={file} className={active ? 'active' : ''} style={resize.gridStyle} onClick={() => playFile(file)} onContextMenu={e => handleSongContextMenu(e, file)} onMouseEnter={tooltipHook.handleEnter(file)} onMouseLeave={tooltipHook.handleLeave}>
                 <span className="pl-artist">{artist}</span>
                 <span className="pl-title">{title}</span>
                 <span className="pl-duration">{dur > 0 ? formatTime(dur) : ''}</span>
@@ -211,45 +104,19 @@ export default function Playlist() {
           {total > 0 && <span>{formatTime(total)}</span>}
         </div>
 
-        {tooltip && tooltipTags && (
-          <div ref={tooltipRef} className="id3-tooltip" style={tooltipStyle ?? { left: -9999, top: -9999 }}>
-            <div className="id3-tooltip-title">{displayName(tooltipTags, fileName(tooltip.file))}</div>
-            <dl className="id3-tooltip-list">
-              {tooltipTags.title && <div><dt>Música</dt><dd>{tooltipTags.title}</dd></div>}
-              {tooltipTags.artist && <div><dt>Artista</dt><dd>{tooltipTags.artist}</dd></div>}
-              {tooltipTags.album && <div><dt>Álbum</dt><dd>{tooltipTags.album}</dd></div>}
-              {tooltipTags.year && <div><dt>Ano</dt><dd>{tooltipTags.year}</dd></div>}
-              {tooltipTags.genre && <div><dt>Gênero</dt><dd>{tooltipTags.genre}</dd></div>}
-              {tooltipTags.track && <div><dt>Faixa</dt><dd>{tooltipTags.track}</dd></div>}
-              {tooltipTags.duration_ms && <div><dt>Duração</dt><dd>{formatTime(Number(tooltipTags.duration_ms))}</dd></div>}
-              {tooltipTags.kbps && <div><dt>Bitrate</dt><dd>{tooltipTags.kbps} kbps</dd></div>}
-            </dl>
-          </div>
+        {tooltipHook.tooltip && tooltipTags && (
+          <PlaylistTooltip
+            file={tooltipHook.tooltip.file}
+            x={tooltipHook.tooltip.x}
+            y={tooltipHook.tooltip.y}
+            style={tooltipHook.tooltipStyle}
+            ref={tooltipHook.tooltipRef}
+            tags={tooltipTags}
+          />
         )}
       </section>
 
-      <div id="playlist-search-bar" className={searchExpanded ? 'expanded' : ''}>
-        <span className="search-icon"><SearchIcon /></span>
-        <div className="playlist-search-field">
-          <input ref={textareaRef} className="playlist-search-input" placeholder="" type="text" value={query} onChange={e => setQuery(e.target.value)} onFocus={() => setSearchFocused(true)} onBlur={() => setSearchFocused(false)} onKeyDown={e => { if (e.key === 'Escape') { setQuery(''); textareaRef.current?.blur(); } }} />
-          {isFiltered && <span className="playlist-search-count">{filteredFiles.length} / {library.playlistFiles.length}</span>}
-        </div>
-        {isFiltered && (
-          <button className="playlist-save-btn" title="Salvar resultado como playlist" onClick={() => { setSaveOpen(true); setSaveName(''); }}>
-            <SaveIcon />
-          </button>
-        )}
-      </div>
-
-      {saveOpen && (
-        <div className="playlist-save-row">
-          <input ref={saveInputRef} className="playlist-save-input" placeholder="Nome da playlist" value={saveName} onChange={e => setSaveName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handleSaveConfirm(); if (e.key === 'Escape') setSaveOpen(false); }} />
-          <button className="pmanager-btn primary" onClick={handleSaveConfirm} disabled={saving || !saveName.trim()}>{saving ? '...' : 'Salvar'}</button>
-          <button className="pmanager-btn" onClick={() => setSaveOpen(false)}>Cancelar</button>
-        </div>
-      )}
-
-      {saveMsg && <div className="playlist-save-msg">{saveMsg}</div>}
+      <SearchBar {...search} filteredCount={displayFiles.length} totalCount={library.playlistFiles.length} />
 
       {songCtxMenu && (
         <div ref={songCtxMenuRef} id="song-context-menu" style={{ left: songCtxMenu.x, top: songCtxMenu.y }} onMouseDown={e => e.stopPropagation()}>
