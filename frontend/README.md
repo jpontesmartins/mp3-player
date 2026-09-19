@@ -15,3 +15,5 @@ Aplicação desktop construída com **Tauri v2 + React 18 + Vite + TypeScript (s
 | Shell desktop | Rust | 2021 edition |
 | Ícones | MUI (Material UI) | 9.2.0 |
 | Estilização | CSS puro (CSS custom properties) | — |
+
+Refatorando para feature sliced design.
