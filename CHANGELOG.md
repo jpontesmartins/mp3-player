@@ -10,6 +10,33 @@ versões seguem [Semântic Versioning](https://semver.org/lang/pt-BR/).
 
 
 
+
+## [1.5.0] — 2026-09-19
+
+### Adicionado
+- Merge pull request #12 from jpontesmartins/refactor/feature-sliced-design
+- readme feature sliced design
+- testes feature playback
+- feature sliced design
+
+### Alterado
+- controles stop e musica anterior;
+- nomenclaturas
+- Pasta dos testes
+- skill frontend
+- readme funcionalidades atualizado com a dominio
+- Merge pull request #10 from jpontesmartins/refactor/omp-08
+- docs: atualizar estrutura de pastas no README para com.ovelha.fy
+- refactor: migrar packages de com.mp3player para com.ovelha.fy
+
+### Corrigido
+- fix controles
+- Merge pull request #11 from jpontesmartins/fix/skill-frontend
+
+### Refatorado
+- testes e refatoração do playlist-view
+- refatoracao Player.tsx externalizando o CoverArt.tsx
+
 ## [1.4.0] — 2026-08-30
 
 ### Adicionado

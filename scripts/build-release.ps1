@@ -135,7 +135,7 @@ if ($DryRun) {
 $packageJson = Join-Path $root 'frontend\package.json'
 $tauriConf   = Join-Path $root 'frontend\src-tauri\tauri.conf.json'
 $cargoToml   = Join-Path $root 'frontend\src-tauri\Cargo.toml'
-$appTsx      = Join-Path $root 'frontend\src\App.tsx'
+$appTsx      = Join-Path $root 'frontend\src\app\App.tsx'
 
 # package.json
 (Get-Content $packageJson -Raw) -replace '"version"\s*:\s*"[^"]*"', "`"version`": `"$newVersion`"" |
