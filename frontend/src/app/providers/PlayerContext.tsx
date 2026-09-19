@@ -10,6 +10,7 @@ interface PlayerState {
   playbackMode: PlaybackMode;
   showCover: boolean;
   intentionalStop: boolean;
+  playHistory: string[];
 }
 
 interface PlayerActions {
@@ -20,9 +21,11 @@ interface PlayerActions {
   setPlaybackMode: (mode: PlaybackMode) => void;
   setShowCover: (show: boolean) => void;
   setIntentionalStop: (value: boolean) => void;
+  setPlayHistory: (history: string[]) => void;
   currentFileRef: React.MutableRefObject<string | null>;
   playlistRef: React.MutableRefObject<string[]>;
   modeRef: React.MutableRefObject<PlaybackMode>;
+  playHistoryRef: React.MutableRefObject<string[]>;
 }
 
 const PlayerContext = createContext<PlayerState & PlayerActions>(null!);
@@ -35,18 +38,21 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const [playbackMode, setPlaybackMode] = useState<PlaybackMode>('continuous');
   const [showCover, setShowCover] = useState(true);
   const [intentionalStop, setIntentionalStop] = useState(false);
+  const [playHistory, setPlayHistory] = useState<string[]>([]);
 
   const currentFileRef = useRef(currentFile);
   currentFileRef.current = currentFile;
   const playlistRef = useRef<string[]>([]);
   const modeRef = useRef(playbackMode);
   modeRef.current = playbackMode;
+  const playHistoryRef = useRef(playHistory);
+  playHistoryRef.current = playHistory;
 
   return (
     <PlayerContext.Provider value={{
-      currentFile, status, position, duration, playbackMode, showCover, intentionalStop,
-      setCurrentFile, setStatus, setPosition, setDuration, setPlaybackMode, setShowCover, setIntentionalStop,
-      currentFileRef, playlistRef, modeRef,
+      currentFile, status, position, duration, playbackMode, showCover, intentionalStop, playHistory,
+      setCurrentFile, setStatus, setPosition, setDuration, setPlaybackMode, setShowCover, setIntentionalStop, setPlayHistory,
+      currentFileRef, playlistRef, modeRef, playHistoryRef,
     }}>
       {children}
     </PlayerContext.Provider>

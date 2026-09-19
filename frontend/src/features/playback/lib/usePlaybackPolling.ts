@@ -10,6 +10,7 @@ export function usePlaybackPolling() {
   const lastLoggedFile = useRef<string | null>(null);
   const previousStatusRef = useRef(player.status);
   previousStatusRef.current = player.status;
+  const advancingRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -25,14 +26,19 @@ export function usePlaybackPolling() {
             player.setDuration(0);
             lastLoggedFile.current = null;
 
-            if ((previousStatusRef.current === 'playing' || previousStatusRef.current === 'paused') && !player.intentionalStop) {
-              const nextTrack = getNextFile(player.currentFileRef.current, library.playlistFiles, player.modeRef.current);
-              if (nextTrack) {
-                const success = await playbackApi.play(nextTrack);
-                if (success) {
-                  player.setCurrentFile(nextTrack);
-                  player.setStatus('playing');
+            if ((previousStatusRef.current === 'playing' || previousStatusRef.current === 'paused') && !player.intentionalStop && !advancingRef.current) {
+              advancingRef.current = true;
+              try {
+                const nextTrack = getNextFile(player.currentFileRef.current, library.playlistFiles, player.modeRef.current);
+                if (nextTrack) {
+                  const success = await playbackApi.play(nextTrack);
+                  if (success) {
+                    player.setCurrentFile(nextTrack);
+                    player.setStatus('playing');
+                  }
                 }
+              } finally {
+                advancingRef.current = false;
               }
             }
             player.setIntentionalStop(false);

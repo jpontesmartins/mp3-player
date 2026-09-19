@@ -2,15 +2,24 @@ import { useCallback } from 'react';
 import { usePlayer } from '../../../app/providers/PlayerContext';
 import { useLibrary } from '../../../app/providers/LibraryContext';
 import * as playbackApi from '../../../shared/api/playback';
-import { getNextFile, getPreviousFile } from './navigation';
+import { getNextFile } from './navigation';
+
+const MAX_HISTORY = 100;
 
 export function usePlayback() {
   const player = usePlayer();
   const library = useLibrary();
 
   const playFile = useCallback(async (file: string) => {
+    if (player.currentFile && player.currentFile !== file) {
+      await playbackApi.stop();
+    }
     const success = await playbackApi.play(file);
     if (success) {
+      if (player.currentFile && player.currentFile !== file) {
+        const newHistory = [...player.playHistoryRef.current, player.currentFile].slice(-MAX_HISTORY);
+        player.setPlayHistory(newHistory);
+      }
       player.setCurrentFile(file);
       player.setStatus('playing');
     }
@@ -30,10 +39,8 @@ export function usePlayback() {
     player.setIntentionalStop(true);
     const success = await playbackApi.stop();
     if (success) {
-      player.setCurrentFile(null);
-      player.setStatus('stopped');
+      player.setStatus('paused');
       player.setPosition(0);
-      player.setDuration(0);
     }
   }, [player]);
 
@@ -53,9 +60,12 @@ export function usePlayback() {
   }, [player.status, player.currentFile, playFile, resume, pause]);
 
   const previous = useCallback(() => {
-    const target = getPreviousFile(player.currentFile, library.playlistFiles, player.playbackMode);
-    if (target) playFile(target);
-  }, [player.currentFile, library.playlistFiles, player.playbackMode, playFile]);
+    if (player.playHistory.length > 0) {
+      const prevFile = player.playHistory[player.playHistory.length - 1];
+      player.setPlayHistory(player.playHistory.slice(0, -1));
+      playFile(prevFile);
+    }
+  }, [player.playHistory, player.setPlayHistory, playFile]);
 
   const next = useCallback(() => {
     const target = getNextFile(player.currentFile, library.playlistFiles, player.playbackMode);

@@ -71,7 +71,7 @@ describe('usePlayback', () => {
   });
 
   describe('stop', () => {
-    it('calls stop API and sets intentionalStop', async () => {
+    it('calls stop API and sets status to paused with position 0', async () => {
       vi.mocked(playbackApi.stop).mockResolvedValue(true);
       const { result } = renderHook(() => usePlayback(), { wrapper });
 
@@ -101,6 +101,16 @@ describe('usePlayback', () => {
       expect(playbackApi.play).not.toHaveBeenCalled();
       expect(playbackApi.pause).not.toHaveBeenCalled();
       expect(playbackApi.resume).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('previous', () => {
+    it('does nothing when history is empty', async () => {
+      const { result } = renderHook(() => usePlayback(), { wrapper });
+
+      await act(() => result.current.previous());
+
+      expect(playbackApi.play).not.toHaveBeenCalled();
     });
   });
 
