@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+import { useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { usePlaybackPolling } from '../../lib/usePlaybackPolling';
-import { PlayerProvider } from '../../../../app/providers/PlayerContext';
-import { LibraryProvider } from '../../../../app/providers/LibraryContext';
+import { PlayerProvider, usePlayer } from '../../../../app/providers/PlayerContext';
+import { LibraryProvider, useLibrary } from '../../../../app/providers/LibraryContext';
 
 vi.mock('../../../../shared/api/playback', () => ({
   getStatus: vi.fn(),
@@ -56,6 +57,77 @@ describe('usePlaybackPolling', () => {
     await act(() => vi.advanceTimersByTimeAsync(2000));
 
     expect(playbackApi.getStatus).toHaveBeenCalledTimes(2);
+  });
+
+  it('starts the next track when the current track finishes', async () => {
+    vi.mocked(playbackApi.getStatus)
+      .mockResolvedValueOnce({ status: 'playing', file: 'a.mp3', position: 0, duration: 100 })
+      .mockResolvedValueOnce({ status: 'stopped', file: 'a.mp3', position: 0, duration: 0 });
+    vi.mocked(playbackApi.play).mockResolvedValue(true);
+
+    function SetupState({ children }: { children: ReactNode }) {
+      const library = useLibrary();
+      const player = usePlayer();
+      useEffect(() => {
+        library.setPlaylistFiles(['a.mp3', 'b.mp3', 'c.mp3']);
+        player.setCurrentFile('a.mp3');
+        player.setStatus('playing');
+      }, []);
+      return <>{children}</>;
+    }
+
+    function setupWrapper({ children }: { children: ReactNode }) {
+      return (
+        <LibraryProvider>
+          <PlayerProvider>
+            <SetupState>{children}</SetupState>
+          </PlayerProvider>
+        </LibraryProvider>
+      );
+    }
+
+    renderHook(() => usePlaybackPolling(), { wrapper: setupWrapper });
+
+    await act(() => vi.advanceTimersByTimeAsync(0));
+    await act(() => vi.advanceTimersByTimeAsync(2000));
+
+    expect(playbackApi.play).toHaveBeenCalledWith('b.mp3');
+  });
+
+  it('does not auto-advance after an intentional stop', async () => {
+    vi.mocked(playbackApi.getStatus)
+      .mockResolvedValueOnce({ status: 'playing', file: 'a.mp3', position: 0, duration: 100 })
+      .mockResolvedValueOnce({ status: 'stopped', file: 'a.mp3', position: 0, duration: 0 });
+    vi.mocked(playbackApi.play).mockResolvedValue(true);
+
+    function SetupState({ children }: { children: ReactNode }) {
+      const library = useLibrary();
+      const player = usePlayer();
+      useEffect(() => {
+        library.setPlaylistFiles(['a.mp3', 'b.mp3', 'c.mp3']);
+        player.setCurrentFile('a.mp3');
+        player.setStatus('playing');
+        player.setIntentionalStop(true);
+      }, []);
+      return <>{children}</>;
+    }
+
+    function setupWrapper({ children }: { children: ReactNode }) {
+      return (
+        <LibraryProvider>
+          <PlayerProvider>
+            <SetupState>{children}</SetupState>
+          </PlayerProvider>
+        </LibraryProvider>
+      );
+    }
+
+    renderHook(() => usePlaybackPolling(), { wrapper: setupWrapper });
+
+    await act(() => vi.advanceTimersByTimeAsync(0));
+    await act(() => vi.advanceTimersByTimeAsync(2000));
+
+    expect(playbackApi.play).not.toHaveBeenCalled();
   });
 
   it('handles playing status by updating position and duration', async () => {
