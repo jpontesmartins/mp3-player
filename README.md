@@ -24,6 +24,7 @@ Gerenciador e organizador de coleção de músicas local com tocador de mp3. Org
 | Desktop | Tauri | v2 |
 | Ícones | MUI (Material UI) | 9.2 |
 | Testes backend | JUnit 5 + Mockito | — |
+| Testes frontend | Vitest + Testing Library | 5 |
 
 ---
 
@@ -32,19 +33,20 @@ Gerenciador e organizador de coleção de músicas local com tocador de mp3. Org
 | Funcionalidade | Domínio | Descrição |
 |---|---|---|
 | Reprodução MP3 | `player/controls` | Play, pausa, stop, resume e seek em arquivos MP3 locais |
-| Navegação entre faixas | `player/controls` | Anterior / próxima com três modos: Contínua, Aleatória e Repetição |
+| Navegação entre faixas | `player/controls` | Anterior / próxima com três modos: Contínua, Aleatória e Repetição, além de stop |
 | Auto-play | `player/controls` | Reproduz automaticamente a próxima faixa ao término da atual |
 | Tags ID3 | `player/music` | Leitura e edição de artista, título, álbum, ano, gênero, faixa, disco, bitrate e duração |
-| Edição em lote (bulk) | `player/music` | Edição de tags ID3 de múltiplos arquivos a partir de padrões de nome |
+| Edição em lote (bulk) | `player/music` | Edição de tags ID3 de múltiplos arquivos a partir de padrões de nome ou de um álbum na coleção |
 | Capa do álbum | `player/music` | Exibição automática de arquivos de capa (jpg/png/webp/gif) |
 | Download de capa | `player/music` | Busca automática via APIs do iTunes (fallback: Deezer) |
-| Gerenciador de coleção | `player/music` | Lista de álbuns e artistas com edição de tags ID3 em grade |
+| Gerenciador de coleção | `player/music` | Lista de álbuns e artistas com edição de tags ID3 em grade e menu de contexto com ícone |
 | Busca avançada | `player/music` | Filtros com operadores lógicos (`&&`, `||`) e filtros por tag |
 | Playlists físicas | `player/playlist` | Escaneamento de pastas para arquivos MP3 |
-| Playlists virtuais | `player/playlist` | Criação, edição (duas colunas), renomeação, exclusão e carregamento |
+| Playlists virtuais | `player/playlist` | Criação com drag and drop, edição (duas colunas), renomeação e exclusão |
 | Cache de metadados | `player/domain` | Cache em disco usando Decorator Pattern |
-| Letras (lyrics) | `lyrics` | Busca via web scraping em letras.mus.br com cache local e edição |
+| Letras (lyrics) | `lyrics` | Busca via web scraping em letras.mus.br com cache local, edição, ajuste de fonte e rolagem até a música atual |
 | Dicionário | `dictionary` | Consulta de palavras em dicionário online (Priberam para português) |
+| Menu de contexto | `shared` | Menu com ícones em Playlist e Coleção > Álbuns |
 | Temas | `shared` | Suporte a tema escuro e claro com CSS custom properties |
 
 ---
@@ -88,34 +90,40 @@ mp3-player/
 │       │       ├── application/        #   DictionaryLookupService
 │       │       ├── infrastructure/     #   PriberamSource
 │       │       └── web/                #   DictionaryController
-│       ├── main/resources/
-│       │   └── application.properties
-│       └── test/java/com/ovelha/fy/   # Testes unitários
+│   ├── main/resources/
+│   │   └── application.properties
+│   └── test/java/com/ovelha/fy/   # Testes unitários
 ├── frontend/                           # App desktop com Tauri v2 + React 18
 │   ├── package.json
 │   ├── README.md
 │   ├── index.html
 │   ├── vite.config.js
+│   ├── vitest.config.ts                # Configuração dos testes (Vitest)
 │   ├── tsconfig.json
-│   ├── src/
-│   │   ├── main.tsx
-│   │   ├── App.tsx                     # Componente raiz (estado global, polling, auto-play)
-│   │   ├── App.css                     # Estilos globais + CSS custom properties (temas)
-│   │   ├── config.ts                   # URL base da API
-│   │   ├── searchParser.ts             # Parser de busca avançada
-│   │   ├── vite-env.d.ts
-│   │   └── components/
-│   │       ├── Player.tsx              # Capa, controles de mídia, barra de progresso
-│   │       ├── Playlist.tsx            # Lista de músicas com busca avançada e tooltip ID3
-│   │       ├── FolderSelector.tsx      # Input de caminho de pasta
-│   │       ├── LyricsPanel.tsx         # Exibição/edição de letras
-│   │       ├── CollectionManager.tsx   # Lista de álbuns/artistas com edição em grade
-│   │       ├── BulkId3Editor.tsx       # Edição em lote de tags
-│   │       ├── InfoModal.tsx           # Dialog "Sobre"
-│   │       ├── SettingsPanel.tsx       # Modo de reprodução, tema, capa
-│   │       ├── PlaylistManager.tsx     # CRUD de playlists virtuais (drag and drop)
-│   │       ├── Toolbar.tsx             # Navegação
-│   │       └── DictionaryModal.tsx     # Consulta ao dicionário
+│   └── src/
+│       ├── main.tsx                     # Entry point React
+│       ├── test/setup.ts                # Setup do Vitest
+│       ├── app/                         # Composição e estado global
+│       │   ├── App.tsx                  # Componente raiz
+│       │   ├── App.css                  # Estilos globais + CSS custom properties (temas)
+│       │   └── providers/               # AppContext, LibraryContext, PlayerContext
+│       ├── widgets/                     # Componentes de composição
+│       │   ├── Toolbar.tsx              # Navegação
+│       │   ├── LeftPanel.tsx            # Coleção/playlists
+│       │   └── RightPanel.tsx           # Player + conteúdo atual
+│       ├── shared/                      # Código reutilizável
+│       │   ├── api/                     # Clientes HTTP (client, playback, playlist, id3, lyrics, cover, dictionary, system)
+│       │   ├── lib/                     # format.ts, search.ts (parser de busca avançada)
+│       │   ├── types/                   # Tipos da API
+│       │   └── ui/                      # Modal.tsx, ContextMenu.tsx
+│       └── features/                    # Feature-Sliced Design: ui/ + lib/ + __tests__/
+│           ├── app-info/                #   InfoModal.tsx (dialog "Sobre")
+│           ├── collection/              #   CollectionManager, BulkId3Editor, PlaylistManager + hooks
+│           ├── lyrics/                  #   LyricsPanel.tsx + useLyrics.ts
+│           ├── load-folder/             #   useLoadFolder.ts
+│           ├── playback/                #   Player, CoverArt + hooks de reprodução
+│           ├── playlist-view/           #   Playlist, SearchBar, ColumnHeader, PlaylistTooltip + hooks
+│           └── settings/                #   SettingsPanel.tsx (reprodução, tema, capa)
 │   └── src-tauri/                      # Shell Tauri (Rust)
 │       ├── Cargo.toml
 │       ├── tauri.conf.json
@@ -190,6 +198,14 @@ mvn test -Dtest=Mp3PlayerApplicationTests
 
 Valida que o contexto Spring sobe e injeta todos os beans.
 
+### Frontend (Vitest)
+
+```bash
+cd frontend
+npm test          # modo watch
+npm run test:run  # execução única
+```
+
 ---
 
 ## Como empacotar
@@ -254,3 +270,4 @@ O projeto foi projetado para funcionar como uma aplicação desktop local. Nesta
 |---|---|---|
 | `mp3_folder` | `string` | Caminho da última pasta carregada |
 | `mp3_theme` | `'dark' \| 'light'` | Tema selecionado pelo usuário |
+| `lyrics_font_size` | `string` | Tamanho da fonte da tela de letras |
