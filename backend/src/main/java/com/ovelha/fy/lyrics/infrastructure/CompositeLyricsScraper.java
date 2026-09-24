@@ -80,7 +80,18 @@ public class CompositeLyricsScraper implements LyricsScraper {
 
             log.info("[{}] Buscando página de letra: {}", source.getName(), pageUrl);
             Document doc = Jsoup.connect(pageUrl)
-                    .userAgent("Mozilla/5.0")
+                    .userAgent(source.getUserAgent())
+                    .referrer("https://www.letras.mus.br")
+                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
+                    .header("Accept-Language", "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7")
+                    .header("Accept-Encoding", "gzip, deflate, br")
+                    .header("Connection", "keep-alive")
+                    .header("Upgrade-Insecure-Requests", "1")
+                    .header("Sec-Fetch-Dest", "document")
+                    .header("Sec-Fetch-Mode", "navigate")
+                    .header("Sec-Fetch-Site", "none")
+                    .header("Sec-Fetch-User", "?1")
+                    .header("Cache-Control", "max-age=0")
                     .timeout(15000)
                     .get();
 

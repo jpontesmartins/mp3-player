@@ -32,6 +32,13 @@ public interface LyricsSource {
     boolean isEnabled();
 
     /**
+     * Retorna o User-Agent utilizado nas requisições HTTP.
+     *
+     * @return User-Agent string
+     */
+    String getUserAgent();
+
+    /**
      * Busca a URL da página da letra para o artista/título informados.
      *
      * @param artist nome do artista
