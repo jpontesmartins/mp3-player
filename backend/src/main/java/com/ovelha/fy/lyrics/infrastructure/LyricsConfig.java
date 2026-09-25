@@ -48,9 +48,15 @@ public class LyricsConfig {
                 props.letras().priority()
         ));
 
-        // Adicione novas fontes aqui:
-        // sources.add(new GeniusSource(...));
-        // sources.add(new MusixmatchSource(...));
+        sources.add(new VagalumeSource(
+                props.vagalume().baseUrl(),
+                props.vagalume().userAgent(),
+                props.vagalume().timeoutConnect(),
+                props.vagalume().timeoutFetch(),
+                props.vagalume().searchPath(),
+                props.vagalume().enabled(),
+                props.vagalume().priority()
+        ));
 
         return sources;
     }
