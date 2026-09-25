@@ -11,6 +11,22 @@ versões seguem [Semântic Versioning](https://semver.org/lang/pt-BR/).
 
 
 
+
+
+## [1.5.2] — 2026-09-25
+
+### Corrigido
+- bugfix letras; adicionada outra fonte
+- ajuste download letras
+
+## [1.5.1] — 2026-09-20
+
+### Alterado
+- atualizacao readme
+
+### Corrigido
+- bugfix autoplay; bugfix tooltip
+
 ## [1.5.0] — 2026-09-19
 
 ### Adicionado
