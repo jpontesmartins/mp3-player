@@ -89,9 +89,6 @@ public class VagalumeSource extends AbstractLyricsSource {
         Element lyricDiv = page.selectFirst("div#lyrics");
         if (lyricDiv == null) return null;
 
-//        for (Element br : lyricDiv.select("br")) {
-//            br.before("\n");
-//        }
         return lyricDiv.wholeText().trim();
     }
 

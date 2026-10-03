@@ -22,7 +22,7 @@ export function usePlaybackPolling() {
       while (!cancelled) {
         try {
           const data = await playbackApi.getStatus();
-          if (!data) { await delay(2000); continue; }
+          if (!data) { await delay(1000); continue; }
 
           if (data.status === 'stopped') {
             player.setStatus('stopped');
@@ -64,7 +64,7 @@ export function usePlaybackPolling() {
             }
           }
         } catch { /* ignore */ }
-        await delay(2000);
+        await delay(1000);
       }
     })();
     return () => { cancelled = true; };

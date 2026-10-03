@@ -32,16 +32,16 @@ afterEach(() => {
 });
 
 describe('usePlaybackPolling', () => {
-  it('calls getStatus immediately on mount and every 2s after', async () => {
+  it('calls getStatus immediately on mount and every 1s after', async () => {
     renderHook(() => usePlaybackPolling(), { wrapper });
 
     await act(() => vi.advanceTimersByTimeAsync(0));
     expect(playbackApi.getStatus).toHaveBeenCalledTimes(1);
 
-    await act(() => vi.advanceTimersByTimeAsync(2000));
+    await act(() => vi.advanceTimersByTimeAsync(1000));
     expect(playbackApi.getStatus).toHaveBeenCalledTimes(2);
 
-    await act(() => vi.advanceTimersByTimeAsync(2000));
+    await act(() => vi.advanceTimersByTimeAsync(1000));
     expect(playbackApi.getStatus).toHaveBeenCalledTimes(3);
   });
 
@@ -54,7 +54,7 @@ describe('usePlaybackPolling', () => {
     renderHook(() => usePlaybackPolling(), { wrapper });
 
     await act(() => vi.advanceTimersByTimeAsync(0));
-    await act(() => vi.advanceTimersByTimeAsync(2000));
+    await act(() => vi.advanceTimersByTimeAsync(1000));
 
     expect(playbackApi.getStatus).toHaveBeenCalledTimes(2);
   });
@@ -89,7 +89,7 @@ describe('usePlaybackPolling', () => {
     renderHook(() => usePlaybackPolling(), { wrapper: setupWrapper });
 
     await act(() => vi.advanceTimersByTimeAsync(0));
-    await act(() => vi.advanceTimersByTimeAsync(2000));
+    await act(() => vi.advanceTimersByTimeAsync(1000));
 
     expect(playbackApi.play).toHaveBeenCalledWith('b.mp3');
   });
@@ -125,7 +125,7 @@ describe('usePlaybackPolling', () => {
     renderHook(() => usePlaybackPolling(), { wrapper: setupWrapper });
 
     await act(() => vi.advanceTimersByTimeAsync(0));
-    await act(() => vi.advanceTimersByTimeAsync(2000));
+    await act(() => vi.advanceTimersByTimeAsync(1000));
 
     expect(playbackApi.play).not.toHaveBeenCalled();
   });
@@ -163,7 +163,7 @@ describe('usePlaybackPolling', () => {
 
     unmount();
 
-    await act(() => vi.advanceTimersByTimeAsync(2000));
+    await act(() => vi.advanceTimersByTimeAsync(1000));
     expect(playbackApi.getStatus).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
 import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
 import PauseIcon from '@mui/icons-material/Pause';
@@ -16,6 +16,17 @@ export default function Player() {
   const { togglePlayPause, stop, previous, next, seek, scrollToCurrent } = usePlayback();
 
   const barRef = useRef<HTMLDivElement>(null);
+  const playStartRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (player.status === 'playing' && player.currentFile) {
+      playStartRef.current = Date.now();
+    } else if (player.status === 'stopped') {
+      playStartRef.current = null;
+    }
+  }, [player.status, player.currentFile]);
+
+  const isSeekAllowed = playStartRef.current ? Date.now() - playStartRef.current >= 2000 : false;
 
   const progressPercentage = player.duration > 0 ? Math.min((player.position / player.duration) * 100, 100) : 0;
   const currentId3 = player.currentFile ? library.id3Cache.get(player.currentFile) : undefined;
@@ -26,11 +37,11 @@ export default function Player() {
   const canSkip = !!player.currentFile;
 
   const handleBarClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!player.duration || !player.currentFile || !barRef.current) return;
+    if (!isSeekAllowed || !player.duration || !player.currentFile || !barRef.current) return;
     const rect = barRef.current.getBoundingClientRect();
     const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
     seek(Math.round(ratio * player.duration));
-  }, [player.duration, player.currentFile, seek]);
+  }, [isSeekAllowed, player.duration, player.currentFile, seek]);
 
   const fallbackName = player.currentFile
     ? player.currentFile?.split('\\').pop()?.split('/').pop() || ''
@@ -50,7 +61,7 @@ export default function Player() {
       </div>
 
       <div id="progress-section">
-        <div id="progress-bar" ref={barRef} onClick={handleBarClick}>
+        <div id="progress-bar" ref={barRef} onClick={handleBarClick} style={{ cursor: isSeekAllowed ? 'pointer' : 'not-allowed' }}>
           <div id="progress-fill" style={{ width: `${progressPercentage}%` }} />
         </div>
         <span id="time-display">

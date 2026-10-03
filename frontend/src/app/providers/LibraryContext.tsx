@@ -49,8 +49,9 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
   const loadFolder = useCallback(async (folder: string, forceRefresh = false): Promise<boolean> => {
     const files = await playlistApi.loadFolder(folder);
     if (!files) return false;
-    setPlaylistFiles(files);
-    setLibraryFiles(files);
+    const uniqueFiles = [...new Set(files)];
+    setPlaylistFiles(uniqueFiles);
+    setLibraryFiles(uniqueFiles);
     localStorage.setItem(STORAGE_KEY, folder);
     if (files.length > 0) {
       setId3Loading(true);
@@ -80,7 +81,8 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
   const loadVirtualPlaylist = useCallback(async (name: string): Promise<boolean> => {
     const files = await playlistApi.loadVirtual(name);
     if (!files) return false;
-    setPlaylistFiles(files);
+    const uniqueFiles = [...new Set(files)];
+    setPlaylistFiles(uniqueFiles);
     if (files.length > 0) {
       setId3Loading(true);
       setId3Total(files.length);

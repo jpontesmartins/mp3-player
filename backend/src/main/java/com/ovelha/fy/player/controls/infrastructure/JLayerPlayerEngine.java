@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * Implementação do port/contrato/interface {@link PlayerEngine} baseada em JLayer.
@@ -37,6 +38,8 @@ public class JLayerPlayerEngine implements PlayerEngine {
     private volatile long playStartNanos;
     private volatile long pauseStartNanos;
     private volatile long totalPausedNanos;
+    private volatile Thread playbackThread;
+    private volatile CountDownLatch threadLatch;
 
     /**
      * Construtor com injeção do codec ID3.
@@ -56,77 +59,84 @@ public class JLayerPlayerEngine implements PlayerEngine {
     /** {@inheritDoc} */
     @Override
     public void play(String filePath, long startPositionMillis) throws IOException {
+        this.currentFilePath = filePath;
         stopCurrent();
 
-        analyzeFile(filePath);
-        readId3Tags(filePath);
+        try {
+            analyzeFile(filePath);
+            readId3Tags(filePath);
 
-        FileInputStream fis = new FileInputStream(filePath);
+            FileInputStream fis = new FileInputStream(filePath);
 
-        int startFrame = 0;
-        if (startPositionMillis > 0 && totalFrames > 0) {
-            startFrame = (int) (startPositionMillis * sampleRate / (SAMPLES_PER_FRAME * 1000L));
-            startFrame = Math.min(startFrame, totalFrames - 1);
-            if (startFrame > 0) {
-                log.info("[Player] Buscando frame {} (~{}ms)", startFrame, startPositionMillis);
-                try {
-                    Bitstream bitstream = new Bitstream(fis);
-                    for (int i = 0; i < startFrame; i++) {
-                        Header h = bitstream.readFrame();
-                        if (h == null) break;
-                        bitstream.closeFrame();
+            int startFrame = 0;
+            if (startPositionMillis > 0 && totalFrames > 0) {
+                startFrame = (int) (startPositionMillis * sampleRate / (SAMPLES_PER_FRAME * 1000L));
+                startFrame = Math.min(startFrame, Math.max(0, totalFrames - 2));
+                if (startFrame > 0) {
+                    log.info("[Player] Buscando frame {} (~{}ms)", startFrame, startPositionMillis);
+                    try {
+                        Bitstream bitstream = new Bitstream(fis);
+                        for (int i = 0; i < startFrame; i++) {
+                            Header h = bitstream.readFrame();
+                            if (h == null) break;
+                            bitstream.closeFrame();
+                        }
+                        long bytePos = fis.getChannel().position();
+                        bitstream.close();
+                        fis.close();
+                        fis = new FileInputStream(filePath);
+                        fis.skip(bytePos);
+                    } catch (Exception e) {
+                        throw new RuntimeException("Error seeking to position", e);
                     }
-                    long bytePos = fis.getChannel().position();
-                    bitstream.close();
-                    fis.close();
-                    fis = new FileInputStream(filePath);
-                    fis.skip(bytePos);
-                } catch (Exception e) {
-                    throw new RuntimeException("Error seeking to position", e);
                 }
             }
-        }
 
-        Player newPlayer;
-        try {
-            newPlayer = new Player(fis);
-        } catch (javazoom.jl.decoder.JavaLayerException e) {
-            throw new RuntimeException("Error creating player", e);
-        }
-
-        log.info("[Player] Reproduzindo: {} (início: {}ms)", filePath, startPositionMillis);
-        this.currentFilePath = filePath;
-        this.player = newPlayer;
-        this.paused = false;
-        this.playing = true;
-        this.playStartNanos = System.nanoTime() - startPositionMillis * 1_000_000;
-        this.pauseStartNanos = 0;
-        this.totalPausedNanos = 0;
-
-        Thread.startVirtualThread(() -> {
+            Player newPlayer;
             try {
-                while (playing && !newPlayer.isComplete()) {
-                    if (!paused) {
-                        newPlayer.play(FRAMES_PER_CHUNK);
-                    } else {
-                        // TODO: ver se isso aqui faz alguma diferença
-                        try {
-                            Thread.sleep(1);
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                            break;
+                newPlayer = new Player(fis);
+            } catch (javazoom.jl.decoder.JavaLayerException e) {
+                throw new RuntimeException("Error creating player", e);
+            }
+
+            log.info("[Player] Reproduzindo: {} (início: {}ms)", filePath, startPositionMillis);
+            this.player = newPlayer;
+            this.paused = false;
+            this.playing = true;
+            this.playStartNanos = System.nanoTime() - startPositionMillis * 1_000_000;
+            this.pauseStartNanos = 0;
+            this.totalPausedNanos = 0;
+
+            this.threadLatch = new CountDownLatch(1);
+            Thread vt = Thread.startVirtualThread(() -> {
+                this.playbackThread = Thread.currentThread();
+                try {
+                    while (playing && !newPlayer.isComplete()) {
+                        if (!paused) {
+                            newPlayer.play(FRAMES_PER_CHUNK);
+                        } else {
+                            try {
+                                Thread.sleep(1);
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                                break;
+                            }
                         }
                     }
+                } catch (javazoom.jl.decoder.JavaLayerException e) {
+                    log.warn("[Player] Erro na reprodução", e);
+                } finally {
+                    newPlayer.close();
+                    if (this.player == newPlayer) {
+                        this.playing = false;
+                    }
+                    this.threadLatch.countDown();
                 }
-            } catch (javazoom.jl.decoder.JavaLayerException e) {
-                log.warn("[Player] Erro na reprodução", e);
-            } finally {
-                newPlayer.close();
-                if (this.player == newPlayer) {
-                    this.playing = false;
-                }
-            }
-        });
+            });
+        } catch (Exception e) {
+            this.currentFilePath = null;
+            throw e;
+        }
     }
 
     /** {@inheritDoc} */
@@ -134,8 +144,9 @@ public class JLayerPlayerEngine implements PlayerEngine {
     public void seekTo(long positionMillis) {
         if (currentFilePath == null) return;
         log.info("[Player] Buscando posição {}ms", positionMillis);
+        String fileToSeek = currentFilePath;
         try {
-            play(currentFilePath, positionMillis);
+            play(fileToSeek, positionMillis);
         } catch (Exception e) {
             log.error("[Player] Arquivo não encontrado ao buscar posição", e);
         }
@@ -241,10 +252,12 @@ public class JLayerPlayerEngine implements PlayerEngine {
     public void stop() {
         log.info("[Player] Parado");
         stopCurrent();
+        currentFilePath = null;
     }
 
     /**
      * Para a reprodução atual e reseta todos os estados associados.
+     * Não limpa currentFilePath para evitar race condition com polling durante seek.
      */
     private void stopCurrent() {
         playing = false;
@@ -253,7 +266,18 @@ public class JLayerPlayerEngine implements PlayerEngine {
             player.close();
             player = null;
         }
-        currentFilePath = null;
+        if (playbackThread != null) {
+            playbackThread.interrupt();
+        }
+        if (threadLatch != null) {
+            try {
+                threadLatch.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        playbackThread = null;
+        threadLatch = null;
         totalFrames = -1;
         id3Tags = null;
         playStartNanos = 0;
