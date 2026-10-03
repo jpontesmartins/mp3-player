@@ -1,13 +1,15 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
 import { revealItemInDir } from '@tauri-apps/plugin-opener';
 import { usePlayer } from '../../../app/providers/PlayerContext';
 import { useLibrary } from '../../../app/providers/LibraryContext';
 import { usePlayback } from '../../playback/lib/usePlayback';
 import { formatTime, fileName } from '../../../shared/lib/format';
-import { ContextMenuItem, getContextMenuPosition, useContextMenuClose } from '../../../shared/ui/ContextMenu';
+import { ContextMenuItem, ContextMenuSubmenu, ContextMenuSubmenuItem, getContextMenuPosition, useContextMenuClose } from '../../../shared/ui/ContextMenu';
+import * as playlistApi from '../../../shared/api/playlist';
 import type { Id3Tags } from '../../../shared/types';
 import { useColumnResize } from '../lib/useColumnResize';
 import { usePlaylistTooltip } from '../lib/usePlaylistTooltip';
@@ -36,19 +38,47 @@ export default function Playlist() {
 
   const [songContextMenu, setSongContextMenu] = useState<{ x: number; y: number; file: string } | null>(null);
   const songContextMenuRef = useRef<HTMLDivElement>(null);
+  const [addMessage, setAddMessage] = useState('');
+  const addMessageTimer = useRef<number | null>(null);
 
   const tooltipTags = tooltipHook.tooltip ? library.id3Cache.get(tooltipHook.tooltip.file) : undefined;
 
   useContextMenuClose(!!songContextMenu, () => setSongContextMenu(null));
 
+  useEffect(() => () => {
+    if (addMessageTimer.current !== null) window.clearTimeout(addMessageTimer.current);
+  }, []);
+
+  const showAddMessage = useCallback((message: string) => {
+    setAddMessage(message);
+    if (addMessageTimer.current !== null) window.clearTimeout(addMessageTimer.current);
+    addMessageTimer.current = window.setTimeout(() => setAddMessage(''), 4000);
+  }, []);
+
   const handleSongContextMenu = useCallback((e: React.MouseEvent<HTMLLIElement>, file: string) => {
     e.preventDefault();
     e.stopPropagation();
     setSongContextMenu({ ...getContextMenuPosition(e, songContextMenuRef.current), file });
-  }, []);
+    library.refreshPlaylists();
+  }, [library]);
 
   const openFolderForSong = useCallback(async (file: string) => { setSongContextMenu(null); try { await revealItemInDir(file); } catch { /* noop */ } }, []);
   const copySongPath = useCallback((file: string) => { setSongContextMenu(null); navigator.clipboard.writeText(file).catch(() => {}); }, []);
+
+  const addToPlaylist = useCallback(async (name: string, file: string) => {
+    setSongContextMenu(null);
+    const paths = await playlistApi.loadVirtual(name);
+    if (!paths) {
+      showAddMessage(`Erro ao carregar "${name}"`);
+      return;
+    }
+    if (paths.includes(file)) {
+      showAddMessage(`"${fileName(file)}" já está em "${name}"`);
+      return;
+    }
+    const success = await playlistApi.savePlaylist(name, [...paths, file]);
+    showAddMessage(success ? `"${fileName(file)}" adicionada a "${name}"` : 'Erro ao salvar playlist');
+  }, [showAddMessage]);
 
   const displayFiles = search.filteredFiles;
   const total = totalDuration(displayFiles, library.id3Cache);
@@ -122,8 +152,18 @@ export default function Playlist() {
         <div ref={songContextMenuRef} id="song-context-menu" style={{ left: songContextMenu.x, top: songContextMenu.y }} onMouseDown={e => e.stopPropagation()}>
           <ContextMenuItem icon={<FolderOpenIcon />} label="Abrir pasta no explorer" onClick={() => openFolderForSong(songContextMenu.file)} />
           <ContextMenuItem icon={<ContentCopyIcon />} label="Copiar caminho" onClick={() => copySongPath(songContextMenu.file)} />
+          <div className="ctx-menu-separator" />
+          <ContextMenuSubmenu icon={<PlaylistAddIcon />} label="Adicionar à playlist">
+            {library.playlists.length === 0
+              ? <ContextMenuSubmenuItem label="Nenhuma playlist criada" disabled onClick={() => {}} />
+              : library.playlists.map(name => (
+                <ContextMenuSubmenuItem key={name} label={name} onClick={() => addToPlaylist(name, songContextMenu.file)} />
+              ))}
+          </ContextMenuSubmenu>
         </div>
       )}
+
+      {addMessage && <div className="playlist-save-msg">{addMessage}</div>}
     </>
   );
 }

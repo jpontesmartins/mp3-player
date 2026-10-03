@@ -13,6 +13,32 @@ export function ContextMenuItem({ icon, label, shortcut, onClick }: {
   );
 }
 
+export function ContextMenuSubmenu({ icon, label, children }: {
+  icon?: React.ReactNode;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="ctx-menu-submenu" onMouseDown={e => e.stopPropagation()}>
+      <span className="ctx-menu-submenu-label">
+        {icon && <span className="ctx-menu-icon">{icon}</span>}
+        <span className="ctx-menu-label">{label}</span>
+      </span>
+      <div className="ctx-menu-submenu-items">{children}</div>
+    </div>
+  );
+}
+
+export function ContextMenuSubmenuItem({ label, disabled, onClick }: {
+  label: string;
+  disabled?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button type="button" className="ctx-menu-submenu-item" disabled={disabled} onClick={onClick}>{label}</button>
+  );
+}
+
 export function useContextMenuClose(
   isOpen: boolean,
   onClose: () => void,
