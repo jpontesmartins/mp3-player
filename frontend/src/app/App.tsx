@@ -46,7 +46,7 @@ export default function App() {
         <LeftPanel />
         <RightPanel />
       </div>
-      <footer id="statusbar">v1.5.2</footer>
+      <footer id="statusbar">v1.5.3</footer>
       {app.showInfo && <InfoModal />}
     </div>
   );

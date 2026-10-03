@@ -13,6 +13,13 @@ versões seguem [Semântic Versioning](https://semver.org/lang/pt-BR/).
 
 
 
+
+## [1.5.3] — 2026-10-03
+
+### Corrigido
+- bugfix musicas sobrepostas
+- Merge pull request #13 from jpontesmartins/bugfix/download-letras
+
 ## [1.5.2] — 2026-09-25
 
 ### Corrigido
