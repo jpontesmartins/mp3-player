@@ -15,6 +15,15 @@ versões seguem [Semântic Versioning](https://semver.org/lang/pt-BR/).
 
 
 
+
+## [1.6.0] — 2026-10-03
+
+### Adicionado
+- item de adicionar musica numa playlist no menu de contexto da playlist do player
+
+### Corrigido
+- bugfix: botoes fixos; edição e visualização das letras mesma posição do scroll
+
 ## [1.5.4] — 2026-10-03
 
 ### Corrigido
