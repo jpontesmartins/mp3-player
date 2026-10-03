@@ -152,9 +152,9 @@ button:disabled {
   background: var(--c-13);
   border: 1px solid var(--c-26);
   border-radius: 8px;
-  padding: 20px;
   display: flex;
-  overflow-y: auto;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .lyrics-empty {
@@ -164,12 +164,7 @@ button:disabled {
   justify-content: center;
   gap: 12px;
   width: 100%;
-}
-
-.lyrics-placeholder {
-  color: var(--c-68);
-  font-size: 1.1rem;
-  font-style: italic;
+  padding: 20px;
 }
 
 .lyrics-content {
@@ -177,12 +172,59 @@ button:disabled {
   flex-direction: column;
   gap: 12px;
   width: 100%;
+  flex: 1;
+  overflow: hidden;
 }
 
 .lyrics-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--c-13);
+  border-bottom: 1px solid var(--c-26);
+  padding: 12px;
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
+}
+
+.lyrics-scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 12px;
+}
+
+.lyrics-scroll-area--editing {
+  overflow: hidden;
+}
+
+.lyrics-scroll-area::-webkit-scrollbar,
+.lyrics-editor::-webkit-scrollbar {
+  width: 6px;
+}
+
+.lyrics-scroll-area::-webkit-scrollbar-track,
+.lyrics-editor::-webkit-scrollbar-track {
+  background: var(--c-13);
+}
+
+.lyrics-scroll-area::-webkit-scrollbar-thumb,
+.lyrics-editor::-webkit-scrollbar-thumb {
+  background: var(--c-51);
+  border-radius: 3px;
+}
+
+.lyrics-scroll-area::-webkit-scrollbar-thumb:hover,
+.lyrics-editor::-webkit-scrollbar-thumb:hover {
+  background: var(--c-68);
+}
+
+.lyrics-placeholder {
+  color: var(--c-68);
+  font-size: 1.1rem;
+  font-style: italic;
 }
 
 .lyrics-font-controls {
@@ -244,22 +286,27 @@ button:disabled {
 .lyrics-editor {
   flex: 1;
   width: 100%;
+  height: 100%;
   min-height: 0;
   resize: none;
-  padding: 12px;
-  background: var(--c-10);
-  border: 1px solid var(--c-34);
-  border-radius: 6px;
+  overflow-y: auto;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
   color: var(--c-204);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   line-height: 1.6;
   white-space: pre-wrap;
   word-wrap: break-word;
   outline: none;
+  box-sizing: border-box;
 }
 
-.lyrics-editor:focus {
-  border-color: var(--c-85);
+.lyrics-editor:focus,
+.lyrics-editor:focus-visible {
+  outline: none;
+  border: none;
 }
 
 #settings-panel {
@@ -954,19 +1001,6 @@ button:disabled {
   font-size: 0.75rem;
   color: var(--c-102);
   flex-shrink: 0;
-}
-
-#lyrics-panel::-webkit-scrollbar {
-  width: 6px;
-}
-
-#lyrics-panel::-webkit-scrollbar-track {
-  background: var(--c-13);
-}
-
-#lyrics-panel::-webkit-scrollbar-thumb {
-  background: var(--c-51);
-  border-radius: 3px;
 }
 
 /* ── Coleção ── */

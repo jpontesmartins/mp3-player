@@ -13,9 +13,27 @@ export default function LyricsPanel() {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [selectedWord, setSelectedWord] = useState('');
   const lyricsRef = useRef<HTMLPreElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<HTMLTextAreaElement>(null);
+  const savedScrollTop = useRef(0);
   const contextMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { fetchCached(); }, [player.currentFile]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    savedScrollTop.current = 0;
+    scrollAreaRef.current?.scrollTo({ top: 0 });
+    editorRef.current?.scrollTo({ top: 0 });
+  }, [player.currentFile]);
+
+  useEffect(() => {
+    const target = editing ? editorRef.current : scrollAreaRef.current;
+    if (target) target.scrollTop = savedScrollTop.current;
+  }, [editing, fontSize]);
+
+  const rememberScroll = useCallback(() => {
+    savedScrollTop.current = (editing ? editorRef.current : scrollAreaRef.current)?.scrollTop ?? savedScrollTop.current;
+  }, [editing]);
 
   const handleLyricsContextMenu = useCallback((e: React.MouseEvent<HTMLPreElement>) => {
     const selection = window.getSelection()?.toString().trim();
@@ -58,11 +76,25 @@ export default function LyricsPanel() {
               <button className="font-btn" onClick={() => setFontSize(s => Math.max(0.7, s - 0.1))} disabled={fontSize <= 0.7}>A-</button>
             </div>
           </div>
-          {editing ? (
-            <textarea className="lyrics-editor" style={{ fontSize: `${fontSize}rem` }} value={draft} onChange={e => setDraft(e.target.value)} spellCheck={false} />
-          ) : (
-            <pre ref={lyricsRef} className="lyrics-text" style={{ fontSize: `${fontSize}rem` }} onContextMenu={handleLyricsContextMenu}>{lyrics}</pre>
-          )}
+          <div
+            ref={scrollAreaRef}
+            className={`lyrics-scroll-area${editing ? ' lyrics-scroll-area--editing' : ''}`}
+            onScroll={editing ? undefined : rememberScroll}
+          >
+            {editing ? (
+              <textarea
+                ref={editorRef}
+                className="lyrics-editor"
+                style={{ fontSize: `${fontSize}rem` }}
+                value={draft}
+                onChange={e => setDraft(e.target.value)}
+                onScroll={rememberScroll}
+                spellCheck={false}
+              />
+            ) : (
+              <pre ref={lyricsRef} className="lyrics-text" style={{ fontSize: `${fontSize}rem` }} onContextMenu={handleLyricsContextMenu}>{lyrics}</pre>
+            )}
+          </div>
         </div>
       )}
 
