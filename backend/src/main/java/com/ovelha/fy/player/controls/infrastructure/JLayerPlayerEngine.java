@@ -13,6 +13,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Implementação do port/contrato/interface {@link PlayerEngine} baseada em JLayer.
@@ -40,6 +41,8 @@ public class JLayerPlayerEngine implements PlayerEngine {
     private volatile long totalPausedNanos;
     private volatile Thread playbackThread;
     private volatile CountDownLatch threadLatch;
+    private volatile boolean seeking;
+    private final ReentrantLock playbackLock = new ReentrantLock();
 
     /**
      * Construtor com injeção do codec ID3.
@@ -59,10 +62,12 @@ public class JLayerPlayerEngine implements PlayerEngine {
     /** {@inheritDoc} */
     @Override
     public void play(String filePath, long startPositionMillis) throws IOException {
-        this.currentFilePath = filePath;
-        stopCurrent();
-
+        playbackLock.lock();
         try {
+            this.currentFilePath = filePath;
+            this.seeking = true;
+            stopCurrent();
+
             analyzeFile(filePath);
             readId3Tags(filePath);
 
@@ -103,6 +108,7 @@ public class JLayerPlayerEngine implements PlayerEngine {
             this.player = newPlayer;
             this.paused = false;
             this.playing = true;
+            this.seeking = false;
             this.playStartNanos = System.nanoTime() - startPositionMillis * 1_000_000;
             this.pauseStartNanos = 0;
             this.totalPausedNanos = 0;
@@ -135,7 +141,10 @@ public class JLayerPlayerEngine implements PlayerEngine {
             });
         } catch (Exception e) {
             this.currentFilePath = null;
+            this.seeking = false;
             throw e;
+        } finally {
+            playbackLock.unlock();
         }
     }
 
@@ -207,7 +216,7 @@ public class JLayerPlayerEngine implements PlayerEngine {
     /** {@inheritDoc} */
     @Override
     public boolean isPlaying() {
-        return playing;
+        return playing || seeking;
     }
 
     /** {@inheritDoc} */
@@ -251,8 +260,14 @@ public class JLayerPlayerEngine implements PlayerEngine {
     @Override
     public void stop() {
         log.info("[Player] Parado");
-        stopCurrent();
-        currentFilePath = null;
+        playbackLock.lock();
+        try {
+            stopCurrent();
+            currentFilePath = null;
+            seeking = false;
+        } finally {
+            playbackLock.unlock();
+        }
     }
 
     /**
