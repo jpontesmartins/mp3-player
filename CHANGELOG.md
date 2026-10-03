@@ -14,6 +14,12 @@ versões seguem [Semântic Versioning](https://semver.org/lang/pt-BR/).
 
 
 
+
+## [1.5.4] — 2026-10-03
+
+### Corrigido
+- bugfix seek para proxima musica
+
 ## [1.5.3] — 2026-10-03
 
 ### Corrigido
