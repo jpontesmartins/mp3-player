@@ -153,6 +153,31 @@ describe('Playlist', () => {
       expect(savePlaylist).not.toHaveBeenCalled();
     });
 
+    it('shows "Nova…" as first submenu item even without playlists', async () => {
+      vi.mocked(listPlaylists).mockResolvedValue([]);
+      renderPlaylistWithFiles(['C:\\music\\a.mp3']);
+      fireEvent.contextMenu(screen.getByText('a.mp3'));
+      expect(await screen.findByText('Nova…')).toBeInTheDocument();
+      expect(screen.getByText('Nenhuma playlist criada')).toBeInTheDocument();
+      const items = document.querySelectorAll('.ctx-menu-submenu-item');
+      expect(items[0].textContent).toBe('Nova…');
+    });
+
+    it('creates a new playlist through the modal', async () => {
+      vi.mocked(listPlaylists).mockResolvedValue([]);
+      vi.mocked(savePlaylist).mockResolvedValue(true);
+      renderPlaylistWithFiles(['C:\\music\\a.mp3']);
+      fireEvent.contextMenu(screen.getByText('a.mp3'));
+      fireEvent.click(await screen.findByText('Nova…'));
+      expect(document.querySelector('#song-context-menu')).toBeNull();
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      fireEvent.change(screen.getByPlaceholderText('Nome da playlist'), { target: { value: 'Viagem' } });
+      fireEvent.click(screen.getByText('Salvar'));
+      await waitFor(() => expect(savePlaylist).toHaveBeenCalledWith('Viagem', ['C:\\music\\a.mp3']));
+      expect(await screen.findByText('Playlist "Viagem" criada com "a.mp3"')).toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
+
     it('shows a hint when no playlist exists', async () => {
       vi.mocked(listPlaylists).mockResolvedValue([]);
       renderPlaylistWithFiles(['C:\\music\\a.mp3']);

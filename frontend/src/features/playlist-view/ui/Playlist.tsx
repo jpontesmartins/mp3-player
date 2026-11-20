@@ -17,6 +17,7 @@ import { usePlaylistSearch } from '../lib/usePlaylistSearch';
 import ColumnHeader from './ColumnHeader';
 import PlaylistTooltip from './PlaylistTooltip';
 import SearchBar from './SearchBar';
+import NewPlaylistModal from './NewPlaylistModal';
 
 function totalDuration(files: string[], cache: Map<string, Id3Tags>): number {
   let total = 0;
@@ -38,6 +39,7 @@ export default function Playlist() {
 
   const [songContextMenu, setSongContextMenu] = useState<{ x: number; y: number; file: string } | null>(null);
   const songContextMenuRef = useRef<HTMLDivElement>(null);
+  const [newPlaylistFile, setNewPlaylistFile] = useState<string | null>(null);
   const [addMessage, setAddMessage] = useState('');
   const addMessageTimer = useRef<number | null>(null);
 
@@ -154,6 +156,8 @@ export default function Playlist() {
           <ContextMenuItem icon={<ContentCopyIcon />} label="Copiar caminho" onClick={() => copySongPath(songContextMenu.file)} />
           <div className="ctx-menu-separator" />
           <ContextMenuSubmenu icon={<PlaylistAddIcon />} label="Adicionar à playlist">
+            <ContextMenuSubmenuItem label="Nova…" onClick={() => { const file = songContextMenu.file; setSongContextMenu(null); setNewPlaylistFile(file); }} />
+            <div className="ctx-menu-separator" />
             {library.playlists.length === 0
               ? <ContextMenuSubmenuItem label="Nenhuma playlist criada" disabled onClick={() => {}} />
               : library.playlists.map(name => (
@@ -161,6 +165,14 @@ export default function Playlist() {
               ))}
           </ContextMenuSubmenu>
         </div>
+      )}
+
+      {newPlaylistFile && (
+        <NewPlaylistModal
+          file={newPlaylistFile}
+          onClose={() => setNewPlaylistFile(null)}
+          onCreated={name => showAddMessage(`Playlist "${name}" criada com "${fileName(newPlaylistFile)}"`)}
+        />
       )}
 
       {addMessage && <div className="playlist-save-msg">{addMessage}</div>}
