@@ -47,7 +47,7 @@
   - Apresentação/interface: exclusivamente em `frontend/src` (componentes em `ui/`, orquestração em hooks em `lib/`, composição em `widgets/`). Controllers do backend só traduzem HTTP ↔ serviço.
   - Acesso a recursos externos, SO e persistência: `infrastructure/` do backend (arquivos, JLayer, mp3agic, Jsoup) e `src-tauri/src/lib.rs` (processo filho, diretório de logs, plugin opener).
 - **Proibições Arquiteturais:**
-  - `domain/` não pode importar Spring, Jsoup, mp3agic, JLayer nem tipos HTTP. **Exceção existente:** `lyrics.domain.port.LyricsSource` importa `org.jsoup.nodes.Document` `[PENDENTE / AMBÍGUO NO CÓDIGO]` — não replicar em novos ports.
+  - `domain/` não pode importar Spring, Jsoup, mp3agic, JLayer nem tipos HTTP. (A exceção antiga de `lyrics.domain.port.LyricsSource` foi removida na `ofy-017`: a porta não expõe mais Jsoup.)
   - `application/` nunca instancia implementações concretas (`new`) nem importa `infrastructure/`; depende de portas via construtor.
   - Controllers não contêm regra de negócio nem acessam `infrastructure/` diretamente. **Exceção existente:** `MetadataController.getCover` (`GET /cover`) faz a busca do arquivo de capa na pasta diretamente no controller `[PENDENTE / AMBÍGUO NO CÓDIGO]` — não replicar o padrão.
   - Componentes React (`ui/`) não chamam `fetch` diretamente; usam `shared/api/*` via hooks. Exceção existente: `shared/api/cover.ts` e `shared/api/id3.ts` fazem `fetch` próprio dentro de `shared/api` (permitido, pois continuam na camada de API).

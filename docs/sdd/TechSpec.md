@@ -51,8 +51,8 @@ public interface Id3Codec { MusicFile read(String path); MusicFile update(String
 public interface AlbumCoverSearcher { CoverImage findCover(String query) throws IOException; }
 public interface MusicScanner { List<MusicFile> scanFolder(String folder) throws IOException; }
 public interface LyricsScraper { String fetch(String artist, String title) throws IOException; }
-public interface LyricsSource { String getName(); int getPriority(); boolean isEnabled(); String getUserAgent();
-    String findPage(String artist, String title) throws IOException; String extractLyrics(Document page); }
+public interface LyricsSource { String getName(); int getPriority(); boolean isEnabled();
+    String fetchFromSource(String artist, String title) throws IOException; }  // findPage/extractLyrics são detalhes de AbstractLyricsSource
 public interface DictionarySource { String language(); String sourceName(); DictionaryLookupResult lookup(String word); }
 public interface PlaylistRepository { List<String> list(); List<String> load(String n); void save(Playlist p); void delete(String n); void rename(String a, String b); }
 public interface LyricRepository { Optional<Lyric> find(String musicPath); void save(Lyric l, MusicFile m); boolean exists(String p); void delete(String p); }

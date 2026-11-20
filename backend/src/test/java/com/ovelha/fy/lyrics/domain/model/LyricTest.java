@@ -41,6 +41,8 @@ class LyricTest {
     void isNotFoundMessageDetectsOnlySingleLineMessage() {
         org.junit.jupiter.api.Assertions.assertTrue(Lyric.isNotFoundMessage(Lyric.notFoundMessage("A", "B")));
         org.junit.jupiter.api.Assertions.assertFalse(Lyric.isNotFoundMessage("Letra não encontrada para x\noutra linha"));
+        org.junit.jupiter.api.Assertions.assertFalse(Lyric.isNotFoundMessage("Letra não encontrada para esta faixa"));
+        org.junit.jupiter.api.Assertions.assertTrue(Lyric.isNotFoundMessage("Letra não encontrada para \"X\" de "));
         org.junit.jupiter.api.Assertions.assertFalse(Lyric.isNotFoundMessage(""));
         org.junit.jupiter.api.Assertions.assertFalse(Lyric.isNotFoundMessage(null));
     }

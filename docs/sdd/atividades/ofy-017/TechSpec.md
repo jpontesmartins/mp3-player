@@ -156,3 +156,15 @@ Padrão AAA, JUnit 5 + Mockito, sem rede (mockando `Jsoup` como em `LetrasMusBrS
 - Implementado conforme a spec, sem desvios de contrato. `Lyric.isNotFoundMessage` usa `indexOf(10)` (quebra de linha) por simplicidade.
 - Testes: `ArtistCandidatesTest`, `VagalumeSourceTest` (novos); `LyricTest`, `LyricsServiceTest`, `CompositeLyricsScraperTest` ampliados; `LetrasMusBrSourceTest.fallsBackToDirectUrl` ajustado (esperava slug `legião-urbana`, que era o bug). `mvn test`: 253 testes, 0 falhas.
 - Pendente: validação manual com rede (as 3 músicas do `input.txt`).
+
+## Registro do Code Review (fix-review)
+
+- `ArtistCandidates`: prefixo numérico puro (`05 - Título.mp3`) não gera candidato; se a tag já é igual ao segmento do arquivo, não há fragmentação (`Earth, Wind & Fire`); sem tag, o segmento completo vem antes dos fragmentos. **Ajusta** a regra 4 acima (antes: "omitir segmento composto") apenas para o caso sem tag.
+- `Lyric.isNotFoundMessage`: passa a exigir o formato completo `Letra não encontrada para "<título>" de <artista>` (uma linha), para não confundir notas manuais do usuário com a mensagem legada.
+- `AbstractLyricsSource.toSlug`: remove hífens nas bordas.
+- `LyricsService`: falhas do scraper agora são registradas em `WARN [Lyrics]`.
+- Demais achados (aplicados depois): cada fonte tem orçamento de tempo próprio (`mp3.lyrics.source-budget-ms`, padrão 30000) — o estouro só interrompe os candidatos restantes daquela fonte; `CompositeLyricsScraper` delega o HTTP à fonte via `LyricsSource.fetchFromSource` (referrer/timeout/cabeçalhos da fonte; remoção de `traducao.html` em `AbstractLyricsSource`) e captura `IOException | RuntimeException` por candidato; `LyricsScraper.fetch` sem `throws IOException`; logs de página de artista sem stack trace; testes de controller.
+- Porta `LyricsSource` sem Jsoup: `getUserAgent`, `findPage` e `extractLyrics` saíram da porta e viraram membros de `AbstractLyricsSource`; removida a exceção correspondente em `Rules.md` §2.
+- `AbstractLyricsSource.statusCode` usa `HEAD` (com `GET` de fallback em 403/405/501) para não baixar a página duas vezes.
+- `Lyric.isNotFoundMessage` também reconhece a mensagem legada sem artista (`... de `). `ArtistCandidates.TRACK_PREFIX` só remove prefixo de faixa em formatos inequívocos (`01 `, `1-05 `, `01. `), preservando `50 Cent`/`2 Unlimited`.
+- Pendência técnica remanescente: o orçamento é verificado entre tentativas (não interrompe uma requisição em andamento, limitada pelos timeouts da fonte).

@@ -2,10 +2,10 @@ package com.ovelha.fy.lyrics.infrastructure;
 
 import com.ovelha.fy.lyrics.domain.port.LyricsScraper;
 import com.ovelha.fy.lyrics.domain.port.LyricsSource;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -22,7 +22,11 @@ public class CompositeLyricsScraper implements LyricsScraper {
 
     private static final Logger log = LoggerFactory.getLogger(CompositeLyricsScraper.class);
 
+    /** Orçamento de tempo padrão (ms) por fonte, ao tentar todos os artistas candidatos. */
+    static final long DEFAULT_MAX_MILLIS = 30_000L;
+
     private final List<LyricsSource> sources;
+    private final long maxMillis;
 
     /**
      * Cria um scraper composto com as fontes habilitadas, ordenadas por prioridade.
@@ -30,6 +34,20 @@ public class CompositeLyricsScraper implements LyricsScraper {
      * @param sources lista de todas as fontes de letras disponíveis
      */
     public CompositeLyricsScraper(List<LyricsSource> sources) {
+        this(sources, DEFAULT_MAX_MILLIS);
+    }
+
+    /**
+     * Cria um scraper composto com orçamento de tempo explícito por fonte.
+     *
+     * @param sources lista de todas as fontes de letras disponíveis
+     * @param maxMillis tempo máximo (ms) em uma fonte antes de passar para a próxima
+     *                  ({@code mp3.lyrics.source-budget-ms})
+     */
+    @Autowired
+    public CompositeLyricsScraper(List<LyricsSource> sources,
+                                  @Value("${mp3.lyrics.source-budget-ms:30000}") long maxMillis) {
+        this.maxMillis = maxMillis;
         this.sources = sources.stream()
                 .filter(LyricsSource::isEnabled)
                 .sorted(Comparator.comparingInt(LyricsSource::getPriority))
@@ -41,7 +59,7 @@ public class CompositeLyricsScraper implements LyricsScraper {
 
     /**
      * Tenta buscar a letra em cada fonte habilitada (por prioridade) e, em cada fonte,
-     * em cada artista candidato.
+     * em cada artista candidato. Cada fonte tem seu próprio orçamento de tempo.
      *
      * @param artistCandidates nomes de artista a tentar
      * @param title título da música
@@ -51,7 +69,13 @@ public class CompositeLyricsScraper implements LyricsScraper {
     public Optional<String> fetch(List<String> artistCandidates, String title) {
         log.info("[Scraper] Candidatos de artista: {}", artistCandidates);
         for (LyricsSource source : sources) {
+            long deadline = System.nanoTime() + maxMillis * 1_000_000L;
             for (String artist : artistCandidates) {
+                if (System.nanoTime() > deadline) {
+                    log.warn("[{}] Orçamento de {} ms esgotado para \"{}\"; passando para a próxima fonte",
+                            source.getName(), maxMillis, title);
+                    break;
+                }
                 String result = trySource(source, artist, title);
                 if (result != null) return Optional.of(result);
             }
@@ -62,7 +86,7 @@ public class CompositeLyricsScraper implements LyricsScraper {
     }
 
     /**
-     * Tenta buscar a letra em uma fonte específica.
+     * Tenta buscar a letra em uma fonte específica, delegando o HTTP à própria fonte.
      *
      * @param source fonte de letras a ser consultada
      * @param artist nome do artista
@@ -71,57 +95,15 @@ public class CompositeLyricsScraper implements LyricsScraper {
      */
     private String trySource(LyricsSource source, String artist, String title) {
         try {
-            log.info("[Scraper] Tentando fonte: {}", source.getName());
-
-            String pageUrl = source.findPage(artist, title);
-            if (pageUrl == null) {
-                log.info("[{}] Nenhuma URL encontrada", source.getName());
-                return null;
-            }
-
-            // Remove sufixo de tradução se presente
-            pageUrl = stripTranslation(pageUrl);
-
-            log.info("[{}] Buscando página de letra: {}", source.getName(), pageUrl);
-            Document doc = Jsoup.connect(pageUrl)
-                    .userAgent(source.getUserAgent())
-                    .referrer("https://www.letras.mus.br")
-                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
-                    .header("Accept-Language", "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7")
-                    .header("Accept-Encoding", "gzip, deflate, br")
-                    .header("Connection", "keep-alive")
-                    .header("Upgrade-Insecure-Requests", "1")
-                    .header("Sec-Fetch-Dest", "document")
-                    .header("Sec-Fetch-Mode", "navigate")
-                    .header("Sec-Fetch-Site", "none")
-                    .header("Sec-Fetch-User", "?1")
-                    .header("Cache-Control", "max-age=0")
-                    .timeout(15000)
-                    .get();
-
-            String lyrics = source.extractLyrics(doc);
+            log.info("[Scraper] Tentando fonte: {} (artista: {})", source.getName(), artist);
+            String lyrics = source.fetchFromSource(artist, title);
             if (lyrics == null) {
-                log.warn("[{}] Letra não encontrada na página {}", source.getName(), pageUrl);
-                return null;
+                log.info("[{}] Letra não encontrada para o artista {}", source.getName(), artist);
             }
-
             return lyrics;
-        } catch (IOException e) {
-            log.warn("[{}] Falha ao buscar letra: {}", source.getName(), e.getMessage());
+        } catch (IOException | RuntimeException e) {
+            log.warn("[{}] Falha ao buscar letra: {}", source.getName(), e.toString());
             return null;
         }
-    }
-
-    /**
-     * Remove o sufixo de tradução de uma URL, se presente.
-     *
-     * @param href URL original
-     * @return URL sem o sufixo "traducao.html"
-     */
-    private static String stripTranslation(String href) {
-        if (href != null && href.endsWith("traducao.html")) {
-            return href.substring(0, href.length() - "traducao.html".length());
-        }
-        return href;
     }
 }

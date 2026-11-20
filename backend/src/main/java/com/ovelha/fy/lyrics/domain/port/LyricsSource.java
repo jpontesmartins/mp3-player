@@ -1,58 +1,41 @@
 package com.ovelha.fy.lyrics.domain.port;
 
-import org.jsoup.nodes.Document;
-
 import java.io.IOException;
 
 /**
- * Strategy para uma fonte de letras. Cada implementação sabe buscar
- * a URL da letra e extrair o texto de um {@link Document}.
+ * Port para uma fonte de letras (site de letras). Não expõe detalhes de HTTP/HTML:
+ * cada implementação sabe localizar e extrair a letra do seu site.
  */
 public interface LyricsSource {
 
     /**
-     * Nome legível da fonte (ex.: "letras.mus.br").
+     * Nome legível da fonte (usado em logs).
      *
-     * @return nome descritivo da fonte
+     * @return nome da fonte
      */
     String getName();
 
     /**
-     * Prioridade da fonte (menor valor = mais prioritário).
+     * Prioridade da fonte (menor = consultada primeiro).
      *
-     * @return número inteiro representando a prioridade
+     * @return prioridade
      */
     int getPriority();
 
     /**
-     * Indica se a fonte está habilitada via configuração.
+     * Indica se a fonte está habilitada na configuração.
      *
-     * @return {@code true} se habilitada, {@code false} caso contrário
+     * @return {@code true} se habilitada
      */
     boolean isEnabled();
 
     /**
-     * Retorna o User-Agent utilizado nas requisições HTTP.
-     *
-     * @return User-Agent string
-     */
-    String getUserAgent();
-
-    /**
-     * Busca a URL da página da letra para o artista/título informados.
+     * Fluxo completo: localiza a página da letra, carrega-a e extrai o texto.
      *
      * @param artist nome do artista
      * @param title título da música
-     * @return URL da página ou {@code null} se não encontrar
-     * @throws IOException se ocorrer erro de rede ao buscar a URL
+     * @return texto da letra ou {@code null} se não encontrada
+     * @throws IOException se ocorrer erro de rede
      */
-    String findPage(String artist, String title) throws IOException;
-
-    /**
-     * Extrai o texto da letra de uma página já carregada.
-     *
-     * @param page documento HTML da página da letra
-     * @return texto da letra ou {@code null} se não encontrou o elemento
-     */
-    String extractLyrics(Document page);
+    String fetchFromSource(String artist, String title) throws IOException;
 }

@@ -1,6 +1,7 @@
 package com.ovelha.fy.lyrics.infrastructure;
 
 import com.ovelha.fy.lyrics.domain.port.LyricsSource;
+import org.mockito.Mockito;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -158,5 +159,59 @@ class CompositeLyricsScraperTest {
             CompositeLyricsScraper scraper = new CompositeLyricsScraper(List.of(source));
             assertFalse(scraper.fetch(List.of("Nara Leão"), "Insensatez").isEmpty());
         }
+    }
+
+    @Test
+    void exhaustedBudgetInOneSourceStillTriesNextSource() throws Exception {
+        LyricsSource slow = Mockito.mock(LyricsSource.class);
+        when(slow.isEnabled()).thenReturn(true);
+        when(slow.getPriority()).thenReturn(1);
+        when(slow.getName()).thenReturn("lenta");
+        when(slow.fetchFromSource(anyString(), anyString())).thenAnswer(inv -> {
+            Thread.sleep(80);
+            return null;
+        });
+        LyricsSource next = Mockito.mock(LyricsSource.class);
+        when(next.isEnabled()).thenReturn(true);
+        when(next.getPriority()).thenReturn(2);
+        when(next.getName()).thenReturn("proxima");
+        when(next.fetchFromSource("A", "M")).thenReturn("letra");
+
+        CompositeLyricsScraper scraper = new CompositeLyricsScraper(List.of(slow, next), 50);
+
+        assertEquals("letra", scraper.fetch(List.of("A", "B"), "M").orElseThrow());
+        // estourou o orçamento após o 1º candidato: "B" não foi tentado na fonte lenta
+        Mockito.verify(slow, Mockito.times(1)).fetchFromSource(anyString(), anyString());
+    }
+
+    @Test
+    void runtimeFailureInOneCandidateDoesNotAbortOthers() throws IOException {
+        LyricsSource source = Mockito.mock(LyricsSource.class);
+        when(source.isEnabled()).thenReturn(true);
+        when(source.getName()).thenReturn("fonte");
+        when(source.fetchFromSource("A", "M")).thenThrow(new IllegalArgumentException("Malformed URL"));
+        when(source.fetchFromSource("B", "M")).thenReturn("letra de B");
+
+        CompositeLyricsScraper scraper = new CompositeLyricsScraper(List.of(source));
+
+        assertEquals("letra de B", scraper.fetch(List.of("A", "B"), "M").orElseThrow());
+    }
+
+    @Test
+    void ioFailureInOneSourceDoesNotStopTheNext() throws IOException {
+        LyricsSource broken = Mockito.mock(LyricsSource.class);
+        when(broken.isEnabled()).thenReturn(true);
+        when(broken.getPriority()).thenReturn(1);
+        when(broken.getName()).thenReturn("quebrada");
+        when(broken.fetchFromSource("A", "M")).thenThrow(new IOException("fora do ar"));
+        LyricsSource ok = Mockito.mock(LyricsSource.class);
+        when(ok.isEnabled()).thenReturn(true);
+        when(ok.getPriority()).thenReturn(2);
+        when(ok.getName()).thenReturn("boa");
+        when(ok.fetchFromSource("A", "M")).thenReturn("letra");
+
+        CompositeLyricsScraper scraper = new CompositeLyricsScraper(List.of(broken, ok));
+
+        assertEquals("letra", scraper.fetch(List.of("A"), "M").orElseThrow());
     }
 }

@@ -56,4 +56,18 @@ class VagalumeSourceTest {
         Document doc = Jsoup.parse("<html><body><div id=\"lyrics\"> linha </div></body></html>");
         assertEquals("linha", source().extractLyrics(doc));
     }
+
+    @Test
+    void doesNotAdvertiseBrotliSoJsoupCanDecodeTheBody() throws IOException {
+        Connection connection = mock(Connection.class, RETURNS_SELF);
+        when(connection.get()).thenReturn(Jsoup.parse("<html></html>"));
+        try (MockedStatic<Jsoup> jsoup = mockStatic(Jsoup.class)) {
+            jsoup.when(() -> Jsoup.connect(anyString())).thenReturn(connection);
+
+            source().connect("https://www.vagalume.com.br/os-mutantes/bat-macumba.html");
+        }
+        // Jsoup não decodifica Brotli: anunciar "br" faz o site devolver corpo ilegível
+        org.mockito.Mockito.verify(connection, org.mockito.Mockito.never())
+                .header(org.mockito.ArgumentMatchers.eq("Accept-Encoding"), anyString());
+    }
 }

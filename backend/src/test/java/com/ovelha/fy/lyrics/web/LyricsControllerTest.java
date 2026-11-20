@@ -125,4 +125,16 @@ class LyricsControllerTest {
         assertEquals(400, response.getStatusCode().value());
         assertTrue(response.getBody().startsWith("Erro ao remover letra: "));
     }
+
+    @Test
+    void getLyricsReturnsOkWithFriendlyMessageWhenNotFound() {
+        String message = "Letra não encontrada para \"Song\" de Artist";
+        when(lyricsService.get("a.mp3")).thenReturn(message);
+        LyricsController controller = new LyricsController(lyricsService);
+
+        var response = controller.getLyrics("a.mp3");
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(message, response.getBody());
+    }
 }
