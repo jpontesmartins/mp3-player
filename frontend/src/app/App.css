@@ -2047,3 +2047,33 @@ table.bulk-table td {
   justify-content: flex-end;
   gap: 8px;
 }
+
+/* ── Modal de nova playlist ── */
+.new-playlist-title {
+  font-size: 0.9rem;
+  color: var(--c-255);
+  margin-bottom: 12px;
+}
+
+.new-playlist-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--c-17);
+  border: 1px solid var(--c-42);
+  border-radius: 6px;
+  color: var(--c-238);
+  padding: 8px 10px;
+  font-size: 0.9rem;
+  outline: none;
+  margin-bottom: 12px;
+}
+
+.new-playlist-input:focus {
+  border-color: var(--c-85);
+}
+
+.new-playlist-error {
+  color: #e57373;
+  font-size: 0.8rem;
+  margin-bottom: 12px;
+}

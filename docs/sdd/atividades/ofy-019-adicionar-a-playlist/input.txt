@@ -1,0 +1,2 @@
+adicionar no menu de contexto de uma música na "Playlist" da tela principal, dentro do item de adicionar "adicionar à playlist" o subitem "nova".
+ao clicar em nova deve aparecer uma modal para a pessoa dar o nome da nova playlist, com dois botões: salvar e cancelar.
