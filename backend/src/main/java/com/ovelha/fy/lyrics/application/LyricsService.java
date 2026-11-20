@@ -19,6 +19,8 @@ import java.util.Optional;
 @Service
 public class LyricsService {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(LyricsService.class);
+
     private final Id3Codec id3Codec;
     private final LyricsScraper lyricsScraper;
     private final LyricRepository lyricRepository;
@@ -83,6 +85,7 @@ public class LyricsService {
         try {
             return lyricsScraper.fetch(candidates, title);
         } catch (Exception e) {
+            log.warn("[Lyrics] Falha ao buscar letra de \"{}\": {}", title, e.toString(), e);
             return Optional.empty();
         }
     }

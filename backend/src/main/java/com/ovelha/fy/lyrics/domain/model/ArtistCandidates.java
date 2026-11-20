@@ -18,7 +18,8 @@ public final class ArtistCandidates {
     /** Limite de candidatos, para não multiplicar requisições externas. */
     static final int MAX = 4;
 
-    private static final Pattern TRACK_PREFIX = Pattern.compile("^\\d+(?:[-.]\\d+)?[\\s.-]+");
+    private static final Pattern TRACK_PREFIX = Pattern.compile(
+            "^(?:0\\d+[\\s.-]+|\\d+[-.]\\d+[\\s.-]+|\\d+\\.\\s+)");
     private static final Pattern SEPARATORS = Pattern.compile(
             "\\s*,\\s*|\\s+e\\s+|\\s+&\\s+|\\s+(?:feat\\.?|ft\\.?|part\\.?)\\s+|\\s+x\\s+",
             Pattern.CASE_INSENSITIVE);
@@ -39,6 +40,18 @@ public final class ArtistCandidates {
 
         String fromFile = MusicFileNaming.artistFromFilename(musicPath);
         fromFile = TRACK_PREFIX.matcher(fromFile).replaceFirst("").trim();
+        // "05 - Título.mp3": o "artista" do arquivo é só o número da faixa
+        if (fromFile.isEmpty() || fromFile.chars().allMatch(Character::isDigit)) {
+            return result;
+        }
+        // A tag já traz o nome completo (ex.: "Earth, Wind & Fire"): não fragmentar
+        if (!result.isEmpty() && key(result.get(0)).equals(key(fromFile))) {
+            return result;
+        }
+        // Sem tag, o nome completo do arquivo também é um candidato válido
+        if (result.isEmpty()) {
+            add(result, fromFile);
+        }
         for (String part : SEPARATORS.split(fromFile)) {
             add(result, part);
         }

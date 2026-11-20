@@ -21,8 +21,8 @@ Módulo `lyrics` (bounded context) com Clean Architecture: `LyricsController →
 
 ```java
 public interface LyricsScraper { String fetch(String artist, String title) throws IOException; }
-public interface LyricsSource { String getName(); int getPriority(); boolean isEnabled(); String getUserAgent();
-    String findPage(String artist, String title) throws IOException; String extractLyrics(Document page); }
+public interface LyricsSource { String getName(); int getPriority(); boolean isEnabled();
+    String fetchFromSource(String artist, String title) throws IOException; }  // ofy-017: sem Jsoup na porta
 public interface LyricRepository { Optional<Lyric> find(String p); void save(Lyric l, MusicFile m); boolean exists(String p); void delete(String p); }
 ```
 

@@ -1,6 +1,7 @@
 package com.ovelha.fy.lyrics.infrastructure;
 
 import com.ovelha.fy.lyrics.domain.port.LyricsSource;
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
@@ -57,7 +58,6 @@ public abstract class AbstractLyricsSource implements LyricsSource {
      *
      * @return User-Agent
      */
-    @Override
     public String getUserAgent() { return userAgent; }
 
     /**
@@ -74,6 +74,26 @@ public abstract class AbstractLyricsSource implements LyricsSource {
      */
     protected int getTimeoutFetch() { return timeoutFetch; }
 
+    // ── Passos específicos de cada site ──────────────────────────────
+
+    /**
+     * Localiza a URL da página da letra no site da fonte.
+     *
+     * @param artist nome do artista
+     * @param title título da música
+     * @return URL da página da letra, ou {@code null} se não encontrada
+     * @throws IOException se ocorrer erro de rede
+     */
+    public abstract String findPage(String artist, String title) throws IOException;
+
+    /**
+     * Extrai o texto da letra de uma página já carregada.
+     *
+     * @param page documento HTML da página da letra
+     * @return texto da letra ou {@code null} se o elemento não for encontrado
+     */
+    public abstract String extractLyrics(Document page);
+
     // ── Template method ──────────────────────────────────────────────
 
     /**
@@ -85,13 +105,28 @@ public abstract class AbstractLyricsSource implements LyricsSource {
      * @return texto da letra ou {@code null} se não encontrada
      * @throws IOException se ocorrer erro de rede
      */
+    @Override
     public String fetchFromSource(String artist, String title) throws IOException {
         String pageUrl = findPage(artist, title);
         if (pageUrl == null) return null;
+        pageUrl = stripTranslation(pageUrl);
 
         log.info("[{}] Buscando página de letra: {}", getName(), pageUrl);
         Document doc = connect(pageUrl);
         return extractLyrics(doc);
+    }
+
+    /**
+     * Remove o sufixo de tradução ({@code traducao.html}) de uma URL, se presente.
+     *
+     * @param href URL original
+     * @return URL sem o sufixo de tradução
+     */
+    private static String stripTranslation(String href) {
+        if (href != null && href.endsWith("traducao.html")) {
+            return href.substring(0, href.length() - "traducao.html".length());
+        }
+        return href;
     }
 
     // ── HTTP helpers ─────────────────────────────────────────────────
@@ -109,7 +144,6 @@ public abstract class AbstractLyricsSource implements LyricsSource {
                 .referrer(baseUrl)
                 .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
                 .header("Accept-Language", "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7")
-                .header("Accept-Encoding", "gzip, deflate, br")
                 .header("Connection", "keep-alive")
                 .header("Upgrade-Insecure-Requests", "1")
                 .header("Sec-Fetch-Dest", "document")
@@ -122,15 +156,26 @@ public abstract class AbstractLyricsSource implements LyricsSource {
     }
 
     /**
-     * Faz HEAD/GET na URL e retorna o código de status HTTP.
+     * Retorna o código de status HTTP da URL usando HEAD (sem baixar o corpo); se o
+     * site recusar HEAD (403/405/501), repete com GET.
      *
      * @param url URL a ser verificada
-     * @return código de status HTTP, ou {@code -1} se ocorrer erro
+     * @return código de status HTTP, ou {@code -1} se ocorrer erro de rede
      */
     protected int statusCode(String url) {
+        int head = probe(url, Connection.Method.HEAD);
+        if (head == 403 || head == 405 || head == 501) {
+            return probe(url, Connection.Method.GET);
+        }
+        return head;
+    }
+
+    private int probe(String url, Connection.Method method) {
         try {
             return Jsoup.connect(url)
                     .userAgent(userAgent)
+                    .method(method)
+                    .ignoreHttpErrors(true)
                     .timeout(timeoutConnect)
                     .execute().statusCode();
         } catch (Exception e) {
@@ -163,7 +208,8 @@ public abstract class AbstractLyricsSource implements LyricsSource {
         return ascii.toLowerCase()
                 .replaceAll("[^a-z0-9\\s-]", "")
                 .trim()
-                .replaceAll("[\\s-]+", "-");
+                .replaceAll("[\\s-]+", "-")
+                .replaceAll("^-+|-+$", "");
     }
 
     /**

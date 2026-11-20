@@ -113,20 +113,20 @@ class LetrasMusBrSourceTest {
     }
 
     @Test
-    void extractsLyricsStripsTranslationSuffix() throws IOException {
-        String translatedUrl = "https://www.letras.mus.br/legiao-urbana/tempo-perdido-traducao.html";
-        String strippedUrl = translatedUrl.substring(0, translatedUrl.length() - "traducao.html".length());
-        Document lyricsDoc = Jsoup.parse(lyricHtml());
+    void fetchFromSourceStripsTranslationSuffix() throws IOException {
+        String artistPageUrl = "https://www.letras.mus.br/legiao-urbana/";
+        String translatedUrl = "https://www.letras.mus.br/legiao-urbana/tempo-perdido/traducao.html";
+        String strippedUrl = "https://www.letras.mus.br/legiao-urbana/tempo-perdido/";
 
         Map<String, Document> docs = new HashMap<>();
-        docs.put(strippedUrl, lyricsDoc);
-        Map<String, Integer> statuses = new HashMap<>();
+        docs.put(artistPageUrl, Jsoup.parse(
+                "<html><body><a href=\"" + translatedUrl + "\">Tempo Perdido</a></body></html>"));
+        docs.put(strippedUrl, Jsoup.parse(lyricHtml()));
+        // a página de tradução (URL com sufixo) NÃO contém a letra original
+        docs.put(translatedUrl, Jsoup.parse("<html><body>traducao</body></html>"));
 
-        try (MockedStatic<Jsoup> jsoup = mockJsoup(docs, statuses)) {
-            LetrasMusBrSource source = createSource();
-            String result = source.findPage("Legião Urbana", "Tempo Perdido");
-            // The findPage won't find it directly, but the CompositeLyricsScraper handles suffix stripping
-            // This test just verifies findPage returns a URL
+        try (MockedStatic<Jsoup> jsoup = mockJsoup(docs, new HashMap<>())) {
+            assertEquals(lyricText(), createSource().fetchFromSource("Legião Urbana", "Tempo Perdido"));
         }
     }
 

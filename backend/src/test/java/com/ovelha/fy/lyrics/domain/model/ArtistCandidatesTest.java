@@ -41,7 +41,39 @@ class ArtistCandidatesTest {
     }
 
     @Test
+    void trackNumberOnlyPrefixIsNotACandidate() {
+        assertEquals(List.of("Nara Leão"),
+                ArtistCandidates.from("Nara Leão", "C:\\m\\05 - O Que Será.mp3"));
+        assertEquals(List.of(), ArtistCandidates.from("", "C:\\m\\06 - Angry Chair.mp3"));
+    }
+
+    @Test
+    void tagEqualToFullFilenameSegmentIsNotSplit() {
+        assertEquals(List.of("Earth, Wind & Fire"),
+                ArtistCandidates.from("Earth, Wind & Fire", "C:\\m\\Earth, Wind & Fire - September.mp3"));
+    }
+
+    @Test
+    void withoutTagFullSegmentComesBeforeFragments() {
+        assertEquals(List.of("Earth, Wind & Fire", "Earth", "Wind", "Fire"),
+                ArtistCandidates.from(null, "C:\\m\\Earth, Wind & Fire - September.mp3"));
+    }
+
+    @Test
     void noTagNoArtistReturnsEmpty() {
         assertEquals(List.of(), ArtistCandidates.from("", "C:\\m\\Musica.mp3"));
+    }
+
+    @Test
+    void numericArtistNamesAreKept() {
+        assertEquals(List.of("50 Cent"), ArtistCandidates.from(null, "C:/m/50 Cent - In Da Club.mp3"));
+        assertEquals(List.of("2 Unlimited"), ArtistCandidates.from(null, "C:/m/2 Unlimited - No Limit.mp3"));
+    }
+
+    @Test
+    void trackPrefixVariantsAreStripped() {
+        assertEquals(List.of("Artista"), ArtistCandidates.from(null, "C:/m/01 Artista - Musica.mp3"));
+        assertEquals(List.of("Artista"), ArtistCandidates.from(null, "C:/m/1-05 Artista - Musica.mp3"));
+        assertEquals(List.of("Artista"), ArtistCandidates.from(null, "C:/m/01. Artista - Musica.mp3"));
     }
 }

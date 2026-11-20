@@ -132,7 +132,7 @@ public class VagalumeSource extends AbstractLyricsSource {
             try {
                 artistDoc = connect(pageUrl);
             } catch (IOException e) {
-                log.warn("[{}] Falha ao buscar página do artista {}", getName(), pageUrl, e);
+                log.warn("[{}] Falha ao buscar página do artista {}: {}", getName(), pageUrl, e.getMessage());
                 continue;
             }
 
