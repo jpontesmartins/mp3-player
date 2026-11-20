@@ -11,8 +11,10 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.RETURNS_SELF;
@@ -69,8 +71,8 @@ class CompositeLyricsScraperTest {
 
         try (MockedStatic<Jsoup> jsoup = mockJsoup(docs, statuses)) {
             CompositeLyricsScraper scraper = new CompositeLyricsScraper(List.of(source));
-            String text = scraper.fetch("James Blunt", "No Tears");
-            assertEquals(lyricText(), text);
+            Optional<String> text = scraper.fetch(List.of("James Blunt"), "No Tears");
+            assertEquals(lyricText(), text.orElseThrow());
         }
     }
 
@@ -84,8 +86,8 @@ class CompositeLyricsScraperTest {
 
         try (MockedStatic<Jsoup> jsoup = mockJsoup(docs, statuses)) {
             CompositeLyricsScraper scraper = new CompositeLyricsScraper(List.of(disabled));
-            String text = scraper.fetch("Artista", "Musica");
-            assertTrue(text.startsWith("Letra não encontrada"));
+            Optional<String> text = scraper.fetch(List.of("Artista"), "Musica");
+            assertTrue(text.isEmpty());
         }
     }
 
@@ -105,9 +107,9 @@ class CompositeLyricsScraperTest {
             CompositeLyricsScraper scraper = new CompositeLyricsScraper(List.of(source));
             // The source's findPage will try artist page first (empty), then direct URL, then search
             // This tests the fallback within a single source
-            String text = scraper.fetch("Artista", "Musica");
+            Optional<String> text = scraper.fetch(List.of("Artista"), "Musica");
             // Should find via direct URL since it returns 200
-            assertEquals(lyricText(), text);
+            assertEquals(lyricText(), text.orElseThrow());
         }
     }
 
@@ -118,10 +120,43 @@ class CompositeLyricsScraperTest {
 
         try (MockedStatic<Jsoup> jsoup = mockJsoup(new HashMap<>(), new HashMap<>())) {
             CompositeLyricsScraper scraper = new CompositeLyricsScraper(List.of(source));
-            String text = scraper.fetch("Artista", "Musica");
-            assertTrue(text.startsWith("Letra não encontrada"));
-            assertTrue(text.contains("Artista"));
-            assertTrue(text.contains("Musica"));
+            Optional<String> text = scraper.fetch(List.of("Artista"), "Musica");
+            assertTrue(text.isEmpty());
+        }
+    }
+
+    @Test
+    void triesNextArtistCandidateWhenFirstFails() throws IOException {
+        String lyricsUrl = "https://www.vagalume.com.br/os-mutantes/bat-macumba.html";
+        Map<String, Document> docs = new HashMap<>();
+        docs.put(lyricsUrl, Jsoup.parse("<html><body><div id=\"lyrics\">letra mutante</div></body></html>"));
+        Map<String, Integer> statuses = new HashMap<>();
+        statuses.put(lyricsUrl, 200);
+
+        VagalumeSource source = new VagalumeSource(
+                "https://www.vagalume.com.br", "Mozilla/5.0", 8000, 15000, "/search.php", true, 1);
+
+        try (MockedStatic<Jsoup> jsoup = mockJsoup(docs, statuses)) {
+            CompositeLyricsScraper scraper = new CompositeLyricsScraper(List.of(source));
+            Optional<String> text = scraper.fetch(List.of("Gilberto Gil", "Os Mutantes"), "Bat Macumba");
+            assertEquals("letra mutante", text.orElseThrow());
+        }
+    }
+
+    @Test
+    void accentedArtistUsesAsciiSlugInDirectUrl() throws IOException {
+        String lyricsUrl = "https://www.vagalume.com.br/nara-leao/insensatez.html";
+        Map<String, Document> docs = new HashMap<>();
+        docs.put(lyricsUrl, Jsoup.parse("<html><body><div id=\"lyrics\">letra</div></body></html>"));
+        Map<String, Integer> statuses = new HashMap<>();
+        statuses.put(lyricsUrl, 200);
+
+        VagalumeSource source = new VagalumeSource(
+                "https://www.vagalume.com.br", "Mozilla/5.0", 8000, 15000, "/search.php", true, 1);
+
+        try (MockedStatic<Jsoup> jsoup = mockJsoup(docs, statuses)) {
+            CompositeLyricsScraper scraper = new CompositeLyricsScraper(List.of(source));
+            assertFalse(scraper.fetch(List.of("Nara Leão"), "Insensatez").isEmpty());
         }
     }
 }

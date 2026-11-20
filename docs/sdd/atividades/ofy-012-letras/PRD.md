@@ -44,7 +44,7 @@ Painel **Letra** exibe a letra da música em reprodução: busca automática em 
 
 ## Questões em Aberto
 
-- **Letra "não encontrada" é gravada como letra:** `CompositeLyricsScraper.fetch` devolve o texto `Letra não encontrada para "<título>" de <artista>` (não lança exceção) e `LyricsService.get` o persiste em `.txt`; reabrir a música exibe essa mensagem como se fosse a letra até o usuário removê-la `[PENDENTE / AMBÍGUO NO CÓDIGO]`.
+- **Letra "não encontrada" (resolvido em `ofy-017`):** a mensagem não é mais persistida e `.txt` legados com essa mensagem são ignorados; a busca também tenta artistas inferidos do nome do arquivo e usa slug sem acentos.
 - `Buscar letra` quando já há letra devolve o **cache** (não refaz a consulta); para buscar de novo é preciso `Remover letra` antes.
 - O tamanho da fonte é **lido** de `localStorage['lyrics_font_size']`, mas o código não o **grava** (README afirma persistência) `[PENDENTE / AMBÍGUO NO CÓDIGO]`.
 - `CompositeLyricsScraper` usa referrer `letras.mus.br` e timeout 15000 fixos, ignorando a configuração da fonte; `AbstractLyricsSource#connect` fica sem uso nesse caminho.

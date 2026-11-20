@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Orquestrador que tenta múltiplas {@link LyricsSource}s em ordem de prioridade.
@@ -39,22 +40,25 @@ public class CompositeLyricsScraper implements LyricsScraper {
     }
 
     /**
-     * Tenta buscar a letra em cada fonte habilitada, na ordem de prioridade.
+     * Tenta buscar a letra em cada fonte habilitada (por prioridade) e, em cada fonte,
+     * em cada artista candidato.
      *
-     * @param artist nome do artista
+     * @param artistCandidates nomes de artista a tentar
      * @param title título da música
-     * @return texto da letra encontrada ou mensagem de erro amigável
-     * @throws IOException se ocorrer erro de rede em todas as fontes
+     * @return texto da letra encontrada, ou vazio se nenhuma fonte a possui
      */
     @Override
-    public String fetch(String artist, String title) throws IOException {
+    public Optional<String> fetch(List<String> artistCandidates, String title) {
+        log.info("[Scraper] Candidatos de artista: {}", artistCandidates);
         for (LyricsSource source : sources) {
-            String result = trySource(source, artist, title);
-            if (result != null) return result;
+            for (String artist : artistCandidates) {
+                String result = trySource(source, artist, title);
+                if (result != null) return Optional.of(result);
+            }
         }
 
-        log.warn("[Scraper] Nenhuma fonte encontrou letra para \"{}\" - \"{}\"", artist, title);
-        return "Letra não encontrada para \"" + title + "\" de " + artist;
+        log.warn("[Scraper] Nenhuma fonte encontrou letra para {} - \"{}\"", artistCandidates, title);
+        return Optional.empty();
     }
 
     /**

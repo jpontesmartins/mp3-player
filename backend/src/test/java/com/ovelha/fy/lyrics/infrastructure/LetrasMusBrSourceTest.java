@@ -82,8 +82,8 @@ class LetrasMusBrSourceTest {
 
     @Test
     void fallsBackToDirectUrl() throws IOException {
-        String artistPageUrl = "https://www.letras.mus.br/legião-urbana/";
-        String directUrl = "https://www.letras.mus.br/legião-urbana/tempo-perdido/";
+        String artistPageUrl = "https://www.letras.mus.br/legiao-urbana/";
+        String directUrl = "https://www.letras.mus.br/legiao-urbana/tempo-perdido/";
 
         Map<String, Document> docs = new HashMap<>();
         docs.put(artistPageUrl, Jsoup.parse("<html><body></body></html>"));

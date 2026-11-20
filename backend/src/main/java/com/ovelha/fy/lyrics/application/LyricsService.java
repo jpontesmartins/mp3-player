@@ -1,5 +1,6 @@
 package com.ovelha.fy.lyrics.application;
 
+import com.ovelha.fy.lyrics.domain.model.ArtistCandidates;
 import com.ovelha.fy.lyrics.domain.model.Lyric;
 import com.ovelha.fy.player.domain.model.MusicFile;
 import com.ovelha.fy.player.music.domain.port.Id3Codec;
@@ -7,6 +8,9 @@ import com.ovelha.fy.lyrics.domain.port.LyricsScraper;
 import com.ovelha.fy.lyrics.domain.repository.LyricRepository;
 import com.ovelha.fy.shared.domain.util.MusicFileNaming;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Service da aplicação para o módulo de letras: lê letras em cache, busca letras
@@ -39,14 +43,17 @@ public class LyricsService {
      * @return texto da letra em cache, ou {@code null} se não encontrada
      */
     public String getCached(String musicPath) {
-        return lyricRepository.find(musicPath).map(Lyric::getText).orElse(null);
+        return lyricRepository.find(musicPath)
+                .map(Lyric::getText)
+                .filter(text -> !Lyric.isNotFoundMessage(text))
+                .orElse(null);
     }
 
     /**
      * Retorna a letra em cache ou busca na web, salvando o resultado.
      *
      * @param musicPath caminho absoluto do arquivo de áudio
-     * @return texto da letra encontrada ou mensagem de erro amigável
+     * @return texto da letra encontrada ou mensagem amigável (esta última não é persistida)
      */
     public String get(String musicPath) {
         String cached = getCached(musicPath);
@@ -55,25 +62,28 @@ public class LyricsService {
         MusicFile musicFile = musicFor(musicPath);
         String artist = artistOrFilename(musicFile);
         String title = titleOrFilename(musicFile);
+        List<String> candidates = ArtistCandidates.from(blank(musicFile.getMetadata().artist()), musicPath);
 
-        String text = fetchOrFallback(artist, title, musicPath);
-        lyricRepository.save(new Lyric(musicPath, text), musicFile);
-        return text;
+        Optional<String> found = fetchSafely(candidates, title);
+        if (found.isEmpty()) {
+            return Lyric.notFoundMessage(artist, title);
+        }
+        lyricRepository.save(new Lyric(musicPath, found.get()), musicFile);
+        return found.get();
     }
 
     /**
-     * Busca a letra na web via scraper; em caso de falha, retorna mensagem de erro amigável.
+     * Busca a letra na web via scraper; falhas viram resultado vazio (nada é persistido).
      *
-     * @param artist nome do artista
+     * @param candidates artistas candidatos
      * @param title título da música
-     * @param musicPath caminho absoluto do arquivo de áudio (para fallback)
-     * @return texto da letra ou mensagem de erro
+     * @return letra encontrada ou vazio
      */
-    private String fetchOrFallback(String artist, String title, String musicPath) {
+    private Optional<String> fetchSafely(List<String> candidates, String title) {
         try {
-            return lyricsScraper.fetch(artist, title);
+            return lyricsScraper.fetch(candidates, title);
         } catch (Exception e) {
-            return "Letra não encontrada para \"" + title + "\" de " + artist;
+            return Optional.empty();
         }
     }
 

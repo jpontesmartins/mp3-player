@@ -1,6 +1,8 @@
 package com.ovelha.fy.lyrics.domain.port;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Port para buscar o texto da letra em uma fonte web.
@@ -8,12 +10,12 @@ import java.io.IOException;
 public interface LyricsScraper {
 
     /**
-     * Busca a letra para o artista/título informados.
+     * Busca a letra tentando cada artista candidato, em ordem.
      *
-     * @param artist nome do artista
+     * @param artistCandidates nomes de artista a tentar (o primeiro é o principal)
      * @param title título da música
-     * @return o texto da letra ou uma mensagem legível de "não encontrado"
+     * @return o texto da letra, ou vazio se nenhuma fonte/candidato a encontrou
      * @throws IOException se ocorrer erro de rede ao acessar a fonte
      */
-    String fetch(String artist, String title) throws IOException;
+    Optional<String> fetch(List<String> artistCandidates, String title) throws IOException;
 }

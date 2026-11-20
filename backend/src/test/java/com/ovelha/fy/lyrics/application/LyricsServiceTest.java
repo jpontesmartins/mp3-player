@@ -12,10 +12,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -47,7 +49,7 @@ class LyricsServiceTest {
 
         when(repository.find(path)).thenReturn(Optional.empty());
         when(id3Codec.read(path)).thenReturn(musicFile);
-        when(scraper.fetch("Artist", "Song")).thenReturn("linha1\nlinha2");
+        when(scraper.fetch(List.of("Artist"), "Song")).thenReturn(Optional.of("linha1\nlinha2"));
 
         LyricsService service = new LyricsService(id3Codec, scraper, repository);
         assertEquals("linha1\nlinha2", service.get(path));
@@ -64,7 +66,7 @@ class LyricsServiceTest {
         MusicFile musicFile = new MusicFile(path, MusicFile.Metadata.empty());
         when(repository.find(path)).thenReturn(Optional.empty());
         when(id3Codec.read(path)).thenReturn(musicFile);
-        when(scraper.fetch("OnlyFileName", "Bd")).thenReturn("letra");
+        when(scraper.fetch(List.of("OnlyFileName"), "Bd")).thenReturn(Optional.of("letra"));
 
         LyricsService service = new LyricsService(id3Codec, scraper, repository);
         assertEquals("letra", service.get(path));
@@ -118,7 +120,7 @@ class LyricsServiceTest {
         MusicFile musicFile = new MusicFile(path, new MusicFile.Metadata("Song", "Artist", null, null, null, null, null));
         when(repository.find(path)).thenReturn(Optional.empty());
         when(id3Codec.read(path)).thenReturn(musicFile);
-        when(scraper.fetch("Artist", "Song")).thenThrow(new RuntimeException("network error"));
+        when(scraper.fetch(List.of("Artist"), "Song")).thenThrow(new RuntimeException("network error"));
 
         LyricsService service = new LyricsService(id3Codec, scraper, repository);
         String result = service.get(path);
@@ -139,5 +141,62 @@ class LyricsServiceTest {
         verify(repository).save(captor.capture(), eq(musicFile));
         assertEquals("my lyrics", captor.getValue().getText());
         assertEquals(path, captor.getValue().getMusicPath());
+    }
+
+    @Test
+    void getDoesNotPersistNotFoundMessage() throws IOException {
+        String path = "C:\\Artist - Song.mp3";
+        MusicFile musicFile = new MusicFile(path, new MusicFile.Metadata("Song", "Artist", null, null, null, null, null));
+        when(repository.find(path)).thenReturn(Optional.empty());
+        when(id3Codec.read(path)).thenReturn(musicFile);
+        when(scraper.fetch(List.of("Artist"), "Song")).thenReturn(Optional.empty());
+
+        LyricsService service = new LyricsService(id3Codec, scraper, repository);
+
+        assertEquals("Letra não encontrada para \"Song\" de Artist", service.get(path));
+        verify(repository, never()).save(any(), any());
+    }
+
+    @Test
+    void getPassesTagAndFilenameArtistsAsCandidates() throws IOException {
+        String path = "C:\\musicas\\1-11 Gilberto Gil e Os Mutantes - Bat Macumba.mp3";
+        MusicFile musicFile = new MusicFile(path,
+                new MusicFile.Metadata("Bat Macumba", "Gilberto Gil", null, null, null, null, null));
+        when(repository.find(path)).thenReturn(Optional.empty());
+        when(id3Codec.read(path)).thenReturn(musicFile);
+        when(scraper.fetch(List.of("Gilberto Gil", "Os Mutantes"), "Bat Macumba"))
+                .thenReturn(Optional.of("letra"));
+
+        LyricsService service = new LyricsService(id3Codec, scraper, repository);
+
+        assertEquals("letra", service.get(path));
+    }
+
+    @Test
+    void legacyNotFoundCacheIsIgnoredAndRefetched() throws IOException {
+        String path = "C:\\Artist - Song.mp3";
+        MusicFile musicFile = new MusicFile(path, new MusicFile.Metadata("Song", "Artist", null, null, null, null, null));
+        when(repository.find(path)).thenReturn(Optional.of(
+                new Lyric(path, "Letra não encontrada para \"Song\" de Artist")));
+        when(id3Codec.read(path)).thenReturn(musicFile);
+        when(scraper.fetch(List.of("Artist"), "Song")).thenReturn(Optional.of("letra nova"));
+
+        LyricsService service = new LyricsService(id3Codec, scraper, repository);
+
+        assertNull(service.getCached(path));
+        assertEquals("letra nova", service.get(path));
+        verify(repository).save(any(Lyric.class), eq(musicFile));
+    }
+
+    @Test
+    void realLyricMentioningPhraseIsStillCached() {
+        String path = "C:\\Artist - Song.mp3";
+        String text = "Letra não encontrada para ninguém\nsegunda linha";
+        when(repository.find(path)).thenReturn(Optional.of(new Lyric(path, text)));
+
+        LyricsService service = new LyricsService(id3Codec, scraper, repository);
+
+        assertEquals(text, service.getCached(path));
+        assertTrue(Lyric.isNotFoundMessage("  Letra não encontrada para \"X\" de Y \n"));
     }
 }

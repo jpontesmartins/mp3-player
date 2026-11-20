@@ -8,6 +8,9 @@ import java.util.Objects;
  */
 public final class Lyric {
 
+    /** Prefixo da mensagem amigável exibida quando nenhuma fonte encontra a letra. */
+    public static final String NOT_FOUND_PREFIX = "Letra não encontrada para ";
+
     private final String musicPath;
     private final String text;
 
@@ -38,6 +41,30 @@ public final class Lyric {
      */
     public String getText() {
         return text;
+    }
+
+    /**
+     * Monta a mensagem amigável de "letra não encontrada".
+     *
+     * @param artist nome do artista
+     * @param title título da música
+     * @return mensagem no formato {@code Letra não encontrada para "<título>" de <artista>}
+     */
+    public static String notFoundMessage(String artist, String title) {
+        return NOT_FOUND_PREFIX + "\"" + title + "\" de " + artist;
+    }
+
+    /**
+     * Indica se o texto é apenas a mensagem de "letra não encontrada" (gravada por
+     * versões anteriores como se fosse letra).
+     *
+     * @param text texto a verificar
+     * @return {@code true} se for uma única linha iniciada pelo prefixo da mensagem
+     */
+    public static boolean isNotFoundMessage(String text) {
+        if (text == null) return false;
+        String t = text.strip();
+        return t.startsWith(NOT_FOUND_PREFIX) && t.indexOf(10) < 0;
     }
 
     @Override

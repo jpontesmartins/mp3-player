@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -152,16 +153,17 @@ public abstract class AbstractLyricsSource implements LyricsSource {
     // ── Slug / string utilities ──────────────────────────────────────
 
     /**
-     * Converte uma string em slug (lowercase, sem caracteres especiais, com hífens).
+     * Converte uma string em slug ASCII (sem acentos, lowercase, sem caracteres especiais, com hífens).
      *
      * @param s string de entrada
      * @return slug resultante
      */
     protected static String toSlug(String s) {
-        return s.toLowerCase()
-                .replaceAll("[^a-z0-9áéíóúãõâêîôûçñ\\s]", "")
+        String ascii = Normalizer.normalize(s, Normalizer.Form.NFD).replaceAll("\\p{M}+", "");
+        return ascii.toLowerCase()
+                .replaceAll("[^a-z0-9\\s-]", "")
                 .trim()
-                .replaceAll("\\s+", "-");
+                .replaceAll("[\\s-]+", "-");
     }
 
     /**

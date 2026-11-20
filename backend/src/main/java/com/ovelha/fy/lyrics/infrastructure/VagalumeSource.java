@@ -167,7 +167,13 @@ public class VagalumeSource extends AbstractLyricsSource {
         String searchUrl = getBaseUrl() + searchPath + "?q=" + query;
         log.info("[{}] Buscando: {}", getName(), searchUrl);
 
-        Document searchDoc = connect(searchUrl);
+        Document searchDoc;
+        try {
+            searchDoc = connect(searchUrl);
+        } catch (IOException e) {
+            log.warn("[{}] Falha na busca do site: {}", getName(), e.getMessage());
+            return null;
+        }
         String href = extractSearchResult(searchDoc, title);
 
         if (href == null || href.isEmpty()) return null;

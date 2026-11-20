@@ -1,0 +1,4 @@
+Está dando erro no download de letras.
+3 exemplos de músicas que não conseguiu baixar: 1. gilberto gil - parque industrial, 2. gilberto gil - bat macumba, 3. nara leão - insensatez
+Exemplo de música que conseguiu baixar: 1. Iggy Pop - The Passanger
+Analise o código e logs e veja onde pode estar o problema.

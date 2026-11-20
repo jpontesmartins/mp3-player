@@ -33,6 +33,19 @@ class LyricTest {
     }
 
     @Test
+    void notFoundMessageHasExpectedFormat() {
+        assertEquals("Letra não encontrada para \"Song\" de Artist", Lyric.notFoundMessage("Artist", "Song"));
+    }
+
+    @Test
+    void isNotFoundMessageDetectsOnlySingleLineMessage() {
+        org.junit.jupiter.api.Assertions.assertTrue(Lyric.isNotFoundMessage(Lyric.notFoundMessage("A", "B")));
+        org.junit.jupiter.api.Assertions.assertFalse(Lyric.isNotFoundMessage("Letra não encontrada para x\noutra linha"));
+        org.junit.jupiter.api.Assertions.assertFalse(Lyric.isNotFoundMessage(""));
+        org.junit.jupiter.api.Assertions.assertFalse(Lyric.isNotFoundMessage(null));
+    }
+
+    @Test
     void differentMusicPathsAreNotEqual() {
         assertNotEquals(new Lyric("a.mp3", "x"), new Lyric("b.mp3", "x"));
     }
